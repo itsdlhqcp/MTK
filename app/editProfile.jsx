@@ -179,7 +179,7 @@ const EditProfile = () => {
             mediaTypes: ['images', 'videos'],
             allowsEditing: true,
             aspect: [4, 3],
-            quality: 1,
+            quality: 0.7,
         })
         if (!result.canceled) {
             setUser({...user, image: result.assets[0]});
