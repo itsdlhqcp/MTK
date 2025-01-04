@@ -1,0 +1,49 @@
+Common_square_pattern.svg 
+
+UnCommon_square_pattern.svg
+
+Rare_square_pattern.svg
+
+Legendry_square_pattern.svg 
+
+Mythic_square_pattern.svg  
+
+
+BallIndicator,
+    BarIndicator,
+    DotIndicator,
+    MaterialIndicator,
+    PacmanIndicator,
+    PulseIndicator,
+    SkypeIndicator,
+    UIActivityIndicator,
+    WaveIndicator
+
+gmail password :- Dilu@1234
+Heroku Email id :- mediatalkx@GMAIL.COM
+Heroku password :- MediaTalkX979759$#
+
+database password :-
+MEDIATALKX@GMAIL.COM
+mediatalkx@6423844894209hFHSKjdfhdjskdsb
+
+project URL :- https://lxzwfdaefevtppxwdjyg.supabase.co
+API KEY :-  eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4endmZGFlZmV2dHBweHdkanlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQzNjY5NzYsImV4cCI6MjA0OTk0Mjk3Nn0.4oyfkVYElfrdzMbcc0Abl_JFgaJoWcfmzkDxnBIl5ZI
+
+At sigUp place add :-
+
+ regex code to make password as CRWD 
+  
+  TWO FIELD NEED TO BE ADDED :- 
+   Confirm Password 
+   Re-Type Password
+
+At signin place add :- 
+
+   Login with OTP 
+align all component in screen with hp and wp
+
+
+build separate loading page
+
+tabar logic only added at layout (like in example app - debug it by comparing the main app)
