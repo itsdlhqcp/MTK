@@ -1,4 +1,4 @@
-// import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Image } from 'react-native'
+// import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Image, Pressable } from 'react-native'
 // import React, { useRef, useState, useEffect } from 'react'
 // import ScreenWrapper from '../components/ScreenWrapper'
 // import Header from '../components/Header'
@@ -10,8 +10,10 @@
 // import { useAuth } from '../contexts/AuthContext'
 // import RichTextEditor from '../components/RichTextEditor'
 // import Button from '@/components/Button'
-// import * as ImagePicker from 'expo-image-picker';
 // import { getSupabaseFileUrl } from '../services/imageService'
+// import { Video } from 'expo-av';
+// import { createOrUpdatePost } from '../services/postService'
+// import * as ImagePicker from 'expo-image-picker';
 
 // const CreateFeed = () => {
 //   const { user } = useAuth();
@@ -21,87 +23,159 @@
 //   const [loading, setLoading] = useState(false);
 //   const [file, setFile] = useState(null);
 
-//   // useEffect(() => {
-//   //   (async () => {
-//   //     // Request permissions when component mounts
-//   //     const mediaPermission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-//   //     if (!mediaPermission.granted) {
-//   //       Alert.alert(
-//   //         "Permission Required",
-//   //         "Please allow access to your media library to upload photos and videos.",
-//   //         [{ text: "OK" }]
-//   //       );
-//   //     }
-//   //   })();
-//   // }, []);
+//   const onPick = async (isImage) => {
 
-//   const onPick = async (isImage = true) => {
-//     try {
-//       const mediaConfig = {
-//         mediaTypes: isImage 
-//           ? ImagePicker.MediaTypeOptions.Images 
-//           : ImagePicker.MediaTypeOptions.Videos,
-        
-//         aspect: [4, 3],
-//         quality: isImage ? 0.8 : 1,
-//       };
-
-//       if (!isImage) {
-//         mediaConfig.duration = 60; // Limit video duration to 60 seconds
+//     let mediaConfig = {
+//       mediaTypes: ImagePicker.MediaTypeOptions.Images,
+//       allowsEditing: true,
+//       aspect: [4, 3],
+//       quality: 0.7,
+//     }
+//     if(!isImage){
+//       mediaConfig = {
+//         mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+//         allowsEditing: true
 //       }
-
+//     }
 //       let result = await ImagePicker.launchImageLibraryAsync(mediaConfig);
-//       console.log('result', result);
-//       if (!result.canceled){
-//         setFile(result.assets[0].uri);
+
+//       if(!result.canceled){
+//         setFile(result.assets[0]);
+//        }
 //       }
-//     } catch (error) {
-//       Alert.alert(
-//         "Error",
-//         "Failed to pick media. Please try again.",
-//         [{ text: "OK" }]
-//       );
-//     }
-//   };
 
-//   const isLocalFile = file => {
-//     if (!file) return null;
-//     if(typeof file  === 'object') return true;
+//       const isLocalFile = file=>{
+//         if(!file) return null;
+//         if(typeof file === 'object') return true;
+//         return false;
+//       }
 
-//     return false;
-//   }
+//       const getFileType = file => {
+//         if(!file) return null;
+//         if (isLocalFile(file)){
+//           return file.type;
+//         }
 
-//   const getFileType = file => {
-//     if (!file) return null;
-//     if(isLocalFile(file)) 
-//       return file.type;
+//         // check image for remote file 
+//         if(file.includes('postImage'))
+//           {
+//              return 'image';
+//             }
+//             return 'video';
+//       }
 
-//     // check image or vedeo
-//     if(file.includes('postImage')) {
-//       return 'image';
-//     }
-//     return 'video';
-//   }
+
+//       const getFileUri = file => {
+//         if(!file) return null;
+//         if(isLocalFile(file)){
+//           return file.uri;
+//         }
+//         return getSupabaseFileUrl(file)?.uri;
+//       }
+       
+
+//   // const onPick = async (isImage = true) => {
+//   //   try {
+//   //     const mediaConfig = {
+//   //       mediaTypes: isImage 
+//   //         ? ImagePicker.MediaTypeOptions.Images 
+//   //         : ImagePicker.MediaTypeOptions.Videos,
+//   //       aspect: [4, 3],
+//   //       quality: isImage ? 0.8 : 1,
+//   //     };
+
+//   //     if (!isImage) {
+//   //       mediaConfig.duration = 60;
+//   //     }
+
+//   //     let result = await ImagePicker.launchImageLibraryAsync(mediaConfig);
+//   //     console.log('Selected file result:', result);
+      
+//   //     if (!result.canceled) {
+//   //       setFile(result.assets[0].uri);
+//   //     }
+//   //   } catch (error) {
+//   //     console.error('Media picker error:', error);
+//   //     Alert.alert(
+//   //       "Error",
+//   //       "Failed to pick media. Please try again.",
+//   //       [{ text: "OK" }]
+//   //     );
+//   //   }
+//   // };
+
+//   // const isLocalFile = file => {
+//   //   if (!file) return null;
+//   //   // Check if it's a local URI (doesn't start with http/https)
+//   //   if (typeof file === 'string') {
+//   //     return !file.startsWith('http') && !file.startsWith('https');
+//   //   }
+//   //   return typeof file === 'object';
+//   // };
+
+//   // const getFileType = file => {
+//   //   if (!file) return null;
+//   //   if(isLocalFile(file)){
+//   //     return file.type;
+//   //   }
+
+//   //   //check image or vedeo for remote file 
+//   //   if(file.includes('postImage')){
+//   //     return 'image';
+//   //   }
+
+//   //   return 'video';
+   
+//   //  };
 
 //   // const getFileUri = file => {
 //   //   if (!file) return null;
-//   //   if(isLocalFile(file)) {
-//   //     return file.uri;
+    
+//   //   // If file is just a URI string, return it directly for local files
+//   //   if (typeof file === 'string') {
+//   //     return file;
 //   //   }
-//   //   return getSupabaseFileUrl(file?.uri);
-//   // }
+    
+//   //   // For object types (from Supabase)
+//   //   if (typeof file === 'object' && file.uri) {
+//   //     return getSupabaseFileUrl(file.uri);
+//   //   }
+    
+//   //   return null;
+//   // };
 
-//   const getFileUri = file => {
-//     if (!file) return null;
-//     if(isLocalFile(file)) {
-//       return file.uri;  // This expects file to be an object with a uri property
-//     }
-//     return getSupabaseFileUrl(file?.uri);
-// }
+//     const onSubmit = async () => {
+//       // Implement your submit logic here
+    
+//       if(!bodyRef.current && !file) {
+//         Alert.alert(
+//           "Error",
+//           "Please write something in the post.",
+//           [{ text: "OK" }]
+//         );
+//         return;
+//       }
 
-//   const onSubmit = async () => {
-//     // Implement your submit logic here
-//   };
+//       let data = {
+//         file, 
+//         body: bodyRef.current,
+//         userId: user?.id,
+//       }
+
+//       // create Post
+//       setLoading(true);
+//       let res = await createOrUpdatePost(data);
+//       setLoading(false);
+//       if(res.success){
+//         setFile(null); 
+//         bodyRef.current = ''; 
+//         editorRef.current?.setContentHTML('');
+//         router.back();
+//       }else{
+//         Alert.alert('Post', res.msg);
+//       }
+//       consol.log('post res:', res)
+//     };
 
 //   const handleEditorChange = (body) => {
 //     bodyRef.current = body;
@@ -128,28 +202,42 @@
 //             </View>
 //           </View>
 
-//           <View style={styles.textEditor}>
+//           <View >
 //             <RichTextEditor 
 //               editorRef={editorRef} 
 //               onChange={handleEditorChange}
 //             />
 //           </View>
 
-//           {       
-//                 file && (
-//                   <View style={styles.file}>
-//                     {getFileType(file) == 'video' ? (
-//                       <Text style={{ color: 'black', fontSize: 16 }}>Video File Detected</Text>
-//                     ) : (
-//                       <Image
-//                         source={{ uri: getFileUri(file)}}
-//                         style={{ width: '100%', height: '100%' }}
-//                         resizeMode="cover"
-//                       />
-//                     )}
-//                   </View>
-//                 )   
-//           }
+//           {file && (
+//             <View style={styles.file}>
+//               {getFileType(file) === 'video' ? (
+//                 <Video
+//                   source={{ uri: getFileUri(file) }}
+//                   style={{ width: '100%', height: '122%' }}
+//                   resizeMode="cover"
+//                   borderRadius={7}
+//                   onError={(error) => console.log('Video loading error:', error)}
+//                   useNativeControls 
+//                   positionMillis
+//                   isLooping
+//                   audioPan
+//                 />
+//               ) : (
+//                 <Image
+//                   source={{ uri: getFileUri(file) }}
+//                   style={{ width: '100%', height: '122%' }}
+//                   resizeMode="cover"
+//                   borderRadius={6}
+//                   onError={(error) => console.log('Image loading error:', error)}
+//                 />
+//               )}
+//               <Pressable style={styles.closeIcon} onPress={() => setFile(null)}>
+//                 <Icon name="delete" size={22} color={"red"} />
+//               </Pressable>
+//             </View>
+//           )}
+
 //           <View style={styles.media}>
 //             <Text style={styles.addImageText}>Add new feed</Text>
 //             <View style={styles.mediaIcons}>
@@ -160,11 +248,10 @@
 //                 <Icon name="video" size={37} color={theme.colors.dark} />
 //               </TouchableOpacity>
 //             </View>
-            
 //           </View>
 //         </ScrollView>
 //         <Button
-//           buttonStyle={{height: hp(6.2)}}
+//           buttonStyle={{ height: hp(6.2) }}
 //           title="Post" 
 //           loading={loading}
 //           onPress={onSubmit}
@@ -186,16 +273,16 @@
 //     gap: 15,
 //   },
 //   file: {
-//     height: hp(30),
+//     height: hp(32),
 //     width: '100%',
 //     overflow: 'hidden',
 //     borderCurve: 'continuous',
+//     paddingVertical: wp(8),
 //     // Add these properties to make it visible
 //     borderWidth: 1,
 //     borderColor: theme.colors.gray,
-//     marginTop: 10,
 //     borderRadius: theme.radius.md,
-//     padding: 10,
+//     padding: 7,
 //     justifyContent: 'center',
 //     alignItems: 'center',
 //     position: 'relative'
@@ -252,8 +339,25 @@
 //       fontWeight: theme.fonts.medium,
 //       color: theme.colors.textLight,
 //       },
+//       closeIcon: {
+//         position: 'absolute',
+//         top: 16,
+//         right: 12,
+//         padding: 6,
+//         borderRadius: 50,
+//         backgroundColor: 'rgba(97, 35, 35, 0.14)',
+       
+//       },
      
 // })
+
+
+
+
+
+
+
+
 
 
 
@@ -273,10 +377,10 @@ import Avatar from '../components/Avatar'
 import { useAuth } from '../contexts/AuthContext'
 import RichTextEditor from '../components/RichTextEditor'
 import Button from '@/components/Button'
-import * as ImagePicker from 'expo-image-picker';
 import { getSupabaseFileUrl } from '../services/imageService'
 import { Video } from 'expo-av';
 import { createOrUpdatePost } from '../services/postService'
+import * as ImagePicker from 'expo-image-picker';
 
 const CreateFeed = () => {
   const { user } = useAuth();
@@ -286,112 +390,102 @@ const CreateFeed = () => {
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState(null);
 
-  // useEffect(() => {
-  //   (async () => {
-  //     // Request permissions when component mounts
-  //     const mediaPermission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  //     if (!mediaPermission.granted) {
-  //       Alert.alert(
-  //         "Permission Required",
-  //         "Please allow access to your media library to upload photos and videos.",
-  //         [{ text: "OK" }]
-  //       );
-  //     }
-  //   })();
-  // }, []);
+  // const onPick = async (isImage) => {
 
-  const onPick = async (isImage = true) => {
+  //   let mediaConfig = {
+  //     mediaTypes: ImagePicker.MediaTypeOptions.Images,
+  //     allowsEditing: true,
+  //     aspect: [4, 3],
+  //     quality: 0.7,
+  //   }
+  //   if(!isImage){
+  //     mediaConfig = {
+  //       mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+  //       allowsEditing: true
+  //     }
+  //   }
+  //     let result = await ImagePicker.launchImageLibraryAsync(mediaConfig);
+
+  //     if(!result.canceled){
+  //       setFile(result.assets[0]);
+  //      }
+  //     }
+
+
+  const onPick = async (isImage) => {
     try {
-      const mediaConfig = {
+      let mediaConfig = {
         mediaTypes: isImage 
           ? ImagePicker.MediaTypeOptions.Images 
           : ImagePicker.MediaTypeOptions.Videos,
+        allowsEditing: true,
         aspect: [4, 3],
-        quality: isImage ? 0.8 : 1,
+        quality: 0.7,
+        // Add these properties to ensure proper file handling
+        base64: false,
+        exif: false
       };
-
-      if (!isImage) {
-        mediaConfig.duration = 60;
-      }
-
+  
       let result = await ImagePicker.launchImageLibraryAsync(mediaConfig);
-      console.log('Selected file result:', result);
-      
+  
       if (!result.canceled) {
-        setFile(result.assets[0].uri);
+        // Add file type information explicitly
+        const asset = result.assets[0];
+        const fileType = asset.type || (isImage ? 'image' : 'video');
+        
+        setFile({
+          uri: asset.uri,
+          type: fileType,
+          name: asset.uri.split('/').pop() // Extract filename from URI
+        });
       }
     } catch (error) {
-      console.error('Media picker error:', error);
-      Alert.alert(
-        "Error",
-        "Failed to pick media. Please try again.",
-        [{ text: "OK" }]
-      );
+      console.error('Error picking media:', error);
+      Alert.alert('Error', 'Failed to pick media file');
     }
   };
 
-  const isLocalFile = file => {
-    if (!file) return null;
-    // Check if it's a local URI (doesn't start with http/https)
-    if (typeof file === 'string') {
-      return !file.startsWith('http') && !file.startsWith('https');
-    }
-    return typeof file === 'object';
-  };
+      const isLocalFile = file=>{
+        if(!file) return null;
+        if(typeof file === 'object') return true;
+        return false;
+      }
 
-  const getFileType = file => {
-    if (!file) return null;
-    
-    // For local files selected through ImagePicker
-    if (typeof file === 'string') {
-      // Check file extension
-      const extension = file.toLowerCase().split('.').pop();
-      const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-      const videoExtensions = ['mp4', 'mov', 'avi', 'wmv'];
-      
-      if (imageExtensions.includes(extension)) {
-        return 'image';
-      }
-      if (videoExtensions.includes(extension)) {
-        return 'video';
-      }
-    }
-    
-    // For files from Supabase or other sources
-    if (typeof file === 'object' && file.uri) {
-      if (file.uri.includes('postImage')) {
-        return 'image';
-      }
-      // Check MIME type if available
-      if (file.type) {
-        return file.type.startsWith('image/') ? 'image' : 'video';
-      }
-    }
-    
-    // If we can't determine the type, assume it's an image for safety
-    return 'image';
-  };
+      // const getFileType = file => {
+      //   if(!file) return null;
+      //   if (isLocalFile(file)){
+      //     return file.type;
+      //   }
 
-  const getFileUri = file => {
-    if (!file) return null;
-    
-    // If file is just a URI string, return it directly for local files
-    if (typeof file === 'string') {
-      return file;
-    }
-    
-    // For object types (from Supabase)
-    if (typeof file === 'object' && file.uri) {
-      return getSupabaseFileUrl(file.uri);
-    }
-    
-    return null;
-  };
+      //   // check image for remote file 
+      //   if(file.includes('postImage'))
+      //     {
+      //        return 'image';
+      //       }
+      //       return 'video';
+      // }
+
+      const getFileType = file => {
+        if (!file) return null;
+        if (isLocalFile(file)) {
+          return file.type || 'image'; // Provide a default type
+        }
+        // For remote files
+        return file.includes('postImage') ? 'image' : 'video';
+      };
+
+
+      const getFileUri = file => {
+        if(!file) return null;
+        if(isLocalFile(file)){
+          return file.uri;
+        }
+        return getSupabaseFileUrl(file)?.uri;
+      }
 
     const onSubmit = async () => {
       // Implement your submit logic here
-      console.log('Body:', bodyRef.current);
-      console.log('Submitting with file:', file);
+    
       if(!bodyRef.current && !file) {
         Alert.alert(
           "Error",
@@ -408,7 +502,7 @@ const CreateFeed = () => {
       }
 
       // create Post
-      setLoading(false);
+      setLoading(true);
       let res = await createOrUpdatePost(data);
       setLoading(false);
       if(res.success){
@@ -465,7 +559,7 @@ const CreateFeed = () => {
                   onError={(error) => console.log('Video loading error:', error)}
                   useNativeControls 
                   positionMillis
-                  isLooping={true}
+                  isLooping
                   audioPan
                 />
               ) : (
@@ -595,3 +689,4 @@ const styles = StyleSheet.create({
       },
      
 })
+

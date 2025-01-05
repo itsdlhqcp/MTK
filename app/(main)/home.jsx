@@ -1,114 +1,5 @@
-// import { Text, Button, Alert, View, StyleSheet, Pressable } from 'react-native'
-// import React from 'react'
-// import { useRouter } from 'expo-router'
-// import theme from '../../constants/theme'
-// import {useAuth} from '../../contexts/AuthContext'
-// import ScreenWrapper from '@/components/ScreenWrapper';
-// import { supabase } from '../../lib/supabase';
-// import { wp, hp } from '@/helpers/common'
-// import Icon from '@/assets/icons'
-// import Avatar from '../../components/Avatar'
-
-// const home = () => {
-
-//     const {user, setAuth} = useAuth();
-
-//     console.log('user', user);
-//     const router = useRouter();
-
-//     const onLogout = async () => {
-//         const {error} = await supabase.auth.signOut(); 
-//         if (!error) {
-//             Alert.alert('Successfully logged out');
-//         }else{
-//             Alert.alert('Error logging out');
-//         }
-//     }
-//   return (
-//     <ScreenWrapper bg={"white"}>
-//       <View style={styles.container}>
-//           {/* header */} 
-//           <View style={styles.header} >
-//             <Text style={styles.title}>MediaTalk</Text>
-//             <View style={styles.icons}>
-//               <Pressable  onPress={()=> router.push('notifications')}>
-//                 <Icon name="heart" size={hp(3.2)} color={theme.colors.text} />
-//               </Pressable>
-//               <Pressable onPress={() => router.push('createFeed')}>
-//                 <Icon name="plus" size={hp(3.2)} color={theme.colors.text} />
-//               </Pressable> 
-//               <Pressable onPress={() => router.push('profile')}>
-//                   <Avatar 
-//                       uri={user?.image}
-//                       size={hp(3.7)}
-//                       rounded={theme.radius.xs}
-//                       style={{borderWidth: 1.3}}
-//                   />
-//               </Pressable>
-//             </View>
-      
-//           </View>
-//       </View>
-      
-//       <Button title='logout' onPress={onLogout} />
-//     </ScreenWrapper>
-//   )
-// }
-
-// export default home
-
-// const styles = StyleSheet.create({
-//   container: {
-//   flex: 1,
-//   }, 
-//   header: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-    
-//     alignItems: 'center', 
-//     marginBottom: 10,
-//     marginHorizontal: wp(3.4)
-//   }, 
-//   title:{
-//     color: theme.colors.text,
-//     fontSize: hp(3.2),
-//     fontWeight: theme.fonts.bold
-//   }, 
-//   listStyle: {
-//     paddingTop: 20, 
-//     paddingHorizontal: wp(4)
-//   }, 
-//   icons: {
-//     flexDirection: 'row', 
-//     justifyContent: 'center', 
-//     alignItems: 'center', 
-//     gap: 18
-//   },
-//   noPosts: {
-//     fontSize: hp(2),
-//     textAlign: 'center', 
-//     color: theme.colors.text 
-//   },
-//   pill:{
-//     position: 'absolute', 
-//     right: -10, 
-//     top: -4, 
-//     height: hp(2.2), 
-//     width: hp(2.2), 
-//     borderRadius: 20, 
-//     backgroundColor: theme.colors.roseLight
-//   }, 
-//   pillText: {
-//     color: 'white',
-//     fontSize: hp(1.8), 
-//     fontWeight: theme.fonts.bold } from 'react-native'
-//   }
-// }) , 
-
-
-
-import { Text, Button, Alert, View, StyleSheet, Pressable, TouchableOpacity, SafeAreaView, Platform, StatusBar } from 'react-native'
-import React, { useEffect } from 'react'
+import { Text, Button, Alert, View, StyleSheet, Pressable, TouchableOpacity, SafeAreaView, Platform, StatusBar, FlatList } from 'react-native'
+import React, { useEffect, useState } from 'react'
 import { useRouter } from 'expo-router'
 import theme from '../../constants/theme'
 import {useAuth} from '../../contexts/AuthContext'
@@ -118,21 +9,39 @@ import { wp, hp } from '@/helpers/common'
 import Icon from '@/assets/icons'
 import Avatar from '../../components/Avatar'
 import { fetchPosts } from '../../services/postService'
+import PostCard from '../../components/PostCard'
 
 const home = () => {
     const {user, setAuth} = useAuth();
-    console.log('user', user);
+    // console.log('user', user);
     const router = useRouter();
-    const [posts, setPosts] = React.useState([]);
+    const [posts, setPosts] = useState([]);
+    const [limit, setLimit] = useState(10);
 
     useEffect(() => {
       getPosts();
     }, [])
 
+    // const getPosts = async () => {
+    //   // call the api here
+    //   limit = limit + 10; 
+    //   console.log('fetching posts', limit);
+    //   let res = await fetchPosts();
+    //   console.log('fetched posts', res);
+    //   if(res.success){
+    //     setPosts(res.data);
+    //   }
+    // }
+
     const getPosts = async () => {
-      // call the api here
+      // Update limit using setState
+      setLimit(prevLimit => prevLimit + 10);
+      console.log('fetching posts', limit);
       let res = await fetchPosts();
-      console.log('got posts results', res);
+      console.log('fetched posts', res);
+      if(res.success){
+        setPosts(res.data);
+      }
     }
 
     const onLogout = async () => {
@@ -166,9 +75,29 @@ const home = () => {
               </Pressable>
             </View>
           </View>
+
+          
+          {/* <Text>Hello</Text> */}
+
+          {/* Posts */}
+          <FlatList
+            data={posts}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.listStyle}
+            keyExtractor={item => item.id.toString()}
+            renderItem={({ item }) => 
+              <PostCard
+                item={item}
+                currentUser={user}
+                router={router}
+              />
+            }
+            ListEmptyComponent={() => (
+              <Text style={styles.emptyText}>No posts available</Text>
+            )}
+          />
       </View>
-      
-      <Button title='logout' onPress={onLogout} />
+      {/* <Button title='logout' onPress={onLogout} /> */}
     </ScreenWrapper>
   )
 }
@@ -195,7 +124,7 @@ const styles = StyleSheet.create({
     fontWeight: theme.fonts.bold
   }, 
   listStyle: {
-    paddingTop: 20, 
+    paddingTop: 70, 
     paddingHorizontal: wp(4)
   }, 
   icons: {
@@ -203,6 +132,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center', 
     alignItems: 'center', 
     gap: 18
+  },
+  listStyle: {
+    paddingTop: 20,
+    paddingHorizontal: wp(4)
   },
   noPosts: {
     fontSize: hp(2),
