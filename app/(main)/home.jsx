@@ -108,7 +108,7 @@
 
 
 import { Text, Button, Alert, View, StyleSheet, Pressable, TouchableOpacity, SafeAreaView, Platform, StatusBar } from 'react-native'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useRouter } from 'expo-router'
 import theme from '../../constants/theme'
 import {useAuth} from '../../contexts/AuthContext'
@@ -117,11 +117,23 @@ import { supabase } from '../../lib/supabase';
 import { wp, hp } from '@/helpers/common'
 import Icon from '@/assets/icons'
 import Avatar from '../../components/Avatar'
+import { fetchPosts } from '../../services/postService'
 
 const home = () => {
     const {user, setAuth} = useAuth();
     console.log('user', user);
     const router = useRouter();
+    const [posts, setPosts] = React.useState([]);
+
+    useEffect(() => {
+      getPosts();
+    }, [])
+
+    const getPosts = async () => {
+      // call the api here
+      let res = await fetchPosts();
+      console.log('got posts results', res);
+    }
 
     const onLogout = async () => {
         const {error} = await supabase.auth.signOut(); 

@@ -261,7 +261,7 @@
 
 
 
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Image } from 'react-native'
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Image, Pressable } from 'react-native'
 import React, { useRef, useState, useEffect } from 'react'
 import ScreenWrapper from '../components/ScreenWrapper'
 import Header from '../components/Header'
@@ -275,6 +275,8 @@ import RichTextEditor from '../components/RichTextEditor'
 import Button from '@/components/Button'
 import * as ImagePicker from 'expo-image-picker';
 import { getSupabaseFileUrl } from '../services/imageService'
+import { Video } from 'expo-av';
+import { createOrUpdatePost } from '../services/postService'
 
 const CreateFeed = () => {
   const { user } = useAuth();
@@ -284,19 +286,19 @@ const CreateFeed = () => {
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState(null);
 
-  useEffect(() => {
-    (async () => {
-      // Request permissions when component mounts
-      const mediaPermission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!mediaPermission.granted) {
-        Alert.alert(
-          "Permission Required",
-          "Please allow access to your media library to upload photos and videos.",
-          [{ text: "OK" }]
-        );
-      }
-    })();
-  }, []);
+  // useEffect(() => {
+  //   (async () => {
+  //     // Request permissions when component mounts
+  //     const mediaPermission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  //     if (!mediaPermission.granted) {
+  //       Alert.alert(
+  //         "Permission Required",
+  //         "Please allow access to your media library to upload photos and videos.",
+  //         [{ text: "OK" }]
+  //       );
+  //     }
+  //   })();
+  // }, []);
 
   const onPick = async (isImage = true) => {
     try {
@@ -386,10 +388,39 @@ const CreateFeed = () => {
     return null;
   };
 
-  const onSubmit = async () => {
-    // Implement your submit logic here
-    console.log('Submitting with file:', file);
-  };
+    const onSubmit = async () => {
+      // Implement your submit logic here
+      console.log('Body:', bodyRef.current);
+      console.log('Submitting with file:', file);
+      if(!bodyRef.current && !file) {
+        Alert.alert(
+          "Error",
+          "Please write something in the post.",
+          [{ text: "OK" }]
+        );
+        return;
+      }
+
+      let data = {
+        file, 
+        body: bodyRef.current,
+        userId: user?.id,
+      }
+
+      // create Post
+      setLoading(false);
+      let res = await createOrUpdatePost(data);
+      setLoading(false);
+      if(res.success){
+        setFile(null); 
+        bodyRef.current = ''; 
+        editorRef.current?.setContentHTML('');
+        router.back();
+      }else{
+        Alert.alert('Post', res.msg);
+      }
+      consol.log('post res:', res)
+    };
 
   const handleEditorChange = (body) => {
     bodyRef.current = body;
@@ -416,7 +447,7 @@ const CreateFeed = () => {
             </View>
           </View>
 
-          <View style={styles.textEditor}>
+          <View >
             <RichTextEditor 
               editorRef={editorRef} 
               onChange={handleEditorChange}
@@ -426,15 +457,29 @@ const CreateFeed = () => {
           {file && (
             <View style={styles.file}>
               {getFileType(file) === 'video' ? (
-                <Text style={{ color: 'black', fontSize: 16 }}>Video File Detected</Text>
+                <Video
+                  source={{ uri: getFileUri(file) }}
+                  style={{ width: '100%', height: '122%' }}
+                  resizeMode="cover"
+                  borderRadius={7}
+                  onError={(error) => console.log('Video loading error:', error)}
+                  useNativeControls 
+                  positionMillis
+                  isLooping={true}
+                  audioPan
+                />
               ) : (
                 <Image
                   source={{ uri: getFileUri(file) }}
-                  style={{ width: '100%', height: '120%' }}
+                  style={{ width: '100%', height: '122%' }}
                   resizeMode="cover"
+                  borderRadius={6}
                   onError={(error) => console.log('Image loading error:', error)}
                 />
               )}
+              <Pressable style={styles.closeIcon} onPress={() => setFile(null)}>
+                <Icon name="delete" size={22} color={"red"} />
+              </Pressable>
             </View>
           )}
 
@@ -473,16 +518,16 @@ const styles = StyleSheet.create({
     gap: 15,
   },
   file: {
-    height: hp(30),
+    height: hp(32),
     width: '100%',
     overflow: 'hidden',
     borderCurve: 'continuous',
+    paddingVertical: wp(8),
     // Add these properties to make it visible
     borderWidth: 1,
     borderColor: theme.colors.gray,
-    marginTop: 10,
     borderRadius: theme.radius.md,
-    padding: 10,
+    padding: 7,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative'
@@ -538,6 +583,15 @@ const styles = StyleSheet.create({
       fontSize: hp(1.7),
       fontWeight: theme.fonts.medium,
       color: theme.colors.textLight,
+      },
+      closeIcon: {
+        position: 'absolute',
+        top: 16,
+        right: 12,
+        padding: 6,
+        borderRadius: 50,
+        backgroundColor: 'rgba(97, 35, 35, 0.14)',
+       
       },
      
 })

@@ -29,7 +29,7 @@ export const uploadProfileImage = async (folderName, isImage=true, fileUri) => {
      let {data, error} = await supabase.storage.from('profileImage').upload(filename, imageData, {
         cacheControl: '3600',
         upsert: false, 
-        contentType: isImage? 'image/png': 'video/mp4'
+        contentType: isImage? 'image/*': 'video/*'
      });
      if(error){
         console.log('file upload error', error); 

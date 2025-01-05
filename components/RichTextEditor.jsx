@@ -58,7 +58,7 @@ const RichTextEditor = ({ editorRef, onChange }) => {
   };
 
   return (
-    <View style={{ minHeight: 285 }}>
+    <View style={{ minHeight: 25 }}>
       <RichToolbar
         actions={[
           actions.insertLink,
@@ -113,7 +113,7 @@ const RichTextEditor = ({ editorRef, onChange }) => {
         onChange={handleChange}
         onPaste={handlePaste}
         pasteAsPlainText={false}
-        initialHeight={250}
+        initialHeight={184}
       />
     </View>
   );
@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   rich: {
-    minHeight: 270,
+    minHeight: 144,
     flex: 1,
     borderWidth: 1.5,
     borderTopWidth: 0,
