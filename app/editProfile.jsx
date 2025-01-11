@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import ScreenWrapper from '../components/ScreenWrapper';
 import { useAuth } from '../contexts/AuthContext';
-import { getImageSrc, uploadProfileImage } from '../services/imageService';
+import { getImageSrc, uploadProfileImage } from '../services/userProfileImage';
 import theme from '../constants/theme';
 import { hp, wp } from '../helpers/common';
 import Icon from '@/assets/icons';
