@@ -9,7 +9,6 @@ import { Video } from 'expo-av';
 import RenderHtml from 'react-native-render-html';
 import { getSupabaseFileUrl } from '../services/imageService'
 
-
 // here all the styling of text editor can be updated
 // HTML STYLES
 
@@ -46,6 +45,8 @@ const PostCard = ({
   }
   console.log('post items', item);
   const createdat = moment(item?.created_at).format('MMM D');
+  const likes = [];
+  const liked = false;
 
   const openPostDetails = () => {
 
@@ -64,8 +65,6 @@ const PostCard = ({
              <Text style={styles.username}>{item?.user?.name}</Text>
              <Text style={styles.username}>{createdat}</Text>
           </View>
-
-         
 
         </View>
 
@@ -118,11 +117,45 @@ const PostCard = ({
      }
 
 
+{/* // like  , comment and share */}
+    <View style={styles.footer}>
+      <View style={styles.footerButton}>
+        <TouchableOpacity>
+            <Icon name='heart' size={24} fill={!liked? theme.colors.rose : 'transparent'} strokeWidth={1.4} color={liked ? theme.colors.blue : theme.colors.textDark}/>
+        </TouchableOpacity>
+        <Text style={styles.count}>
+          {
+            likes?.length
+          }
+        </Text>
+      </View>
+
+      <View style={styles.footerButton}>
+        <TouchableOpacity>
+            <Icon name='comment' size={24} strokeWidth={2} color={liked ? theme.colors.rose : theme.colors.textDark}/>
+        </TouchableOpacity>
+        <Text style={styles.count}>
+          {
+            likes?.length
+          }
+        </Text>
+      </View>
+
+      <View style={styles.footerButton}>
+        <TouchableOpacity>
+            <Icon name='share' size={24} strokeWidth={2} color={liked ? theme.colors.rose : theme.colors.textDark}/>
+        </TouchableOpacity>
+        <Text style={styles.count}>
+          {
+            likes?.length
+          }
+        </Text>
+      </View>
+      
+    </View>
     </View>
 
-
-
- 
+  
   )
 }
 
@@ -170,5 +203,30 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.xl,
     borderCurve: 'continuous',
   },
+  // postBody: {
+  //   marginLeft: 1
+  // },
+  footer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 15,
+    marginLeft: 12
+  },
+  footerButton: {
+    marginLeft: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4
+  },
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 18
+  },
+  count: {
+    color: theme.colors.text,
+    fontSize: hp(1.8),
+    fontWeight: theme.fonts.medium
+  }
  
 })
