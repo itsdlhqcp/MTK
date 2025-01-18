@@ -47,3 +47,7 @@ align all component in screen with hp and wp
 build separate loading page
 
 tabar logic only added at layout (like in example app - debug it by comparing the main app)
+
+##need to debug file sharing and text sharing into one
+
+##not to add back route protect after log-out

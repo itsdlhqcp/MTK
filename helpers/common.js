@@ -1,19 +1,3 @@
-// import { Dimensions } from "react-native";
-
-// const {width: deviceWidth, height: deviceHight} = Dimensions.get('window');
-
-// export const hp = percentage=>{
-//     return (percentage*deviceHight) / 100;
-// }
-
-//  const wp = percentage=>{
-//     return (percentage*deviceWidth) / 100;
-// }
-
-// export default {wp, hp};
-
-
-
 import { Dimensions } from "react-native";
 
 // Get device dimensions
@@ -30,6 +14,15 @@ export const wp = percentage => {
   if (typeof percentage !== 'number' || percentage < 0) return 0;
   return (percentage * deviceWidth) / 100;
 };
+export const stripHtmlTags = (html) => {
+  if (!html) return "";
+  return html.replace(/<[^>]*>/g, '');
+}
+
+// const stripHtmlTags = (html) => {
+//   if (!html) return "";
+//   return html.replace(/<\/?[^>]+(>|$)/g, ""); // Removes HTML tags
+// };
 
 // Default export
 export default { wp, hp };

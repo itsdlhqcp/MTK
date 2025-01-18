@@ -1,62 +1,11 @@
-// import * as FileSystem from 'expo-file-system';
-// import { decode } from 'base64-arraybuffer'; 
-// import { supabase } from '@/lib/supabase';
-// import { supabaseUrl } from '../constants';
-
-// export const getImageSrc = imagePath => {
-//     if (imagePath) {
-//         return getSupabaseFileUrl(imagePath);
-//     }else {
-//         return require('../assets/images/defaultUser.png');
-//     }
-// }
-
-// export const getSupabaseFileUrl = filePath =>{
-//     if (filePath) {
-//     return {uri: `${supabaseUrl}/storage/v1/object/public/profileImage/${filePath}`}
-//     }
-//     return null;
-//     }
-
-// export const uploadProfileImage = async (folderName, isImage=true, fileUri) => {
-//     try{
-//      let filename = getFilePath(folderName , isImage);
-//      // Fixed: Use base64 directly instead of EncodingType
-//      const fileBase64 = await FileSystem.readAsStringAsync(fileUri, {encoding: 'base64'});
-//      let imageData = decode(fileBase64); 
-//      let {data, error} = await supabase.storage.from('profileImage').upload(filename, imageData, {
-//         cacheControl: '3600',
-//         upsert: false, 
-//         contentType: isImage? 'image/*': 'video/*'
-//      });
-//      if(error){
-//         console.log('file upload error', error); 
-//         return {success: false, msg: 'Could not upload media'};
-//      }
-
-//      console.log('file upload data', data);
-
-//      return {success: true, data: data.path};  // Fixed typo in 'success'
-
-//     }catch(error){
-//         console.log('file upload error', error);
-//         return {success: false, msg: 'Could not upload media'};
-//     }
-// }
-
-// export const getFilePath = (folderName, isImage) => {
-//     return `/${folderName}/${(new Date()).getTime()}${isImage? '.png': '.mp4'}`;
-// }
-
-
-
-
-
 
 import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
+import * as MediaLibrary from 'expo-media-library';    // try delete this library if not used
 import { decode } from 'base64-arraybuffer';
 import { supabase } from '@/lib/supabase';
 import { supabaseUrl } from '../constants';
+import { Platform } from 'react-native';
 
 export const getImageSrc = imagePath => {
     if (imagePath) {
@@ -130,65 +79,106 @@ export const uploadProfileImage = async (folderName, fileUri, isImage = true) =>
     }
   };
 
-// export const uploadProfileImage = async (folderName, isImage = true, fileUri) => {
-//     try {
-//         if (!fileUri) {
-//             throw new Error('File URI is required');
-//         }
 
-//         const filename = getFilePath(folderName, isImage);
-        
-//         // Check if file exists before reading
-//         const fileInfo = await FileSystem.getInfoAsync(fileUri);
-//         if (!fileInfo.exists) {
-//             throw new Error('File does not exist');
-//         }
 
-//         // Read file with explicit options
-//         const fileBase64 = await FileSystem.readAsStringAsync(fileUri, {
-//             encoding: FileSystem.EncodingType.Base64
-//         });
 
-//         if (!fileBase64) {
-//             throw new Error('Failed to read file as base64');
-//         }
+  export const getLocalFilePath = (filePath) => {
+    // Ensure we have a valid filename by removing query parameters
+    const fileName = filePath.split('/').pop().split('?')[0];
+    return `${FileSystem.documentDirectory}${fileName}`;
+  };
+  
+  export const downloadFile = async (url) => {
+    try {
+      // Check if file already exists
+      const localPath = getLocalFilePath(url);
+      const fileInfo = await FileSystem.getInfoAsync(localPath);
+      
+      if (!fileInfo.exists) {
+        const { uri } = await FileSystem.downloadAsync(url, localPath);
+        return uri;
+      }
+      return localPath;
+    } catch (error) {
+      console.error('Download error:', error);
+      return null;
+    }
+  }; 
 
-//         // Convert base64 to array buffer
-//         const imageData = decode(fileBase64);
+  // Sharing utility function
+export const shareContent = async ({ message, fileUrl }) => {
+  try {
+    // Check if sharing is available
+    const isSharingAvailable = await Sharing.isAvailableAsync();
+    if (!isSharingAvailable) {
+      throw new Error('Sharing is not available on this platform');
+    }
 
-//         // Upload to Supabase with proper content type
-//         const contentType = isImage ? 'image/png' : 'video/mp4';
-//         const { data, error } = await supabase.storage
-//             .from('profileImage')
-//             .upload(filename, imageData, {
-//                 cacheControl: '3600',
-//                 upsert: false,
-//                 contentType
-//             });
+    // If we have a file to share
+    if (fileUrl) {
+      const localUri = await downloadFile(fileUrl);
+      if (!localUri) {
+        throw new Error('Failed to download file');
+      }
 
-//         if (error) {
-//             console.error('Supabase upload error:', error);
-//             return {
-//                 success: false,
-//                 msg: 'Could not upload media',
-//                 error: error.message
-//             };
-//         }
+      if (Platform.OS === 'ios') {
+        // For iOS, we can share both message and file together
+        await Share.share({
+          message: message || '',
+          url: localUri
+        });
+      } else {
+        // For Android, we'll use Intent.ACTION_SEND to share both file and text
+        // First, create the sharing options
+        const options = {
+          mimeType: getMimeType(fileUrl),
+          UTI: getMimeType(fileUrl),
+        };
 
-//         return {
-//             success: true,
-//             data: data.path
-//         };
+        // On Android, we need to use Intent extras to include both file and text
+        if (message) {
+          options.dialogTitle = message;
+          // Try multiple approaches to include the message
+          options.message = message;
+          options.text = message;
+          // Some Android apps look for these specific extras
+          options.android = {
+            extraText: message,
+            social: message
+          };
+        }
 
-//     } catch (error) {
-//         console.error('File upload error:', error);
-//         return {
-//             success: false,
-//             msg: error.message || 'Could not upload media',
-//             error: error
-//         };
-//     }
-// };
+        // Use the native sharing
+        await Sharing.shareAsync(localUri, options);
+      }
+    } else {
+      // For text-only sharing
+      await Share.share({
+        message: message || ''
+      });
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Sharing error:', error);
+    throw error;
+  }
+};
+
+
+  const getMimeType = (fileUrl) => {
+    const extension = fileUrl.split('.').pop().toLowerCase();
+    const mimeTypes = {
+      'pdf': 'application/pdf',
+      'jpg': 'image/jpeg',
+      'jpeg': 'image/jpeg',
+      'png': 'image/png',
+      'doc': 'application/msword',
+      'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      // Add more mime types as needed
+    };
+    return mimeTypes[extension] || 'application/octet-stream';
+  };
 
 export const getFilePath = (folderName, isImage) => {
     const timestamp = new Date().getTime();
