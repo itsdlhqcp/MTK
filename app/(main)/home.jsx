@@ -27,6 +27,7 @@ const Home = () => {
 
     // Handle real-time post updates
     const handlePostEvent = async (payload) => {
+        // handle inser new post on main stram
         if (payload.eventType === 'INSERT' && payload?.new?.id) {
             let newPost = {...payload.new};
             newPost.postLikes = [];
@@ -44,6 +45,44 @@ const Home = () => {
                     return updatedPosts;
                 })
             }
+            // Handle post update on real-time
+            if(payload.eventType === 'UPDATE' && payload.new.id){
+                setPosts(prevPosts=>{
+                    let updatedPosts = prevPosts.map(post=>{
+                        if(post.id == payload.new.id){
+                            post.body = payload.new.body; 
+                            post.file = payload.new.file;
+                        }
+                        return post;
+                    })
+                    return updatedPosts;
+                })
+            }
+            // Handle real time post likes
+            // if(payload.eventType === 'INSERT' && payload?.new?.id){
+            //     setPosts(prevPosts=>{
+            //         let updatedPosts = prevPosts.map(post=>{
+            //             if(post.id == payload.new.id){
+            //                 return {...post, postLikes: [...post.postLikes, payload.new]};
+            //             }
+            //             return post;
+            //         })
+            //         return updatedPosts;
+            //     })
+            // }
+
+            // // Handle real time post comments
+            // if(payload.eventType === 'INSERT' && payload?.new?.id){
+            //     setPosts(prevPosts=>{
+            //         let updatedPosts = prevPosts.map(post=>{
+            //             if(post.id == payload.new.postId){
+            //                 return {...post, comments: [...post.comments, payload.new]};
+            //             }
+            //             return post;
+            //         })
+            //         return updatedPosts;
+            //     })
+            // }
     }
 
     // Set up Supabase real-time subscription
@@ -117,7 +156,7 @@ const Home = () => {
             <View style={styles.container}>
                 {/* Header */}
                 <View style={styles.header}>
-                    <Text style={styles.title}>MediaTalk</Text>
+                    <Text style={styles.title}>Plot Twist</Text>
                     <View style={styles.icons}>
                         <Pressable onPress={() => router.push('notifications')}>
                             <Icon name="heart" size={hp(3.2)} color="white" />

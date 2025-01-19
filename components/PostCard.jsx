@@ -156,7 +156,7 @@ const PostCard = ({
           <TouchableOpacity onPress={openPostDetails}>
             <Icon 
               name='threeDotsHorizontal'
-              size={hp(3)}
+              size={hp(3.8)}
               strokeWidth={3}
               color={theme.colors.text}
             />
@@ -273,6 +273,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    paddingHorizontal: wp(1.4),
   },
   username: {
     fontSize: hp(1.7),

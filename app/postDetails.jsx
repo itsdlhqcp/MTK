@@ -139,6 +139,7 @@ const PostDetails = () => {
 
     const onEditPost = async (item) => {
         console.log('item edited' , item);
+        router.push({pathname: 'createFeed', params: {...item}})
 
     }
 
