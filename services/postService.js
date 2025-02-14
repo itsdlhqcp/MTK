@@ -3,7 +3,6 @@ import { supabase } from "../lib/supabase";
 
 export const createOrUpdatePost = async (post) => {
   try {
-  
     if (post.file && typeof post.file === "object") {
       let isImage = post.file.type === "image";
       let folderName = isImage ? "postImage" : "postVideo";
@@ -131,12 +130,14 @@ export const createPostLike = async (postLike) => {
         .from('posts')
         .select(`*,user: users (id, name, image),
           postLikes(*),
-          comments(*, user: users(id, name, image))
+          comments(*,
+           user: users(id, name, image),
+           reply(*))
           `,
           
         )
         .eq('id', postId)
-        .order("created_at", { ascending: false, foreignTable: "comments" })
+        .order("created_at", { ascending: false, foreignTable: "comments", foreignColumn: "reply" })
         .single();
       if (error) {
         console.log('Fech post details error: ', error);
@@ -147,6 +148,8 @@ export const createPostLike = async (postLike) => {
       return { success: false, msg: 'Could not fetch the posts due to an exception' };
     }
   };
+
+
 
 
   export const createComment = async (comment) => {
@@ -181,8 +184,6 @@ export const createPostLike = async (postLike) => {
 }
 
 
-
-
 export const removeComment = async (commentId) => {
   try {
     const {error} = await supabase.from('comments').
@@ -213,5 +214,96 @@ export const removePost = async (postId) => {
     return { success: true, data: {postId}};
   } catch (error) {
     return { success: false, msg: 'Could not remove feed post' };
+  }
+};
+
+// export const createReply = async (reply) => {
+//   try {
+//       const { data, error } = await supabase  // Destructure both data and error
+//           .from('reply')
+//           .insert(reply)
+//           .select()
+//           .single();
+  
+//       if (error) {
+//           console.log('post comment reply!! error: ', error);
+//           return { 
+//               success: false, 
+//               msg: 'Could not create post comment reply!!' 
+//           };
+//       }
+      
+//       return { 
+//           success: true, 
+//           data, 
+//           action: 'post commented replied' 
+//       };
+  
+//   } catch (error) {
+//       console.log('post comment reply error: ', error);
+//       return { 
+//           success: false, 
+//           msg: 'Could not process post comment reply action' 
+//       };
+//   }
+// }
+
+
+
+export const createReply = async (reply) => {
+  try {
+      const { data, error } = await supabase
+          .from('reply')
+          .insert({
+            userId: reply.userId,
+            text: reply.text,
+            commentId: reply.parentCommentId  // Use parentCommentId as commentId
+          })
+          .select()
+          .single();
+  
+      if (error) {
+          console.log('post comment reply error: ', error);
+          return { 
+              success: false, 
+              msg: 'Could not create post comment reply' 
+          };
+      }
+      
+      return { 
+          success: true, 
+          data, 
+          action: 'post comment replied' 
+      };
+  
+  } catch (error) {
+      console.log('post comment reply error: ', error);
+      return { 
+          success: false, 
+          msg: 'Could not process post comment reply action' 
+      };
+  }
+}
+
+// In postService.js
+export const fetchCommentReplies = async (commentId) => {
+  try {
+    const { data, error } = await supabase
+      .from('reply')
+      .select(`
+        *,
+        user: users(id, name, image)
+      `)
+      .eq('commentId', commentId)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.log('Fetch comment replies error: ', error);
+      return { success: false, msg: 'Could not fetch replies' };
+    }
+
+    return { success: true, data };
+  } catch (error) {
+    return { success: false, msg: 'Could not fetch replies' };
   }
 };

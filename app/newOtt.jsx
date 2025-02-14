@@ -12,11 +12,14 @@ import RichTextEditor from '../components/RichTextEditor'
 import Button from '@/components/Button'
 import { getSupabaseFileUrl } from '../services/imageService'
 import { Video } from 'expo-av';
-import { createOrUpdatePost } from '../services/postService'
 import * as ImagePicker from 'expo-image-picker';
+import DatePicker from '../components/DatePicker'
+import RatingInput from '../components/RatingInput'
+import UserRatingImpact from '../components/userRatingImpact'
+import { createOrUpdateOtt } from '../services/ottService'
+import TagInput from '../components/OttTagInput'
 
-
-const CreateFeed = () => {
+const NewOtt = () => {
 
   const post = useLocalSearchParams();
   const { user } = useAuth();
@@ -24,8 +27,16 @@ const CreateFeed = () => {
   const editorRef = useRef(null);
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(null);
   const [file, setFile] = useState(null);
+  const [rating, setRating] = useState(null);
+  const [userRatingImpact, setUserRatingImpact] = useState(0);
+  const [tags, setTags] = useState([]);
 
+  const handleDateSelect = (date) => {
+    console.log('Selected date:', date);
+    setSelectedDate(date); // This will now properly store the date
+  };
 
   useEffect(() => {
     if(post && post.id){
@@ -36,39 +47,6 @@ const CreateFeed = () => {
       },300)
     }
   }, [post])
-
-  // const onPick = async (isImage) => {
-  //   try {
-  //     let mediaConfig = {
-  //       mediaTypes: isImage 
-  //         ? ImagePicker.MediaTypeOptions.Images 
-  //         : ImagePicker.MediaTypeOptions.Videos,
-  //       allowsEditing: true,
-  //       aspect: [4, 3],
-  //       quality: 0.7,
-  //       // Add these properties to ensure proper file handling
-  //       base64: false,
-  //       exif: false
-  //     };
-  
-  //     let result = await ImagePicker.launchImageLibraryAsync(mediaConfig);
-  
-  //     if (!result.canceled) {
-  //       // Add file type information explicitly
-  //       const asset = result.assets[0];
-  //       const fileType = asset.type || (isImage ? 'image' : 'video');
-        
-  //       setFile({
-  //         uri: asset.uri,
-  //         type: fileType,
-  //         name: asset.uri.split('/').pop() // Extract filename from URI
-  //       });
-  //     }
-  //   } catch (error) {
-  //     console.error('Error picking media:', error);
-  //     Alert.alert('Error', 'Failed to pick media file');
-  //   }
-  // };
 
   const onPick = async (isImage) => {
     try {
@@ -128,15 +106,23 @@ const CreateFeed = () => {
         return getSupabaseFileUrl(file)?.uri;
       }
 
+      const handleRatingChange = (value) => {
+        console.log('Rating changed:', value);
+        setRating(value);
+      };
+
+      const handleuserRatingImpactChange = (value) => {
+        console.log('Impact Rating changed:', value);
+        setUserRatingImpact(value);
+      };
+
     const onSubmit = async () => {
-      // Implement your submit logic here
-    
-      if(!bodyRef.current && !file) {
-        Alert.alert(
-          "Error",
-          "Please write something in the post.",
-          [{ text: "OK" }]
-        );
+      if (!selectedDate && !file && !bodyRef.current && !tags.length) {
+        Alert.alert('Error', 'Enter Title, post img and release date');
+        return;
+      }
+      if (!rating) {
+        Alert.alert('Error', 'Please enter Rating of release');
         return;
       }
 
@@ -144,26 +130,31 @@ const CreateFeed = () => {
         file, 
         body: bodyRef.current,
         userId: user?.id,
+        rDate: selectedDate,
+        defRating: rating,
+        userRatImpact: userRatingImpact,
+        tags: tags
       }
 
-      // when condition is updating post - include the post id to it
-      if(post && post.id){
-        data.id = post.id;
-      }
-
-      // create Post
+      // CREATING A NEW RELEASE 
       setLoading(true);
-      let res = await createOrUpdatePost(data);
+      let res = await createOrUpdateOtt(data);
       setLoading(false);
       if(res.success){
         setFile(null); 
         bodyRef.current = ''; 
         editorRef.current?.setContentHTML('');
-        router.back();
+        Alert.alert('Stream uploaded successfully');
+        router.push('/upcoming');
       }else{
-        Alert.alert('Post', res.msg);
+        Alert.alert('Release', res.msg);
       }
-      consol.log('post res:', res)
+      // below are the set of data console logs
+      // console.log('body#######: ', bodyRef.current);
+      // console.log('file#######: ', file);
+      // console.log('date: ', selectedDate);
+      // console.log('rating:', rating);
+      // console.log('userRatingImpact:', userRatingImpact);
     };
 
   const handleEditorChange = (body) => {
@@ -172,7 +163,7 @@ const CreateFeed = () => {
 
   return (
     <ScreenWrapper bg="white">
-      <Header title={post?.id ? "Edit Feed" : "Create Feed"}
+      <Header title={post?.id ? "Edit Ott Stream" : "Create Ott Stream"}
          showBackButton={true} />
       <View style={styles.container}>
         <ScrollView contentContainerStyle={{ gap: 20 }}>
@@ -191,13 +182,15 @@ const CreateFeed = () => {
               </Text>
             </View>
           </View>
+          
+        <View>
+          <RichTextEditor 
+            editorRef={editorRef} 
+            onChange={handleEditorChange}
+            initialHeight={136}
+            placeholder="Enter Film Title here @author ## write film name in a line ## please don't use any text alignment for this session and use default text font size ==>> like film name = Interstellar"  />
+        </View>
 
-          <View >
-            <RichTextEditor 
-              editorRef={editorRef} 
-              onChange={handleEditorChange}
-            />
-          </View>
 
           {file && (
             <View style={styles.file}>
@@ -229,20 +222,38 @@ const CreateFeed = () => {
           )}
 
           <View style={styles.media}>
-            <Text style={styles.addImageText}>Add new feed</Text>
+            <Text style={styles.addImageText}>Stick Release Poster HERE</Text>
             <View style={styles.mediaIcons}>
               <TouchableOpacity onPress={() => onPick(true)}>
                 <Icon name="image" size={30} color={theme.colors.dark} />
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => onPick(false)}>
-                <Icon name="video" size={37} color={theme.colors.dark} />
-              </TouchableOpacity>
             </View>
           </View>
+
+          <View>
+          <DatePicker 
+            // onDateSelect={handleDateSelect}
+            onDateSelect={(date) => handleDateSelect(date)}
+            initialDate={selectedDate}
+          />
+          </View>
+
+          <TagInput tags={tags} setTags={setTags} />
+
+          <RatingInput
+            onRatingChange={handleRatingChange}
+            initialValue={post?.rating}
+          />
+
+         <UserRatingImpact
+            onRatingChange={handleuserRatingImpactChange}
+            initialValue={post?.rating}
+          />
+
         </ScrollView>
         <Button
           buttonStyle={{ height: hp(6.2) }}
-          title={post?.id ? "Edit" : "Post"}
+          title={post?.id ? "Edit" : "Post New Release"}
           loading={loading}
           onPress={onSubmit}
           hasShadow={false}
@@ -252,7 +263,7 @@ const CreateFeed = () => {
   );
 };
 
-export default CreateFeed
+export default NewOtt
 
 const styles = StyleSheet.create({
   container: {
@@ -338,6 +349,23 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(97, 35, 35, 0.14)',
        
       },
+      label: {
+        fontSize: hp(2),
+        fontWeight: hp(4.5),
+        paddingStart: 10,
+        color: theme.colors.text,
+        paddingBottom: 5
+      },
+      dateInput: {
+        fontSize: hp(2),
+        fontWeight: theme.fonts.semibold,
+        color: theme.colors.text,
+        padding: 24,
+        borderWidth: 1,
+        borderColor: theme.colors.gray,
+        borderRadius: theme.radius.md,
+        borderCurve: 'continuous',
+        marginTop: 10,
+      },
      
 })
-

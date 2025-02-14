@@ -477,33 +477,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import { View, StyleSheet, TouchableOpacity, Alert, Pressable, Text, ScrollView, useColorScheme, FlatList } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
@@ -549,6 +522,7 @@ const Profile = () => {
    const activeTheme = colorScheme === 'dark' ? darkTheme : theme;
    const post = useLocalSearchParams();
    const [postCount, setPostCount] = useState(0);
+   console.log('auth user profile cred', user);
 
   const onLogout = async () => {
     Alert.alert('Confirm', 'Are you sure you want to logout?', [

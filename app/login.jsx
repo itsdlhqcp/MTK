@@ -12,7 +12,6 @@ import Button from '@/components/Button'
 import { Alert } from 'react-native'
 import { supabase } from '@/lib/supabase'
 
-
 const Login = () => {
   const router = useRouter();
   const emailRef = useRef();
@@ -68,7 +67,7 @@ const Login = () => {
               secureTextEntry
               onChangeText={value=> passwordRef.current = value}
             />
-            <Text style={styles.forgotPassword}>
+            <Text style={styles.forgotPassword} onPress={() => router.push('auth/forgot')}>
               Forgot Password?</Text>
               {/* button */}
               <Button loaderType = 'BarIndicator' title={'Login'} loading={false} onPress={onSubmit} />
@@ -85,7 +84,6 @@ const Login = () => {
               </Pressable>
           </View>
        </View>
-  
     </ScreenWrapper>
   )
 }

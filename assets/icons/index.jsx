@@ -22,6 +22,7 @@ import Delete from './Delete';
 import Logout from './logout';
 import Image from './Image';
 import Video from './Video';
+import Close from './Close';
 
 const icons = {
     home: Home,
@@ -29,6 +30,7 @@ const icons = {
     lock: Lock,
     user: User,
     heart: Heart,
+    close: Close,
     plus: Plus,
     search: Search,
     location: Location,
@@ -45,6 +47,7 @@ const icons = {
     logout: Logout,
     image: Image,
     video: Video,
+    
 }
 
 const Icon = ({name, ...props}) => {

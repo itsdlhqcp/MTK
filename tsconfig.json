@@ -35,7 +35,8 @@
     "app/index.jsx",
     "app/_layout.jsx", 
     "app/login.jsx", 
+    "app/forgot.jsx", 
     "app/signup.jsx", 
     "app/welcome.jsx"
-  ]
+, "app/releaseCard.tsx"  ]
 }

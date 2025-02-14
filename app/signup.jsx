@@ -12,7 +12,6 @@ import Button from '@/components/Button'
 import { Alert } from 'react-native'
 import { supabase } from '@/lib/supabase'
 
-
 const SignUp = () => {
   const router = useRouter(); 
   const emailRef = useRef();
