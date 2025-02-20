@@ -1,177 +1,191 @@
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import React from 'react'
+import React, { useState } from 'react'
 import { wp, hp } from '@/helpers/common'
 import theme from '../constants/theme'
 import moment from 'moment/moment'
-import Avatar from './Avatar'
-import Icon from '../assets/icons'
-import RenderHtml from 'react-native-render-html';
+import RenderHtml from 'react-native-render-html'
 import { getSupabaseFileUrl } from '../services/userProfileImage'
+import TagsList from './TagList'
 
 const OttCard = ({
     item,
-    currentUser,
-    router, 
+    router,
     hasShadow = true,
 }) => {
+    const [userRating, setUserRating] = useState(0);
+    const [clickCount, setClickCount] = useState(0);
+
     const shadowStyle = {
         shadowOffset: {
-            width: 0, height: 2
+            width: 0,
+            height: 2
         },
         shadowOpacity: 0.25,
         shadowRadius: 6,
         elevation: 1
     }
 
-    const createdAt = item?.created_at ? moment(item.created_at).format('MMM D') : '';
+    const handleReadReviews = () => {
+        if (!item?.id) return null;
+        router.push({ pathname: 'postDetails', params: { postId: item.id } });
+    }
 
-    const textStyle = {
-        color: theme.colors.dark, 
-        fontSize: hp(1.75)
-      }
+    const handleCardPress = () => {
+        const newClickCount = clickCount + 0.5;
+        setClickCount(newClickCount);
+        const newRating = newClickCount % 5 === 0 ? 5 : newClickCount % 5;
+        setUserRating(newRating);
+    }
 
-    const tagsStyles = {
-        div: textStyle,
-        p: textStyle,
-        ol: textStyle,
-        h1: {
-          color: theme.colors.dark,
+    const rDate = item?.rDate ? moment(item.rDate).format('MMM DD') : '';
+
+    const renderRating = () => {
+        const rating = userRating || item?.defRating || 0;
+        const filledStars = Math.floor(rating);
+        
+        return (
+            <TouchableOpacity style={styles.ratingContainer} onPress={handleCardPress}>
+                {[...Array(5)].map((_, index) => {
+                    const isYellow = index < filledStars;
+                    return (
+                        <Text 
+                            key={index} 
+                            style={[
+                                styles.star,
+                                { color: isYellow ? '#FFD700' : '#FFFFFF' }
+                            ]}
+                        >
+                            {isYellow ? '★' : '☆'}
+                        </Text>
+                    );
+                })}
+                <Text style={[styles.ratingValue, { color: '#FF0000' }]}>
+                    {rating.toFixed(1)}/5
+                </Text>
+            </TouchableOpacity>
+        );
+    }
+
+    const titleTagsStyles = {
+        div: {
+            color: 'white',
+            fontSize: hp(2.5),
+            textAlign: 'center',
+            fontWeight: 'bold'
         },
-        h4: {
-          color: theme.colors.dark
+        p: {
+            color: 'white',
+            fontSize: hp(2.5),
+            textAlign: 'center',
+            fontWeight: 'bold'
         }
-      }
+    }
 
-    const openPostDetails = () => {
-        if (!showMoreIcon || !item?.id) return null;
-        router.push({pathname: 'postDetails', params: {postId: item.id}});
-      }
-  return (
-    <View style={[styles.container, hasShadow && shadowStyle]}>
-      <View style={styles.header}>
-        {/* Header  user info and post time*/}
-        <View style={styles.userInfo}>
-          <Avatar
-            uri={item?.user?.image}
-            size={hp(4.5)}
-            rounded={theme.radius.lg}
-          />
-          <View style={{gap: 2}}>
-            <Text style={styles.username}>{item?.user?.name || 'Anonymous'}</Text>
-            <Text style={styles.username}>{createdAt}</Text>
-          </View>
+    return (
+        <View style={[styles.container, hasShadow && shadowStyle]}>
+            <TouchableOpacity 
+                style={styles.imageContainer}
+                onPress={handleCardPress}
+            >
+                {item?.file?.includes('postImage') && (
+                    <Image
+                        source={getSupabaseFileUrl(item.file)}
+                        style={styles.postMedia}
+                        resizeMode="cover"
+                    />
+                )}
+
+                <View style={styles.overlay}>
+                    {renderRating()}
+
+                    <View style={styles.contentContainer}>
+                        {item?.body && (
+                            <RenderHtml
+                                contentWidth={wp(100)}
+                                source={{ html: item.body }}
+                                tagsStyles={titleTagsStyles}
+                            />
+                        )}
+
+                        <Text style={styles.releaseDate}>
+                            {rDate}
+                        </Text>
+
+                        <TagsList tags={item?.tags} />
+                    </View>
+                </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+                style={styles.reviewButton}
+                onPress={handleReadReviews}
+            >
+                <Text style={styles.reviewButtonText}>READ REVIEWS</Text>
+            </TouchableOpacity>
         </View>
-
-
-      <TouchableOpacity onPress={openPostDetails}>
-            <Icon 
-            name='threeDotsHorizontal'
-            size={hp(3.8)}
-            strokeWidth={3}
-            color={theme.colors.text}
-            />
-        </TouchableOpacity> 
-      </View>
-
-
-      {/* release body and details */}
-
-      <View style={styles.content}>
-        <View style={styles.postBody}>
-          {item?.body && (
-            <RenderHtml
-              contentWidth={wp(100)}
-              source={{html: item.body}}
-              tagsStyles={tagsStyles}
-            />
-          )}
-        </View>
-      </View>
-       
-      {/* post image is shown hre */}
-         {item?.file?.includes('postImage') && (
-               <Image
-                 source={getSupabaseFileUrl(item.file)} 
-                 transition={100}
-                 style={styles.postMedia}
-                 contentFit='cover'
-               />
-             )}
-    </View>
-  )
+    )
 }
 
-export default OttCard
-
 const styles = StyleSheet.create({
-    container:{
-      gap: 10, 
-      marginBottom: 15, 
-      borderRadius: theme.radius.xxl*1.1,
-      borderCurve: 'continuous', 
-      padding: 10,
-      paddingVertical: 12,
-      backgroundColor: 'white',
-      borderWidth: 0.5,
-      borderColor: theme.colors.gray,
-      shadowColor: '#000'
+    container: {
+        marginBottom: 15,
+        borderTopLeftRadius: 4,
+        borderTopRightRadius: 4,
+        borderBottomLeftRadius: theme.radius.lg,
+        borderBottomRightRadius: theme.radius.lg,
+        backgroundColor: 'black',
+        overflow: 'hidden',
+        height: hp(30),
+        padding: 6
     },
-    header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      paddingHorizontal: wp(1.4),
-    },
-    username: {
-      fontSize: hp(1.7),
-      color: theme.colors.textDark,
-      fontWeight: theme.fonts.medium
-    },
-    userInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    },
-    postTime: {
-      fontSize: hp(1.5), 
-      color: theme.colors.textLight,
-      fontWeight: theme.fonts.medium
-    },
-    content: {
-     gap: 10,
-     marginLeft: 12,
+    imageContainer: {
+        width: '100%',
+        height: '90%',
+        position: 'relative',
     },
     postMedia: {
-      height: hp(40),
-      width: '100%',
-      borderRadius: theme.radius.xl,
-      borderCurve: 'continuous',
+        width: '100%',
+        height: '100%',
     },
-    // postBody: {
-    //   marginLeft: 1
-    // },
-    footer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingLeft: 14,
-      // Remove gap as we're using fixed widths
+    overlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0,0,0,0.4)',
+        justifyContent: 'space-between',
     },
-    footerButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 5,
-      // Remove marginLeft as we're using fixed widths
+    ratingContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 8,
     },
-    actions: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 18,
-      marginRight: 7
+    star: {
+        fontSize: hp(2.2),
+        marginRight: 2,
     },
-    count: {
-      color: theme.colors.text,
-      fontSize: hp(1.8),
-      fontWeight: theme.fonts.medium
-    }
-   
-  })
-  
+    ratingValue: {
+        marginLeft: 5,
+        fontSize: hp(1.8),
+        fontWeight: '600',
+    },
+    contentContainer: {
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
+    releaseDate: {
+        color: 'white',
+        fontSize: hp(1.8),
+        marginTop: hp(0.5),
+    },
+    reviewButton: {
+        backgroundColor: 'black',
+        height: '10%',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    reviewButtonText: {
+        color: 'white',
+        fontWeight: 'bold',
+        fontSize: hp(1.8),
+    },
+});
+
+export default OttCard

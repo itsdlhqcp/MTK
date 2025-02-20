@@ -460,7 +460,12 @@ const Home = () => {
             <View style={styles.container}>
                 {/* Header */}
                 <View style={styles.header}>
-                    <Text style={styles.title}>Plot Twist</Text>
+                    <Text style={styles.title}>PloTwist</Text>
+                    {/* <View style={styles.icons}> */}
+                    {/* <View style={{marginLeft: hp(1.5), marginVertical: hp(-0.5)}}>
+                      <Icon name="plotwist" size={hp(7)}/>
+                    </View> */}
+                    
                     <View style={styles.icons}>
                         <Pressable onPress={() => {
                             setNotificationCount(0);
@@ -543,7 +548,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', 
     marginBottom: 10,
     // marginHorizontal: wp(3.4),
-    backgroundColor: '#625D5D',
+    backgroundColor: '#121212',
     padding: wp(3.2),
     // borderRadius: theme.radius.sm
   }, 

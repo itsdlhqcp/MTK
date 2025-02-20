@@ -1,25 +1,27 @@
+
 // import React, { useEffect, useRef, useState } from "react";
 // import { useLocalSearchParams, useRouter } from "expo-router";
 // import { StyleSheet, TouchableOpacity, Alert, Animated } from "react-native";
 // import Input from '../components/Input';
-// import { createReleaseReview, fetchReleaseDetails, removeReview ,createReviewReply, fetchReviewReplies } from "../services/releaseService";
+// import { createPeopleReleaseReview, fetchPeoplesReleaseDetails, removePeopleReview ,createPeopleReviewReply, fetchPeopleReviewReplies, removeReplyPeopleReview } from "../services/releaseService";
 // import { View } from "react-native";
 // import { createNotifications } from '../services/notificationService'
 // import ReviewItem from "../components/ReviewItem";
 // import { hp, wp } from '../helpers/common';
 // import theme from '../constants/theme';
 // import { ScrollView } from "react-native";
-// import { supabase } from '../lib/supabase'
+// import { supabase } from '../lib/supabase';
 // import { useAuth } from '../contexts/AuthContext';
 // import ReleaeCard from '../components/RelesaeCard';
 // import Loading from "../components/Loading";
 // import FeedLoader from "../components/FeedLoader";
 // import Icon from '../assets/icons';
 // import { Text } from "react-native";
+// import RatingModal from "../components/RatingModel";
 
 // const MIN_CHARS = 85;
 
-// const ReleaseDetails = () => {
+// const ReleasePeopleDetails = () => {
 //     const { releaseId } = useLocalSearchParams();
 //     const { user } = useAuth();
 //     const router = useRouter();
@@ -34,14 +36,21 @@
 //     const shakeAnimation = useRef(new Animated.Value(0)).current;
 //     const [openReplyBox, setOpenReplyBox] = useState(null);
 //     const [reviewReplies, setReviewReplies] = useState({});
+//     const [replyInputValues, setReplyInputValues] = useState({});
+//     const [ratingModalVisible, setRatingModalVisible] = useState(false);
+//     const [reviewRating, setReviewRating] = useState(0);
 
 //     useEffect(() => {
 //         getReleaseDetails();
+//         subscribeToChanges();
+//         return () => {
+//             cleanup();
+//         };
 //     }, []);
 
 //     const getReleaseDetails = async () => {
 //         setStartLoading(true);
-//         let res = await fetchReleaseDetails(releaseId);
+//         let res = await fetchPeoplesReleaseDetails(releaseId);
 //         if (res.success) setRelease(res.data);
 //         setStartLoading(false);
 //     };
@@ -50,7 +59,7 @@
 
 //     const fetchRepliesForReview = async (reviewId) => {
 //         try {
-//             const res = await fetchReviewReplies(reviewId);
+//             const res = await fetchPeopleReviewReplies(reviewId);
 //             if (res.success) {
 //                 setReviewReplies(prev => ({
 //                     ...prev,
@@ -69,28 +78,58 @@
 //         }
 //     };
 
+//     const handleReplyInputChange = (reviewId, value) => {
+//         setReplyInputValues(prev => ({
+//             ...prev,
+//             [reviewId]: value
+//         }));
+//         replyRef.current = value;
+//     };
+
 //     const onSubmitReply = async (parentReviewId) => {
-//         if(!replyRef.current || !user?.id) return null;
-        
+//         if (!replyRef.current || !user?.id) return null;
+
 //         let data = {
 //             userId: user.id,
 //             text: replyRef.current,
-//             parentReviewId: parentReviewId
+//             parentReviewId: parentReviewId,
+//             releaseId: release.id // Add releaseId for the filter in subscription
 //         };
-        
+
 //         setLoading(true);
 //         try {
-//             let res = await createReviewReply(data);
-//             if(res.success) {
-//                 setOpenReplyBox(null);
-//                 await getReleaseDetails();
-                
-//                 if(user.id !== release.userId) {
+//             let res = await createPeopleReviewReply(data);
+//             if (res.success) {
+//                 // Create new reply object with user data
+//                 const newReply = {
+//                     ...res.data,
+//                     user: {
+//                         id: user.id,
+//                         ...user
+//                     }
+//                 };
+
+//                 // Update state immediately
+//                 setReviewReplies(prev => ({
+//                     ...prev,
+//                     [parentReviewId]: [...(prev[parentReviewId] || []), newReply]
+//                 }));
+
+//                 // Clear input
+//                 replyRef.current = '';
+//                 setReplyInputValues(prev => ({
+//                     ...prev,
+//                     [parentReviewId]: ''
+//                 }));
+//                 // setOpenReplyBox(null);
+
+//                 // Handle notification
+//                 if (user.id !== release.userId) {
 //                     let notify = {
 //                         senderId: user.id,
 //                         receiverId: release.userId,
 //                         title: 'replied to your review',
-//                         data: JSON.stringify({releaseId: release.id, reviewId: parentReviewId})
+//                         data: JSON.stringify({ releaseId: release.id, reviewId: parentReviewId })
 //                     };
 //                     createNotifications(notify);
 //                 }
@@ -101,65 +140,165 @@
 //             Alert.alert('Reply', 'Something went wrong');
 //         } finally {
 //             setLoading(false);
-//             replyRef.current = '';
 //         }
 //     };
 
 //     // end of review replies code - below is the handle review code 
 
 //     const handleNewReview = async (payload) => {
-//         if(payload.new){
-//             let onNewReview = {...payload.new}; 
-//             let res = await getUserData(onNewReview.userId);
-//             onNewReview.user = res.success? res.data: {};
-//             setRelease(prevRelease=>{
-//                 return {
-//                     ...prevRelease,
-//                     reviews: [onNewReview, ...prevRelease.reviews]
-//                 }
-//             })
+//         if (payload.new && payload.new.parentReviewId) {
+//             const newReply = { ...payload.new };
+//             const parentReviewId = newReply.parentReviewId;
+            
+//             // Get user data for the reply
+//             let userRes = await getUserData(newReply.userId);
+//             newReply.user = userRes.success ? userRes.data : {};
+
+//             // Update reviewReplies state
+//             setReviewReplies(prev => ({
+//                 ...prev,
+//                 [parentReviewId]: [...(prev[parentReviewId] || []), newReply]
+//             }));
 //         }
 //     };
 
-//       useEffect(()=>{
-//             let reviewChannel = supabase
-//             .channel('reviews')
-//             .on('postgres_changes', {event: 'INSERT', schema: 'public', table: 'reviews', filter: `releaseId=eq.${releaseId}`}, handleNewReview )
-//             .subscribe();
-//             return () =>{
-//                 supabase.removeChannel(reviewChannel);
-//              }
-//            }, [])
-
-//            const onNewReview = async () => {
-//             if(!reviewRef.current || !user?.id || !release?.id) return null;
+//     const handleNewReply = async (payload) => {
+//         if (payload.new && payload.new.parentReviewId) {
+//             const newReply = { ...payload.new };
+//             const parentReviewId = newReply.parentReviewId;
             
+//             // Get user data for the reply
+//             let userRes = await getUserData(newReply.userId);
+//             newReply.user = userRes.success ? userRes.data : {};
+
+//             // Update reviewReplies state
+//             setReviewReplies(prev => ({
+//                 ...prev,
+//                 [parentReviewId]: [...(prev[parentReviewId] || []), newReply]
+//             }));
+//         }
+//     };
+
+//                 const subscribeToChanges = () => {
+//                     // Subscribe to new reviews
+//                     let reviewChannel = supabase
+//                         .channel('peoplesReview')
+//                         .on('postgres_changes', 
+//                             {event: 'INSERT', schema: 'public', table: 'peoplesReview', filter: `releaseId=eq.${releaseId}`}, 
+//                             handleNewReview)
+//                         .subscribe();
+
+//                     // Subscribe to new replies
+//                     let replyChannel = supabase
+//                         .channel('replyPeopleReviews')
+//                         .on('postgres_changes', 
+//                             {event: 'INSERT', schema: 'public', table: 'peoplesReview', filter: `releaseId=eq.${releaseId}`}, 
+//                             handleNewReply)
+//                         .subscribe();
+
+//                     return { reviewChannel, replyChannel };
+//                 };
+
+//                 const cleanup = () => {
+//                     const channels = subscribeToChanges();
+//                     supabase.removeChannel(channels.reviewChannel);
+//                     supabase.removeChannel(channels.replyChannel);
+//                 };
+
+
+//                 // HERE PEOPLE ADD NEW REVIEW
+//         //    const onNewReview = async () => {
+//         //     if(!reviewRef.current || !user?.id || !release?.id) return null;
+            
+//         //     let data = {
+//         //         userId: user.id,
+//         //         releaseId: release.id,
+//         //         text: reviewRef.current,
+//         //         // below code is the  user review rating
+//         //         userRating : reviewRating
+//         //     }
+            
+//         //     setLoading(true);
+//         //     try {
+//         //         let res = await createPeopleReleaseReview(data);
+//         //         if(res.success){
+//         //             // Create the new review object with user data
+//         //             const newReview = {
+//         //                 ...res.data,
+//         //                 user: {
+//         //                     id: user.id,
+//         //                     // Add any other user fields that are displayed in ReviewItem
+//         //                     ...user
+//         //                 }
+//         //             };
+    
+//         //             // Update the state directly
+//         //             setRelease(prevRelease => ({
+//         //                 ...prevRelease,
+//         //                 peoplesReview: [newReview, ...prevRelease.peoplesReview]
+//         //             }));
+    
+//         //             if(user.id !== release.userId){
+//         //                 let notify = {
+//         //                     senderId: user.id,
+//         //                     receiverId: release.userId,
+//         //                     title: 'reviewed on your release',
+//         //                     data: JSON.stringify({releaseId: release.id, reviewId: res?.data?.id})
+//         //                 }
+//         //                 createNotifications(notify);
+//         //             }
+    
+//         //             // Reset the input
+//         //             inputRef?.current?.clear();
+//         //             reviewRef.current = "";
+//         //             setReviewText('');
+//         //             setCharCount(0);
+//         //         } else {
+//         //             Alert.alert('Review', res.msg || 'Something went wrong');
+//         //         }
+//         //     } catch (err) {
+//         //         Alert.alert('Review', 'Something went wrong');
+//         //     } finally {
+//         //         setLoading(false);
+//         //     }
+//         // }
+
+//         const onNewReview = () => {
+//             if(!reviewRef.current || !user?.id || !release?.id) return null;
+//             if(charCount < MIN_CHARS) return null;
+            
+//             setRatingModalVisible(true);
+//         };
+
+//         // below is a cup of tea variable which is a boolean value
+//         const [cupOfTea, setCupOfTea] = useState(false);// this is a boolean state variable 
+
+//         const handleFinalReviewSubmit = async (rating) => {
 //             let data = {
 //                 userId: user.id,
 //                 releaseId: release.id,
-//                 text: reviewRef.current
+//                 text: reviewRef.current,
+//                 userRating: rating,
+//                 cupOfTea: cupOfTea
 //             }
             
 //             setLoading(true);
 //             try {
-//                 let res = await createReleaseReview(data);
+//                 let res = await createPeopleReleaseReview(data);
 //                 if(res.success){
-//                     // Create the new review object with user data
 //                     const newReview = {
 //                         ...res.data,
 //                         user: {
 //                             id: user.id,
-//                             // Add any other user fields that are displayed in ReviewItem
 //                             ...user
 //                         }
 //                     };
-    
-//                     // Update the state directly
+        
 //                     setRelease(prevRelease => ({
 //                         ...prevRelease,
-//                         reviews: [newReview, ...prevRelease.reviews]
+//                         peoplesReview: [newReview, ...prevRelease.peoplesReview]
 //                     }));
-    
+        
 //                     if(user.id !== release.userId){
 //                         let notify = {
 //                             senderId: user.id,
@@ -169,12 +308,12 @@
 //                         }
 //                         createNotifications(notify);
 //                     }
-    
-//                     // Reset the input
+        
 //                     inputRef?.current?.clear();
 //                     reviewRef.current = "";
 //                     setReviewText('');
 //                     setCharCount(0);
+//                     setReviewRating(0);
 //                 } else {
 //                     Alert.alert('Review', res.msg || 'Something went wrong');
 //                 }
@@ -183,22 +322,37 @@
 //             } finally {
 //                 setLoading(false);
 //             }
-//         }
+//         };
     
 //         const onDeleteReview = async (review) => {
 //             try {
-//                 let res = await removeReview(review?.id);
+//                 let res = await removePeopleReview(review?.id);
 //                 if(res.success){
 //                     // Update state directly instead of reloading
 //                     setRelease(prevRelease => ({
 //                         ...prevRelease,
-//                         reviews: prevRelease.reviews.filter(r => r.id !== review.id)
+//                         peoplesReview: prevRelease.peoplesReview.filter(r => r.id !== review.id)
 //                     }));
 //                 } else {
 //                     Alert.alert('Review', res.msg || 'Something went wrong');
 //                 }
 //             } catch (err) {
 //                 Alert.alert('Review', 'Something went wrong');
+//             }
+//         }
+
+
+//         const onDeleteReviewReply = async (review) => {
+//             // Remove the reply from the state
+//             try{
+//                 let res = await removeReplyPeopleReview(review?.id);
+//                 if(res.success){
+//                     Alert.alert('Review Reply :', 'Reply deleted. Thanks! You can still view it to respond again.');
+
+//                     // here is the upadtion to be done to make instant reply release functions
+//                 }
+//             }catch(err){
+//                 Alert.alert('Review Reply', 'Something went wrong');
 //             }
 //         }
     
@@ -257,13 +411,13 @@
 //             <View style={styles.container}>
 //                 <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.list}>
 //                     <ReleaeCard
-//                         item={{ ...release, reviews: [{ count: release?.reviews?.length }] }}
+//                         item={{ ...release ,reviews: [{ count: release?.peoplesReview?.length || 0 }] }}
 //                         currentUser={user}
 //                         router={router}
 //                         hasShadow={false}
 //                         showReviewButton={false}
 //                     />
-    
+                   
 //                     <Animated.View style={[
 //                         styles.inputContainer,
 //                         { transform: [{ translateX: shakeAnimation }] }
@@ -315,76 +469,62 @@
 //                             </TouchableOpacity>
 //                         )}
 //                     </Animated.View>
-//                    {/* review items reviews renders here */}
-//                     {/* <View style={styles.reviewsContainer}>
-//                         {release?.reviews?.length > 0 ? (
-//                             release.reviews.map(review => (
-//                                 <ReviewItem
-//                                     key={review?.id?.toString()}
-//                                     item={review}
-//                                     onDelete={onDeleteReview}
-//                                     canDelete={user.id === review.userId || user.id === release.userId}
-//                                 />
-//                             ))
-//                         ) : (
-//                             <View style={styles.noReviews}>
-//                                 <Text style={styles.noReviewsText}>
-//                                     Be the first to write a review!
-//                                 </Text>
-//                             </View>
-//                         )}
-//                     </View> */}
                     
 //                     <View style={styles.reviewsContainer}>
-//                     {release?.reviews?.length > 0 ? (
-//                         release.reviews
-//                             .filter(review => !review.parentReviewId)
-//                             .map(review => (
-//                                 <View key={review?.id?.toString()}>
+//                     {release?.peoplesReview?.length > 0 ? (
+//                         release.peoplesReview
+//                             .filter(peoplesReview => !peoplesReview.parentReviewId)
+//                             .map(peoplesReview => (
+//                                 <View key={peoplesReview?.id?.toString()}>
 //                                     <ReviewItem
-//                                         item={review}
+//                                         item={peoplesReview}
 //                                         onDelete={onDeleteReview}
-//                                         canDelete={user.id === review.userId || user.id === release.userId}
-//                                         onReplyReviewPress={() => toggleReplyBox(review.id)}
+//                                         canDelete={user.id === peoplesReview.userId || user.id === release.userId}
+//                                         onReplyReviewPress={() => toggleReplyBox(peoplesReview.id)}
+//                                         replyCount={reviewReplies[peoplesReview.id]?.length || 0}
+//                                         isReply={false}
 //                                     />
                                     
 //                                     {/* Render replies when reply box is open */}
-//                                     {openReplyBox === review.id && reviewReplies[review.id]?.map(reply => (
+//                                     {openReplyBox === peoplesReview.id && reviewReplies[peoplesReview.id]?.map(reply => (
 //                                         <View key={reply.id} style={styles.replyContainer}>
 //                                             <ReviewItem
 //                                                 item={reply}
-//                                                 onDelete={onDeleteReview}
+//                                                 onDelete={onDeleteReviewReply}
 //                                                 canDelete={user.id === reply.userId || user.id === release.userId}
+//                                                 replyCount={reviewReplies[peoplesReview.id]?.length || 0}
+//                                                 isReply={true}
 //                                             />
 //                                         </View>
 //                                     ))}
                                     
 //                                     {/* Reply input box */}
-//                                     {openReplyBox === review.id && (
+//                                     {openReplyBox === peoplesReview.id && (
 //                                         <View style={styles.replyInputContainer}>
-//                                             <Input
-//                                                 placeholder={`Reply to @${review.user.name}...`}
-//                                                 onChangeText={value => replyRef.current = value}
-//                                                 placeholderTextColor={theme.colors.textLight}
-//                                                 containerStyle={{
-//                                                     flex: 1,
-//                                                     height: hp(5),
-//                                                     borderRadius: theme.radius.sm
-//                                                 }}
-//                                             />
-//                                             {loading ? (
-//                                                 <View style={styles.loading}>
-//                                                     <FeedLoader size="small" color={theme.colors.primaryDark} />
-//                                                 </View>
-//                                             ) : (
-//                                                 <TouchableOpacity
-//                                                     style={styles.replySendIcon}
-//                                                     onPress={() => onSubmitReply(review.id)}
-//                                                 >
-//                                                     <Icon name="send" size={hp(3)} color={theme.colors.primaryDark} />
-//                                                 </TouchableOpacity>
-//                                             )}
-//                                         </View>
+//                                         <Input
+//                                             placeholder={`Reply to @${peoplesReview.user.name}...`}
+//                                             onChangeText={value => handleReplyInputChange(peoplesReview.id, value)}
+//                                             value={replyInputValues[peoplesReview.id] || ''}
+//                                             placeholderTextColor={theme.colors.textLight}
+//                                             containerStyle={{
+//                                                 flex: 1,
+//                                                 height: hp(5),
+//                                                 borderRadius: theme.radius.sm
+//                                             }}
+//                                         />
+//                                         {loading ? (
+//                                             <View style={styles.loading}>
+//                                                 <FeedLoader size="small" color={theme.colors.primaryDark} />
+//                                             </View>
+//                                         ) : (
+//                                             <TouchableOpacity
+//                                                 style={styles.replySendIcon}
+//                                                 onPress={() => onSubmitReply(peoplesReview.id)}
+//                                             >
+//                                                 <Icon name="send" size={hp(2)} color={theme.colors.primaryDark} />
+//                                             </TouchableOpacity>
+//                                         )}
+//                                     </View>
 //                                     )}
 //                                 </View>
 //                             ))
@@ -397,12 +537,18 @@
 //                     )}
 //                 </View>
 
+//                 <RatingModal 
+//                     visible={ratingModalVisible}
+//                     onClose={() => setRatingModalVisible(false)}
+//                     onSubmit={handleFinalReviewSubmit}
+//                 />
+
 //                 </ScrollView>
 //             </View>
 //         );
 //     };
     
-//     export default ReleaseDetails;
+//     export default ReleasePeopleDetails;
 
 // const styles = StyleSheet.create({
 //     container: {
@@ -429,7 +575,7 @@
 //         maxHeight: hp(20),
 //         borderRadius: theme.radius.xl,
 //         backgroundColor: theme.colors.background,
-//         paddingRight: wp(12),
+//         paddingRight: wp(8),
 //         paddingTop: hp(1.5),
 //         paddingBottom: hp(1.5)
 //     },
@@ -542,20 +688,11 @@
 
 
 
-
-
-
-
-
-
-
-
-
 import React, { useEffect, useRef, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StyleSheet, TouchableOpacity, Alert, Animated } from "react-native";
 import Input from '../components/Input';
-import { createReleaseReview, fetchReleaseDetails, removeReview ,createReviewReply, fetchReviewReplies } from "../services/releaseService";
+import { createPeopleReleaseReview, fetchPeoplesReleaseDetails, removePeopleReview ,createPeopleReviewReply, fetchPeopleReviewReplies, removeReplyPeopleReview } from "../services/releaseService";
 import { View } from "react-native";
 import { createNotifications } from '../services/notificationService'
 import ReviewItem from "../components/ReviewItem";
@@ -569,10 +706,11 @@ import Loading from "../components/Loading";
 import FeedLoader from "../components/FeedLoader";
 import Icon from '../assets/icons';
 import { Text } from "react-native";
+import RatingModal from "../components/RatingModel";
 
 const MIN_CHARS = 85;
 
-const ReleaseDetails = () => {
+const ReleasePeopleDetails = () => {
     const { releaseId } = useLocalSearchParams();
     const { user } = useAuth();
     const router = useRouter();
@@ -587,6 +725,10 @@ const ReleaseDetails = () => {
     const shakeAnimation = useRef(new Animated.Value(0)).current;
     const [openReplyBox, setOpenReplyBox] = useState(null);
     const [reviewReplies, setReviewReplies] = useState({});
+    const [replyInputValues, setReplyInputValues] = useState({});
+    const [ratingModalVisible, setRatingModalVisible] = useState(false);
+    const [reviewRating, setReviewRating] = useState(0);
+    const [cupOfTea, setCupOfTea] = useState(false);
 
     useEffect(() => {
         getReleaseDetails();
@@ -598,7 +740,7 @@ const ReleaseDetails = () => {
 
     const getReleaseDetails = async () => {
         setStartLoading(true);
-        let res = await fetchReleaseDetails(releaseId);
+        let res = await fetchPeoplesReleaseDetails(releaseId);
         if (res.success) setRelease(res.data);
         setStartLoading(false);
     };
@@ -607,7 +749,7 @@ const ReleaseDetails = () => {
 
     const fetchRepliesForReview = async (reviewId) => {
         try {
-            const res = await fetchReviewReplies(reviewId);
+            const res = await fetchPeopleReviewReplies(reviewId);
             if (res.success) {
                 setReviewReplies(prev => ({
                     ...prev,
@@ -626,6 +768,14 @@ const ReleaseDetails = () => {
         }
     };
 
+    const handleReplyInputChange = (reviewId, value) => {
+        setReplyInputValues(prev => ({
+            ...prev,
+            [reviewId]: value
+        }));
+        replyRef.current = value;
+    };
+
     const onSubmitReply = async (parentReviewId) => {
         if (!replyRef.current || !user?.id) return null;
 
@@ -633,12 +783,13 @@ const ReleaseDetails = () => {
             userId: user.id,
             text: replyRef.current,
             parentReviewId: parentReviewId,
-            releaseId: release.id // Add releaseId for the filter in subscription
+            releaseId: release.id
+           
         };
 
         setLoading(true);
         try {
-            let res = await createReviewReply(data);
+            let res = await createPeopleReviewReply(data);
             if (res.success) {
                 // Create new reply object with user data
                 const newReply = {
@@ -657,6 +808,10 @@ const ReleaseDetails = () => {
 
                 // Clear input
                 replyRef.current = '';
+                setReplyInputValues(prev => ({
+                    ...prev,
+                    [parentReviewId]: ''
+                }));
                 // setOpenReplyBox(null);
 
                 // Handle notification
@@ -718,17 +873,17 @@ const ReleaseDetails = () => {
                 const subscribeToChanges = () => {
                     // Subscribe to new reviews
                     let reviewChannel = supabase
-                        .channel('reviews')
+                        .channel('peoplesReview')
                         .on('postgres_changes', 
-                            {event: 'INSERT', schema: 'public', table: 'reviews', filter: `releaseId=eq.${releaseId}`}, 
+                            {event: 'INSERT', schema: 'public', table: 'peoplesReview', filter: `releaseId=eq.${releaseId}`}, 
                             handleNewReview)
                         .subscribe();
 
                     // Subscribe to new replies
                     let replyChannel = supabase
-                        .channel('replies')
+                        .channel('replyPeopleReviews')
                         .on('postgres_changes', 
-                            {event: 'INSERT', schema: 'public', table: 'reviews', filter: `releaseId=eq.${releaseId}`}, 
+                            {event: 'INSERT', schema: 'public', table: 'peoplesReview', filter: `releaseId=eq.${releaseId}`}, 
                             handleNewReply)
                         .subscribe();
 
@@ -741,35 +896,43 @@ const ReleaseDetails = () => {
                     supabase.removeChannel(channels.replyChannel);
                 };
 
-           const onNewReview = async () => {
+        const onNewReview = () => {
             if(!reviewRef.current || !user?.id || !release?.id) return null;
+            if(charCount < MIN_CHARS) return null;
             
+            setRatingModalVisible(true);
+        };
+
+        // below is a cup of tea variable which is a boolean value
+
+        const handleFinalReviewSubmit = async (rating, cupOfTea, emoji, mustWatch) => {
             let data = {
                 userId: user.id,
                 releaseId: release.id,
-                text: reviewRef.current
+                text: reviewRef.current,
+                userRating: rating,
+                cupOfTea: cupOfTea, 
+                addings: emoji,
+                popCorn: mustWatch
             }
             
             setLoading(true);
             try {
-                let res = await createReleaseReview(data);
+                let res = await createPeopleReleaseReview(data);
                 if(res.success){
-                    // Create the new review object with user data
                     const newReview = {
                         ...res.data,
                         user: {
                             id: user.id,
-                            // Add any other user fields that are displayed in ReviewItem
                             ...user
                         }
                     };
-    
-                    // Update the state directly
+        
                     setRelease(prevRelease => ({
                         ...prevRelease,
-                        reviews: [newReview, ...prevRelease.reviews]
+                        peoplesReview: [newReview, ...prevRelease.peoplesReview]
                     }));
-    
+        
                     if(user.id !== release.userId){
                         let notify = {
                             senderId: user.id,
@@ -779,12 +942,12 @@ const ReleaseDetails = () => {
                         }
                         createNotifications(notify);
                     }
-    
-                    // Reset the input
+        
                     inputRef?.current?.clear();
                     reviewRef.current = "";
                     setReviewText('');
                     setCharCount(0);
+                    setReviewRating(0);
                 } else {
                     Alert.alert('Review', res.msg || 'Something went wrong');
                 }
@@ -793,22 +956,37 @@ const ReleaseDetails = () => {
             } finally {
                 setLoading(false);
             }
-        }
+        };
     
         const onDeleteReview = async (review) => {
             try {
-                let res = await removeReview(review?.id);
+                let res = await removePeopleReview(review?.id);
                 if(res.success){
                     // Update state directly instead of reloading
                     setRelease(prevRelease => ({
                         ...prevRelease,
-                        reviews: prevRelease.reviews.filter(r => r.id !== review.id)
+                        peoplesReview: prevRelease.peoplesReview.filter(r => r.id !== review.id)
                     }));
                 } else {
                     Alert.alert('Review', res.msg || 'Something went wrong');
                 }
             } catch (err) {
                 Alert.alert('Review', 'Something went wrong');
+            }
+        }
+
+
+        const onDeleteReviewReply = async (review) => {
+            // Remove the reply from the state
+            try{
+                let res = await removeReplyPeopleReview(review?.id);
+                if(res.success){
+                    Alert.alert('Review Reply :', 'Reply deleted. Thanks! You can still view it to respond again.');
+
+                    // here is the upadtion to be done to make instant reply release functions
+                }
+            }catch(err){
+                Alert.alert('Review Reply', 'Something went wrong');
             }
         }
     
@@ -866,18 +1044,14 @@ const ReleaseDetails = () => {
         return (
             <View style={styles.container}>
                 <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.list}>
-
-                    {/* Card displayed here */}
                     <ReleaeCard
-                        item={{ ...release, reviews: [{ count: release?.reviews?.length }] }}
+                        item={{ ...release ,reviews: [{ count: release?.peoplesReview?.length || 0 }] }}
                         currentUser={user}
                         router={router}
                         hasShadow={false}
                         showReviewButton={false}
                     />
-    
-
-                    {/* Input box rendering here */}
+                   
                     <Animated.View style={[
                         styles.inputContainer,
                         { transform: [{ translateX: shakeAnimation }] }
@@ -930,62 +1104,61 @@ const ReleaseDetails = () => {
                         )}
                     </Animated.View>
                     
-
-                    {/* Reviews rendering here */}
                     <View style={styles.reviewsContainer}>
-                    {release?.reviews?.length > 0 ? (
-                        release.reviews
-                            .filter(review => !review.parentReviewId)
-                            .map(review => (
-                                <View key={review?.id?.toString()}>
+                    {release?.peoplesReview?.length > 0 ? (
+                        release.peoplesReview
+                            .filter(peoplesReview => !peoplesReview.parentReviewId)
+                            .map(peoplesReview => (
+                                <View key={peoplesReview?.id?.toString()}>
                                     <ReviewItem
-                                        item={review}
+                                        item={peoplesReview}
                                         onDelete={onDeleteReview}
-                                        canDelete={user.id === review.userId || user.id === release.userId}
-                                        onReplyReviewPress={() => toggleReplyBox(review.id)}
-                                        replyCount={reviewReplies[review.id]?.length || 0}
+                                        canDelete={user.id === peoplesReview.userId || user.id === release.userId}
+                                        onReplyReviewPress={() => toggleReplyBox(peoplesReview.id)}
+                                        replyCount={reviewReplies[peoplesReview.id]?.length || 0}
                                         isReply={false}
                                     />
                                     
                                     {/* Render replies when reply box is open */}
-                                    {openReplyBox === review.id && reviewReplies[review.id]?.map(reply => (
+                                    {openReplyBox === peoplesReview.id && reviewReplies[peoplesReview.id]?.map(reply => (
                                         <View key={reply.id} style={styles.replyContainer}>
                                             <ReviewItem
                                                 item={reply}
-                                                onDelete={onDeleteReview}
+                                                onDelete={onDeleteReviewReply}
                                                 canDelete={user.id === reply.userId || user.id === release.userId}
-                                                replyCount={reviewReplies[review.id]?.length || 0}
+                                                replyCount={reviewReplies[peoplesReview.id]?.length || 0}
                                                 isReply={true}
                                             />
                                         </View>
                                     ))}
                                     
                                     {/* Reply input box */}
-                                    {openReplyBox === review.id && (
+                                    {openReplyBox === peoplesReview.id && (
                                         <View style={styles.replyInputContainer}>
-                                            <Input
-                                                placeholder={`Reply to @${review.user.name}...`}
-                                                onChangeText={value => replyRef.current = value}
-                                                placeholderTextColor={theme.colors.textLight}
-                                                containerStyle={{
-                                                    flex: 1,
-                                                    height: hp(5),
-                                                    borderRadius: theme.radius.sm
-                                                }}
-                                            />
-                                            {loading ? (
-                                                <View style={styles.loading}>
-                                                    <FeedLoader size="small" color={theme.colors.primaryDark} />
-                                                </View>
-                                            ) : (
-                                                <TouchableOpacity
-                                                    style={styles.replySendIcon}
-                                                    onPress={() => onSubmitReply(review.id)}
-                                                >
-                                                    <Icon name="send" size={hp(2)} color={theme.colors.primaryDark} />
-                                                </TouchableOpacity>
-                                            )}
-                                        </View>
+                                        <Input
+                                            placeholder={`Reply to @${peoplesReview.user.name}...`}
+                                            onChangeText={value => handleReplyInputChange(peoplesReview.id, value)}
+                                            value={replyInputValues[peoplesReview.id] || ''}
+                                            placeholderTextColor={theme.colors.textLight}
+                                            containerStyle={{
+                                                flex: 1,
+                                                height: hp(5),
+                                                borderRadius: theme.radius.sm
+                                            }}
+                                        />
+                                        {loading ? (
+                                            <View style={styles.loading}>
+                                                <FeedLoader size="small" color={theme.colors.primaryDark} />
+                                            </View>
+                                        ) : (
+                                            <TouchableOpacity
+                                                style={styles.replySendIcon}
+                                                onPress={() => onSubmitReply(peoplesReview.id)}
+                                            >
+                                                <Icon name="send" size={hp(2)} color={theme.colors.primaryDark} />
+                                            </TouchableOpacity>
+                                        )}
+                                    </View>
                                     )}
                                 </View>
                             ))
@@ -998,12 +1171,18 @@ const ReleaseDetails = () => {
                     )}
                 </View>
 
+                <RatingModal 
+                    visible={ratingModalVisible}
+                    onClose={() => setRatingModalVisible(false)}
+                    onSubmit={handleFinalReviewSubmit}
+                />
+
                 </ScrollView>
             </View>
         );
     };
     
-    export default ReleaseDetails;
+    export default ReleasePeopleDetails;
 
 const styles = StyleSheet.create({
     container: {
@@ -1137,3 +1316,4 @@ const styles = StyleSheet.create({
         width: Math.round(hp(4.8))
     }
 });
+

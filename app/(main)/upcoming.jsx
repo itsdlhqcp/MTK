@@ -3,16 +3,15 @@ import ScreenWrapper from '@/components/ScreenWrapper';
 import { Text, View, TouchableOpacity, StyleSheet, Vibration } from 'react-native';
 import { fetchReleases } from '../../services/releaseService';
 import { wp, hp } from '@/helpers/common'
-import PostCard from '../../components/PostCard';
-import { FlatList } from 'react-native';
-import RelesaeCard from '../../components/RelesaeCard';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from 'expo-router';
 import { fetchOtt } from '../../services/ottService';
-import OttCard from '../../components/OttCard';
+import ReleaseList from '../../components/ReleaseList';
+import OttList from '../../components/OttList';
 
 var limit = 0;
 var limit2 = 0;
+
 const upcoming = () => {
     const {user, setAuth} = useAuth();
     const router = useRouter();
@@ -28,7 +27,7 @@ const upcoming = () => {
     }, []);
 
     const getReleases = async () => {
-        limit = limit + 10;
+        limit = limit + 5;
         // call api here
         console.log('limit-->>', limit);
         let res  = await fetchReleases(limit);
@@ -40,7 +39,7 @@ const upcoming = () => {
 
     // fetch ott 
     const getOtts = async () => {
-        limit2 = limit2 + 10;
+        limit2 = limit2 + 5;
         // call api here
         console.log('limit-->>', limit2);
         let res  = await fetchOtt(limit2);
@@ -70,7 +69,7 @@ const upcoming = () => {
                 <Text style={[
                     styles.tabText,
                     activeTab === 'ott' && styles.activeTabText
-                ]}>OTT</Text>
+                ]}>OOOO</Text>
             </TouchableOpacity>
             <TouchableOpacity 
                 style={[
@@ -82,48 +81,34 @@ const upcoming = () => {
                 <Text style={[
                     styles.tabText,
                     activeTab === 'upcoming' && styles.activeTabText
-                ]}>Upcoming</Text>
+                ]}>TTTTT</Text>
             </TouchableOpacity>
         </View>
     );
+
 
     const renderContent = () => {
         if (activeTab === 'ott') {
             return (
                 <View>
                 {/* streams */}
-                <FlatList
-                  data={ott}
-                  showsVerticalScrollIndicator={false}
-                  contentContainerStyle={styles.listStyle}
-                  keyExtractor={item => item.id.toString()}
-                  renderItem={({ item }) => (
-                    <OttCard
-                      item={item}
-                      currentUser={user}
-                      router={router}
-                    />
-                  )}
-                />
+                <OttList
+                  streams={ott}
+                  currentUser={user}     
+                  router={router}
+               />
+               
             </View>
             );
         }
         return (
             <View>
-                {/* posts */}
-                <FlatList
-                  data={relese}
-                  showsVerticalScrollIndicator={false}
-                  contentContainerStyle={styles.listStyle}
-                  keyExtractor={item => item.id.toString()}
-                  renderItem={({ item }) => (
-                    <RelesaeCard
-                      item={item}
-                      currentUser={user}
-                      router={router}
-                    />
-                  )}
-                />
+                {/* releases rendering */}
+               <ReleaseList
+                  releases={relese}
+                  currentUser={user}     
+                  router={router}
+               />
             </View>
         );
     };

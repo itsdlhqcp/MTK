@@ -4,13 +4,14 @@ import { wp, hp } from '@/helpers/common'
 import theme from '../constants/theme'
 import { getSupabaseFileUrl } from '../services/userProfileImage'
 import RenderHtml from 'react-native-render-html'
+import Icon from '../assets/icons';
 import moment from 'moment/moment'
 
 const ReleaseCard = ({
     item,
     router,
     hasShadow = true,
-    showReviewButton = true,  // New prop to control button visibility
+    showReviewButton = true,
 }) => {
     const shadowStyle = {
         shadowOffset: {
@@ -25,6 +26,11 @@ const ReleaseCard = ({
     const handleReadReviews = () => {
         if (!item?.id) return null;
         router.push({pathname: 'releaseDetails', params: {releaseId: item.id}});
+    }
+
+    const handlePeopleReadReviews = () => {
+        if (!item?.id) return null;
+        router.push({pathname: 'releasePeopleDetails', params: {releaseId: item.id}});
     }
 
     const createdAt = item?.rDate ? moment(item.rDate).format('MMM D') : '';
@@ -56,6 +62,9 @@ const ReleaseCard = ({
         }
     }
 
+    const reviewCount = item?.reviews?.[0]?.count || 0;
+   const peoplesReviewCount =  item?.peoplesReview?.[0]?.count || 0;
+
     return (
         <View style={[styles.container, hasShadow && shadowStyle]}>
             {item?.file?.includes('postImage') && (
@@ -81,15 +90,39 @@ const ReleaseCard = ({
                     <Text style={styles.releaseDate}>
                         Release Date: {createdAt || 'N/A'}
                     </Text>
+
+                    <View style={styles.box}>
                     
                     {showReviewButton && (
-                        <TouchableOpacity 
-                            style={styles.reviewButton}
-                            onPress={handleReadReviews}
-                        >
-                            <Text style={styles.reviewButtonText}>READ REVIEWS</Text>
-                        </TouchableOpacity>
+                        <View style={styles.reviewSection}>
+                            <TouchableOpacity 
+                                style={styles.reviewButton}
+                                onPress={handleReadReviews}
+                            >
+                                <Text style={styles.reviewButtonText}>READ REVIEWS</Text>
+                            </TouchableOpacity>
+                            <View style={styles.reviewCountBadge}>
+                                <Text style={styles.reviewCountText}>{reviewCount}</Text>
+                            </View>
+                        </View>
                     )}
+
+                  {showReviewButton && (
+                        <View style={styles.reviewSection}>
+                            <TouchableOpacity 
+                                // style={styles.reviewButton}
+                                onPress={handlePeopleReadReviews}
+                            >
+                                {/* <Text style={styles.reviewButtonText}>PEOPLES REVIEWS</Text> */}
+                                <Icon name="comment01" size={hp(2)} color={theme.colors.primaryDark} />
+                            </TouchableOpacity>
+                            <View style={styles.reviewCountBadge2}>
+                                <Text style={styles.reviewCountText}>{peoplesReviewCount}</Text>
+                            </View>
+                        </View>
+                    )}
+
+                </View>
                 </View>
             </View>
         </View>
@@ -148,15 +181,53 @@ const styles = StyleSheet.create({
         fontSize: hp(1.8),
         marginBottom: 10
     },
+    reviewSection: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        position: 'relative'
+    },
     reviewButton: {
         backgroundColor: 'black',
         paddingHorizontal: 20,
         paddingVertical: 8,
-        borderRadius: theme.radius.lg
+        borderRadius: 8
     },
     reviewButtonText: {
         color: 'white',
         fontWeight: 'bold',
         fontSize: hp(1.8)
+    },
+    reviewCountBadge: {
+        backgroundColor: theme.colors.primary || '#007AFF',
+        borderRadius: 12,
+        minWidth: 21,
+        height: 21,
+        justifyContent: 'center',
+        alignItems: 'center',
+        position: 'absolute',
+        right: -12,
+        top: -12,
+        paddingHorizontal: 8
+    },
+    reviewCountText: {
+        color: 'white',
+        fontSize: hp(1.6),
+        fontWeight: 'bold'
+    },
+    reviewCountBadge2: {
+       
+        borderRadius: 12,
+        minWidth: 21,
+        height: 21,
+        justifyContent: 'center',
+        alignItems: 'center',
+        position: 'absolute',
+        right: -12,
+        top: -12,
+        paddingHorizontal: 8
+    },
+    box: {
+       flexDirection: 'row',
+       gap: 24
     }
 })

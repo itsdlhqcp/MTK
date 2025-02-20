@@ -1,4 +1,3 @@
-import { View, Text } from 'react-native'
 import React from 'react'
 import Home from './Home';
 import Mail from './Mail';
@@ -9,7 +8,7 @@ import Plus from './Plus';
 import Search from './Search';
 import Location from './Location';
 import Call from './Call';
-import  theme  from '../../constants/theme';
+import theme  from '../../constants/theme';
 import Camera from './Camera';
 import Edit from './Edit';
 import ArrowLeft from './ArrowLeft';
@@ -23,6 +22,23 @@ import Logout from './logout';
 import Image from './Image';
 import Video from './Video';
 import Close from './Close';
+import Comment01 from './Comment01';
+import BubbleChatAdd from './BubbleReply';
+import Netflix from './Netflix';
+import Prime from './Prime';
+import Disney from './Disney';
+import Hbo from './Hbo';
+import PloTwist from './PloTwist';
+import Hulu from './Hulu';
+import Amc from './Amc';
+import Zee5 from './Zee5';
+import SonyLiv from './SonyLiv';
+import Paramountlus from './Paramountplus';
+import AppleTv from './AppleTv';
+import Hotstar from './Hotstar';
+import Voot from './Voot';
+import Aha from './Aha';
+import SunNxt from './Sunnxt';
 
 const icons = {
     home: Home,
@@ -47,7 +63,24 @@ const icons = {
     logout: Logout,
     image: Image,
     video: Video,
-    
+    comment01: Comment01,
+    bubbleChatReply: BubbleChatAdd,
+    netflix: Netflix,
+    prime: Prime, 
+    disney: Disney, 
+    hbo: Hbo,
+    plotwist: PloTwist, 
+    hulu: Hulu, 
+    amc: Amc,
+    zee5: Zee5,
+    sonyliv: SonyLiv,
+    paramountplus: Paramountlus,
+    appletvplus: AppleTv,
+    hotstar: Hotstar,
+    voot: Voot, 
+    aha: Aha,
+    sunnxt: SunNxt
+
 }
 
 const Icon = ({name, ...props}) => {
