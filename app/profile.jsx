@@ -11,7 +11,7 @@ import Avatar from '../components/Avatar'
 import { fetchPosts } from '../services/postService'
 import PostCard from '../components/PostCard'
 import MLoading from '../components/MaterialLoader'
-import FeedLoader from '../components/FeedLoader'
+import { useFocusEffect } from '@react-navigation/native';
 
 // Dark mode colors
 var limit = 0;
@@ -32,7 +32,7 @@ const darkTheme = {
 }
 
 const Profile = () => {
-  const { user, setAuth } = useAuth();
+  const { user, setAuth, logout, navigationGuard} = useAuth();
   const router = useRouter();
   const [posts, setPosts] = useState([]);
   const [hasMore, setHasMore] = useState(true);
@@ -43,30 +43,47 @@ const Profile = () => {
    const activeTheme = colorScheme === 'dark' ? darkTheme : theme;
    const post = useLocalSearchParams();
    const [postCount, setPostCount] = useState(0);
-   console.log('auth user profile cred', user);
+  //  console.log('auth user profile cred', user);
 
-  const onLogout = async () => {
-    Alert.alert('Confirm', 'Are you sure you want to logout?', [
-      {
-        text: 'Cancel',
-        style: 'cancel'
-      },
-      {
-        text: 'Logout',
-        style: 'destructive',
-        onPress: async () => {
-          const { error } = await supabase.auth.signOut();
-          if (!error) {
-            Alert.alert('Successfully logged out');
-            setAuth(null);
+  useFocusEffect(
+        React.useCallback(() => {
+          if (!user) {
             router.replace('/login');
-          } else {
-            Alert.alert('Error logging out');
           }
-        }
+        }, [user])
+      );
+   
+//    useEffect(() => {
+//     navigationGuard();
+// }, [navigationGuard]);
+
+const onLogout = async () => {
+  Alert.alert('Confirm', 'Are you sure you want to logout?', [
+         {
+             text: 'Cancel',
+             style: 'cancel'
+         },
+         {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+			    try{
+          setLoading(true);
+          const { error } = await supabase.auth.signOut();
+            if (error) throw error;
+            setAuth(null);
+          router.replace('/welcome');
+          router.setParams({});
+          } catch (error) {
+              console.error('Logout error:', error.message);
+              return { error };
+          }finally {
+            setLoading(false);
+          }
+          }
       }
-    ]);
-  }
+  ]);
+};
 
   const getPostCount = async () => {
     try {
@@ -253,9 +270,6 @@ const InstagramProfile = ({ user, router, handleLogout, theme, postCount}) => {
         {user.bio && <Text style={[styles.bio, { color: theme.colors.text }]}>{user.bio}</Text>}
         <Text style={[styles.joinedDate, { color: theme.colors.textLight }]}>Joined {formattedDate}</Text>
         <Text style={[styles.joinedDate, { color: theme.colors.textLight }]}> {user.address}</Text>
-
-
-       
       </View>
 
       {/* Tags */}

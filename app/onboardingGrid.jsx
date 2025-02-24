@@ -1,5 +1,6 @@
 import { Text, Button, View, Image, StyleSheet, Dimensions, TouchableOpacity, StatusBar } from 'react-native'
 import React from 'react'
+import { wp, hp } from '@/helpers/common'
 import { useRouter } from 'expo-router'
 import ScreenWrapper from '@/components/ScreenWrapper';
 
@@ -115,13 +116,11 @@ const onboardingGrid = () => {
                         style={styles.button}
                         onPress={() => router.push('signup')}
                     >
-                        <Text style={styles.buttonText}>Lets Get Started</Text>
+                        <Text style={styles.buttonText}>Let's Go &gt;&gt;&gt;</Text>
                     </TouchableOpacity>
                 </View>
             </View>
         </>
-       
-        
     )
 }
 
@@ -151,15 +150,15 @@ const styles = StyleSheet.create({
     },
     buttonContainer: {
       position: 'absolute',
-      top: 700,
+      top: hp(85),
       width: '100%',
       zIndex: 1,
       alignItems: 'center',
       paddingHorizontal: 20,
   },
   button: {
-      backgroundColor: 'rgba(186, 184, 184, 0.9)',
-      paddingVertical: 12,
+      backgroundColor: 'rgba(33, 4, 4, 0.71)',
+      paddingVertical: 9,
         paddingHorizontal: 30,
         borderRadius: 25,
         minWidth: 150,
@@ -175,7 +174,7 @@ const styles = StyleSheet.create({
         elevation: 5,
   },
   buttonText: {
-      color: 'black',
+      color: 'rgb(201, 201, 207)',
       fontSize: 16,
       fontWeight: '600',
   }

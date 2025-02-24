@@ -5,13 +5,14 @@ import { DotIndicator } from 'react-native-indicators';
 
 const index = () => {
    
-  return (
-    <ScreenWrapper>
+return (
+     <ScreenWrapper bg="black">
+     {/* <ScreenWrapper > */}
        <View style={{flex:1, justifyContent: 'center', alignItems: 'center'}}>
+      {/* </View> <View style={{flex:1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'black'}}> */}
        <DotIndicator size={12} color="green" />  
       </View>
     </ScreenWrapper>
-    
   )
 }
 

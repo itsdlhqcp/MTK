@@ -323,11 +323,37 @@ import PostCard from '../../components/PostCard'
 import { getUserData } from '../../services/userServices'
 import MLoading from '../../components/MaterialLoader'
 import FeedLoader from '../../components/FeedLoader'
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { useFocusEffect } from '@react-navigation/native';
 
 const Home = () => {
-    const {user, setAuth} = useAuth();
+    const {user, setAuth, navigationGuard} = useAuth();
     const router = useRouter();
+
+    // Protect route on mount and user state change
+    useFocusEffect(
+        React.useCallback(() => {
+          if (!user) {
+            router.replace('/welcome');
+          }
+        }, [user])
+      );
+
+        // Protect route on mount and user state change
+    //     useFocusEffect(
+    // useEffect(() => {
+    //     navigationGuard();
+    // }, [navigationGuard]))
+
+    // // Protect route on screen focus
+    // useEffect(() => {
+    //     const unsubscribe = router.addListener('focus', () => {
+    //         if (!user) {
+    //             router.replace('/welcome');
+    //         }
+    //     });
+
+    //     return unsubscribe;
+    // }, [user]);
     
     // State management
     const [posts, setPosts] = useState([]);

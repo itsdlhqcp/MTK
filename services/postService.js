@@ -36,7 +36,6 @@ export const fetchPosts = async (limit=10,userId) => {
           postLikes (*),
           comments  (count)
           `,
-          
         )
         .order('created_at', { ascending: false })
         .eq('userId', userId)

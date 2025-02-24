@@ -11,11 +11,13 @@ import Input from "../components/Input"
 import Button from '@/components/Button'
 import { Alert } from 'react-native'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/contexts/AuthContext'
 
 const Login = () => {
   const router = useRouter();
   const emailRef = useRef();
   const passwordRef = useRef(); 
+  const { checkUserStatus } = useAuth();
   const [loading, setLoading ] = useState(true);
 
   const onSubmit = async () => {
@@ -24,27 +26,52 @@ const Login = () => {
       return;
      }
 
-     let email = emailRef.current.trim();
-     let password = passwordRef.current.trim();
-     setLoading(true);
-     const {error} = await supabase.auth.signInWithPassword({
-      email, 
-      password
-     }); 
-     setLoading(false); 
-     console.log('error', error);
-     if(error){
-      Alert.alert('Login', error.message)
-     }else{
-      Alert.alert("Successfully logged in");
-     }
-    }
+    //  let email = emailRef.current.trim();
+    //  let password = passwordRef.current.trim();
+    //  setLoading(true);
+    //  const {error} = await supabase.auth.signInWithPassword({
+    //   email, 
+    //   password
+    //  }); 
+    //  setLoading(false); 
+    //  console.log('error', error);
+    //  if(error){
+    //   Alert.alert('Login', error.message)
+    //  }else{
+    //   Alert.alert("Successfully logged in");
+    //  }
+    //  const isNewUser = await checkUserStatus(user.id);
+    try {
+      setLoading(true);
+      const { data: { user }, error } = await supabase.auth.signInWithPassword({
+          email: emailRef.current.trim(),
+          password: passwordRef.current.trim()
+      });
+
+      if (error) throw error;
+
+      // Check if user is new
+      const isNew = await checkUserStatus(user.id);
+      
+      // Navigate based on user status
+      if (isNew) {
+          router.replace('/auth/newuserscreens/userpreferences');
+      } else {
+          router.replace('/home');
+          // Alert.alert('Login success');
+      }
+      } catch (error) {
+          Alert.alert('Login', error.message);
+      } finally {
+          setLoading(false);
+      }
+    };
 
   return (
     <ScreenWrapper bg="white">
        <StatusBar style="dark"/>
        <View style={styles.container}>
-          <BackButton router={router}/>
+          <BackButton router={router} />
           {/* welcome */}
           <View>
             <Text style={styles.welcomeText}>Hey,</Text>
@@ -67,8 +94,8 @@ const Login = () => {
               secureTextEntry
               onChangeText={value=> passwordRef.current = value}
             />
-            <Text style={styles.forgotPassword} onPress={() => router.push('auth/forgot')}>
-              Forgot Password?</Text>
+            <Text style={styles.forgotPassword} onPress={() => router.push('/auth/forgot')}>
+              try hassle-free login &gt;&gt;</Text>
               {/* button */}
               <Button loaderType = 'BarIndicator' title={'Login'} loading={false} onPress={onSubmit} />
           </View>
@@ -113,6 +140,7 @@ const styles = StyleSheet.create({
     textAlign: 'right', 
     fontWeight: theme.fonts.semibold, 
     color: theme.colors.text,
+    marginRight: 14
   }, 
   footer:{
     flexDirection: 'row', 

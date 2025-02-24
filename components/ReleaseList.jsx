@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
 import moment from 'moment';
 import ReleaseCard from '../components/RelesaeCard';
+import FeedLoader from './FeedLoader';
 
 const ReleaseDateHeader = ({ date }) => (
   <View style={styles.headerContainer}>
@@ -11,7 +12,7 @@ const ReleaseDateHeader = ({ date }) => (
   </View>
 );
 
-const ReleaseList = ({ releases, currentUser, router }) => {
+const ReleaseList = ({ releases, currentUser, router, loading, hasMore, onLoadMore }) => {
   const getHeaderText = (date) => {
     const today = moment();
     const releaseDate = moment(date);
@@ -75,19 +76,42 @@ const ReleaseList = ({ releases, currentUser, router }) => {
     ];
   }, []);
 
+  const renderFooter = () => {
+    if (releases.length === 0) return null;
+
+    return (
+      <View style={{ marginVertical: 0, paddingBottom: 16 }}>
+        {loading && <FeedLoader />}
+        {!hasMore && releases.length > 0 && (
+          <Text style={styles.noMoreText}>No more releases to load!</Text>
+        )}
+      </View>
+    );
+  };
+
   return (
     <FlatList
-      data={flatListData}
-      renderItem={renderItem}
-      keyExtractor={(item, index) => 
-        item.header ? `header-${item.header}` : `release-${item.id}`
-      }
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={styles.listContainer}
-      stickyHeaderIndices={flatListData.map((item, index) => 
-        item.header ? index : null
-      ).filter(Boolean)}
-    />
+    data={flatListData}
+    renderItem={renderItem}
+    keyExtractor={(item, index) => 
+      item.header ? `header-${item.header}` : `release-${item.id}`
+    }
+    onEndReached={onLoadMore}
+    onEndReachedThreshold={0.5}
+    ListFooterComponent={renderFooter}
+    showsVerticalScrollIndicator={false}
+    contentContainerStyle={styles.listContainer}
+    stickyHeaderIndices={flatListData.map((item, index) => 
+      item.header ? index : null
+    ).filter(Boolean)}
+    ListEmptyComponent={() => (
+      <View style={styles.emptyContainer}>
+        <Text style={styles.noMoreText}>
+          {loading ? "Loading..." : "No releases found!"}
+        </Text>
+      </View>
+    )}
+  />
   );
 };
 
@@ -113,6 +137,17 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#fff',
     textAlign: 'center',
+  },
+  noMoreText: {
+    fontSize: 14,
+    textAlign: 'center',
+    color: '#666',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: 300,
   }
 });
 

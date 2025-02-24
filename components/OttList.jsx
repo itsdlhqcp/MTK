@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
 import moment from 'moment';
 import OttCard from '../components/OttCard';
+import FeedLoader from './FeedLoader';
 
 const ReleaseDateHeader = ({ date }) => (
   <View style={styles.headerContainer}>
@@ -11,7 +12,7 @@ const ReleaseDateHeader = ({ date }) => (
   </View>
 );
 
-const ReleaseList = ({ streams, currentUser, router }) => {
+const ReleaseList = ({ streams, currentUser, router, loading, hasMore, onLoadMore  }) => {
   const getHeaderText = (date) => {
     const today = moment();
     const releaseDate = moment(date);
@@ -75,18 +76,37 @@ const ReleaseList = ({ streams, currentUser, router }) => {
     ];
   }, []);
 
+
+  const renderFooter = () => {
+    if (streams.length === 0) return null;
+
+    return (
+      <View style={{ marginVertical: 0, paddingBottom: 16 }}>
+        {loading && <FeedLoader />}
+        {!hasMore && streams.length > 0 && (
+          <Text style={styles.noMoreText}>No more OTT content to load!</Text>
+        )}
+      </View>
+    );
+  };
+
   return (
     <FlatList
-      data={flatListData}
+      data={streams}
       renderItem={renderItem}
-      keyExtractor={(item, index) => 
-        item.header ? `header-${item.header}` : `release-${item.id}`
-      }
+      keyExtractor={item => item.id.toString()}
+      onEndReached={onLoadMore}
+      onEndReachedThreshold={0.5}
+      ListFooterComponent={renderFooter}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.listContainer}
-      stickyHeaderIndices={flatListData.map((item, index) => 
-        item.header ? index : null
-      ).filter(Boolean)}
+      ListEmptyComponent={() => (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.noMoreText}>
+            {loading ? "Loading..." : "This is End of the Road!"}
+          </Text>
+        </View>
+      )}
     />
   );
 };
@@ -113,6 +133,17 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#fff',
     textAlign: 'center',
+  },
+  noMoreText: {
+    fontSize: 14,
+    textAlign: 'center',
+    color: '#666',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: 300,
   }
 });
 

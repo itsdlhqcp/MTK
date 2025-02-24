@@ -5,10 +5,15 @@
     "version": "1.0.0",
     "entryPoint": "app/index.jsx",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/splash-icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "splash":{
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "black"
+    },
     "ios": {
       "supportsTablet": true,
        "bundleIdentifier": "com.myapp"
