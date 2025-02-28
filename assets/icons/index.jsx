@@ -39,6 +39,7 @@ import Hotstar from './Hotstar';
 import Voot from './Voot';
 import Aha from './Aha';
 import SunNxt from './Sunnxt';
+import Menu from './Menu';
 
 const icons = {
     home: Home,
@@ -79,7 +80,8 @@ const icons = {
     hotstar: Hotstar,
     voot: Voot, 
     aha: Aha,
-    sunnxt: SunNxt
+    sunnxt: SunNxt,
+    menu: Menu
 
 }
 

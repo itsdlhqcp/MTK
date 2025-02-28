@@ -1929,6 +1929,7 @@ import { createContext, useCallback, useContext, useEffect, useState } from "rea
 import { supabase } from '@/lib/supabase';
 import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
+import Toast from 'react-native-toast-message';
 
 const AuthContext = createContext();
 
@@ -1949,17 +1950,17 @@ export const AuthProvider = ({ children }) => {
                 
                 if (session?.user) {
                     const isNew = await checkUserStatus(session.user.id);
-                 //   setAuth(session.user);
+                    setAuth(session.user);
                     setIsNewUser(isNew);
                     router.replace('/home'); // or your main screen
                 } else {
-                    setAuth(null);
-                    router.replace('/welcome');
+                    // setAuth(null);
+                    // router.replace('/welcome');
                 }
             } catch (error) {
               //  console.error('Initialize auth error:', error.message);
-                setAuth(null);
-                router.replace('/welcome');
+                // setAuth(null);
+                // router.replace('/welcome');
             } finally {
                 setLoading(false);
                 setInitialized(true);
@@ -2073,8 +2074,21 @@ export const AuthProvider = ({ children }) => {
             });
 
             if (error) throw error;
-
-            return { success: true };
+            // Ensure we have updated user data
+            if (data?.user) {
+                setAuth(data.user);
+                await checkUserStatus(data.user.id);
+            }
+            // setLoading(false);
+            // Toast.show({
+            //     type: 'success',
+            //     text1: 'Success',
+            //     text2: 'Your password has been reset successfully',
+            //     position: 'top',
+            //     visibilityTime: 3000,
+            // });
+            // router.replace('/profile');
+            return { success: true, user: data?.user };
         } catch (error) {
             console.error('Password update error:', error.message);
             return { error };

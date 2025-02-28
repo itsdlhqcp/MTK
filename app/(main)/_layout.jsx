@@ -61,58 +61,58 @@ import { useColorScheme } from '../../hooks/useColorScheme.ts';
 export default function TabLayout() {
   const colorScheme = useColorScheme();
 
-  useEffect(() => {
-    // Handle deep links when app is already open
-    const subscription = Linking.addEventListener('url', handleDeepLink);
+  // useEffect(() => {
+  //   // Handle deep links when app is already open
+  //   const subscription = Linking.addEventListener('url', handleDeepLink);
 
-    // Handle deep links when app is opened from closed state
-    handleInitialDeepLink();
+  //   // Handle deep links when app is opened from closed state
+  //   handleInitialDeepLink();
 
-    return () => {
-      subscription.remove();
-    };
-  }, []);
+  //   return () => {
+  //     subscription.remove();
+  //   };
+  // }, []);
 
-  useEffect(() => {
-    const subscription = Linking.addEventListener('url', async ({ url }) => {
-      if (url.includes('reset-password')) {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          router.replace('/auth/reset-password');
-        }
-      }
-    });
+  // useEffect(() => {
+  //   const subscription = Linking.addEventListener('url', async ({ url }) => {
+  //     if (url.includes('reset-password')) {
+  //       const { data: { session } } = await supabase.auth.getSession();
+  //       if (session) {
+  //         router.replace('/auth/reset-password');
+  //       }
+  //     }
+  //   });
   
-    return () => subscription.remove();
-  }, []);
+  //   return () => subscription.remove();
+  // }, []);
 
-  const handleDeepLink =  ({ url })=> {
-    // Handle different deep link scenarios
-    if (url.includes('reset-password')) {
-      const token = url.split('token=')[1];
-      if (token) {
-        // Navigate to reset password screen with token
-        router.push({
-          pathname: '/reset-password',
-          params: { token }
-        });
-      }
-    }
-    // Add more deep link handlers as needed
-    else if (url.includes('upcoming')) {
-      router.push('/upcoming');
-    }
-    else if (url.includes('home')) {
-      router.push('/home');
-    }
-  };
+  // const handleDeepLink =  ({ url })=> {
+  //   // Handle different deep link scenarios
+  //   if (url.includes('reset-password')) {
+  //     const token = url.split('token=')[1];
+  //     if (token) {
+  //       // Navigate to reset password screen with token
+  //       router.push({
+  //         pathname: '/reset-password',
+  //         params: { token }
+  //       });
+  //     }
+  //   }
+  //   // Add more deep link handlers as needed
+  //   else if (url.includes('upcoming')) {
+  //     router.push('/upcoming');
+  //   }
+  //   else if (url.includes('home')) {
+  //     router.push('/home');
+  //   }
+  // };
 
-  const handleInitialDeepLink = async () => {
-    const initialUrl = await Linking.getInitialURL();
-    if (initialUrl) {
-      handleDeepLink({ url: initialUrl });
-    }
-  };
+  // const handleInitialDeepLink = async () => {
+  //   const initialUrl = await Linking.getInitialURL();
+  //   if (initialUrl) {
+  //     handleDeepLink({ url: initialUrl });
+  //   }
+  // };
 
   return (
     <Tabs

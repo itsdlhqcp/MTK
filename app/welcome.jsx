@@ -114,8 +114,8 @@ const Welcome = () => {
           source={require('../assets/images/welcome.png')}
         />
         <View style={{ gap: 20 }}>
-           <Text style={styles.title}>MediaTalk</Text>
-           <Text style={styles.punchline}>Where every thought finds a home and every image tells a story.</Text>
+           <Text style={styles.title}>PloTwist</Text>
+           <Text style={styles.punchline}>Where every thought finds a home and every review tells a story.</Text>
         </View>
 
         {/* footer */}

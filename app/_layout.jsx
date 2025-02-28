@@ -1223,13 +1223,22 @@ const MainLayout = () => {
         if (_event === 'PASSWORD_RECOVERY') {
           // Don't redirect to home for password recovery
          // router.push('/auth/reset');
+        }else if (_event === 'PASSWORD_RESET') {
+          // Handle successful password reset
+          setAuth(session.user);
+          await updatedUserData(session.user, session.user.email);
+        //  router.replace('/profile');
+        }else if (_event === 'SIGNED_OUT') {
+          setAuth(null);
+          // Remove this line to prevent duplicate navigation
+          // router.replace('/welcome'); 
         } else {
           setAuth(session?.user);
           await updatedUserData(session?.user, session?.user?.email);
           // router.replace('/profile');
         }
       } else {
-        setAuth(null);
+         //setAuth(null);
         router.replace('/welcome');
       }
     });
@@ -1238,6 +1247,10 @@ const MainLayout = () => {
       subscription.unsubscribe();
     };
   }, []);
+
+  // if (!initialized) {
+  //   return <SplashScreen />;  // Make sure you show a loading state
+  // }
 
    useEffect(() => {
     if (!initialized) return;
@@ -1254,8 +1267,8 @@ const MainLayout = () => {
          // router.replace('/home');
         }
       } else if (event === 'SIGNED_OUT') {
-        setAuth(null);
-      //  router.replace('/welcome');
+      //  setAuth(null);
+       // router.replace('/welcome');
       }
     });
 

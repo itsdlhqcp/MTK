@@ -225,15 +225,21 @@ const onPasswordlessGrid = () => {
             visibilityTime: 3000,
         });
 
-        // Show custom grey toast
-        setShowCustomToast(true);
+        // Delay showing custom grey toast
+        const showCustomToastTimer = setTimeout(() => {
+            setShowCustomToast(true);
+        }, 3400); // Delay by 3.5 seconds after success toast
 
-        // Hide custom toast after 30 seconds
-        const timer = setTimeout(() => {
+        // Hide custom toast after it's been shown for 7 seconds
+        const hideCustomToastTimer = setTimeout(() => {
             setShowCustomToast(false);
-        }, 30000);
+        }, 10500); // 3.5s delay + 7s display time
 
-        return () => clearTimeout(timer);
+        // Cleanup timers
+        return () => {
+            clearTimeout(showCustomToastTimer);
+            clearTimeout(hideCustomToastTimer);
+        };
     }, []);
 
     const handleCustomToastPress = () => {
@@ -379,10 +385,10 @@ const styles = StyleSheet.create({
     // ... existing styles ...
     customToast: {
         position: 'absolute',
-        top: 80, // Position below status bar
+        top: 50, // Position below status bar
         left: 20,
         right: 20,
-        backgroundColor: '#808080',
+        backgroundColor: 'rgba(57, 50, 50, 0.9)',
         padding: 15,
         borderRadius: 8,
         zIndex: 1000,

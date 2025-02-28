@@ -14,33 +14,21 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 
 const Login = () => {
+ 
   const router = useRouter();
   const emailRef = useRef();
   const passwordRef = useRef(); 
   const { checkUserStatus } = useAuth();
-  const [loading, setLoading ] = useState(true);
+  const [loading, setLoading] = useState(false);
+
+  // Helper function to create a delay
+  const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
   const onSubmit = async () => {
      if (!emailRef.current || !passwordRef.current){
       Alert.alert("Login", "Please fill in all fields");
       return;
      }
-
-    //  let email = emailRef.current.trim();
-    //  let password = passwordRef.current.trim();
-    //  setLoading(true);
-    //  const {error} = await supabase.auth.signInWithPassword({
-    //   email, 
-    //   password
-    //  }); 
-    //  setLoading(false); 
-    //  console.log('error', error);
-    //  if(error){
-    //   Alert.alert('Login', error.message)
-    //  }else{
-    //   Alert.alert("Successfully logged in");
-    //  }
-    //  const isNewUser = await checkUserStatus(user.id);
     try {
       setLoading(true);
       const { data: { user }, error } = await supabase.auth.signInWithPassword({
@@ -53,19 +41,21 @@ const Login = () => {
       // Check if user is new
       const isNew = await checkUserStatus(user.id);
       
+      // Add 3000ms delay before navigation
+      await delay(600);
+      
       // Navigate based on user status
       if (isNew) {
           router.replace('/auth/newuserscreens/userpreferences');
       } else {
           router.replace('/home');
-          // Alert.alert('Login success');
       }
-      } catch (error) {
-          Alert.alert('Login', error.message);
-      } finally {
-          setLoading(false);
-      }
-    };
+    } catch (error) {
+        Alert.alert('Login', error.message);
+    } finally {
+        setLoading(false);
+    }
+  };
 
   return (
     <ScreenWrapper bg="white">
@@ -97,7 +87,7 @@ const Login = () => {
             <Text style={styles.forgotPassword} onPress={() => router.push('/auth/forgot')}>
               try hassle-free login &gt;&gt;</Text>
               {/* button */}
-              <Button loaderType = 'BarIndicator' title={'Login'} loading={false} onPress={onSubmit} />
+              <Button loaderType="BarIndicator" title="Login" loading={loading} onPress={onSubmit} />
           </View>
 
           {/* footer */} 

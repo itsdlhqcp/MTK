@@ -40,7 +40,8 @@ const Profile = () => {
    const [loading, setLoading] = useState(false);
    const [page, setPage] = useState(1);
    const ITEMS_PER_PAGE = 4; // This was used in your Home component but missing here
-   const activeTheme = colorScheme === 'dark' ? darkTheme : theme;
+   // const activeTheme = colorScheme === 'dark' ? darkTheme : theme;
+   const activeTheme = colorScheme === 'dark' ? darkTheme : darkTheme;
    const post = useLocalSearchParams();
    const [postCount, setPostCount] = useState(0);
   //  console.log('auth user profile cred', user);
@@ -57,32 +58,8 @@ const Profile = () => {
 //     navigationGuard();
 // }, [navigationGuard]);
 
-const onLogout = async () => {
-  Alert.alert('Confirm', 'Are you sure you want to logout?', [
-         {
-             text: 'Cancel',
-             style: 'cancel'
-         },
-         {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: async () => {
-			    try{
-          setLoading(true);
-          const { error } = await supabase.auth.signOut();
-            if (error) throw error;
-            setAuth(null);
-          router.replace('/welcome');
-          router.setParams({});
-          } catch (error) {
-              console.error('Logout error:', error.message);
-              return { error };
-          }finally {
-            setLoading(false);
-          }
-          }
-      }
-  ]);
+const         onSettings = async () => {
+  router.push('/profileSettings');
 };
 
   const getPostCount = async () => {
@@ -166,7 +143,7 @@ useEffect(() => {
                 <InstagramProfile 
                     user={user} 
                     router={router} 
-                    handleLogout={onLogout} 
+                    handleLogout={onSettings} 
                     theme={activeTheme}
                     postCount={postCount}
                 />
@@ -228,10 +205,10 @@ const InstagramProfile = ({ user, router, handleLogout, theme, postCount}) => {
       <View style={styles.header}>
         <Text style={[styles.username, { color: theme.colors.textDark }]}>{user.name}</Text>
         <TouchableOpacity 
-          style={[styles.logoutButton, { backgroundColor: theme.colors.secondary }]} 
+          style={[styles.logoutButton]} 
           onPress={handleLogout}
         >
-          <Icon name="logout" color={theme.colors.rose} />
+          <Icon name="menu" color={theme.colors.textDark} />
         </TouchableOpacity>
       </View>
 
@@ -409,7 +386,7 @@ const styles = StyleSheet.create({
   },
   logoutButton: {
     padding: 8,
-    borderRadius: theme.radius.sm,
+   // borderRadius: theme.radius.sm,
   },
   editIcon: {
     position: 'absolute',

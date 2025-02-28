@@ -1327,32 +1327,40 @@ export default function ResetPasswordScreen() {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
-
+  
     if (password !== confirmPassword) {
       Alert.alert('Error', 'Passwords do not match');
       return;
     }
-
+  
     const validationResult = validatePassword(password);
     if (!validationResult.isValid) {
       Alert.alert('Error', validationResult.message);
       return;
     }
-
+  
     try {
-      const { error, success } = await updatePassword(password);
-
+      const { error, success, user } = await updatePassword(password);
+  
       if (error) throw error;
-
+  
       if (success) {
         Alert.alert(
           'Success',
           'Your password has been reset successfully',
-          [{ text: 'OK', onPress: () => router.replace('/login') }]
+          [{ 
+            text: 'OK', 
+            onPress: () => {
+              // Clear the password fields
+              setPassword('');
+              setConfirmPassword('');
+              router.replace('/home');
+            }
+          }]
         );
       }
     } catch (error) {
-      Alert.alert('Error', error.message);
+      Alert.alert('Error', error.message || 'Failed to reset password');
     }
   };
 
