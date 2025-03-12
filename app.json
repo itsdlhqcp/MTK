@@ -1,29 +1,28 @@
 {
   "expo": {
-    "name": "MediaTalk",
+    "name": "PloTwist",
     "slug": "MediaTalk",
+    "description": "PloTwist for cinimophiles",
     "version": "1.0.0",
-    "backgroundColor": "black",
-    "entryPoint": "app/index.jsx",
+    "backgroundColor": "#000000",
     "orientation": "portrait",
     "icon": "./assets/images/splash-icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "splash":{
+    "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "black"
+      "backgroundColor": "#000000"
     },
     "ios": {
       "supportsTablet": true,
-       "bundleIdentifier": "com.myapp"
+      "bundleIdentifier": "com.myapp"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff",
-        "package": "com.myapp"
+        "backgroundColor": "#000000"
       }
     },
     "web": {
@@ -39,13 +38,27 @@
           "image": "./assets/images/booking.png",
           "imageWidth": 500,
           "resizeMode": "contain",
-          "backgroundColor": "black"
+          "backgroundColor": "#000000"
         }
       ],
       "expo-font"
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "914fa909-af2f-4ae4-951d-30b3a259f8d3"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/914fa909-af2f-4ae4-951d-30b3a259f8d3"
     }
   }
 }

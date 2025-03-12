@@ -113,44 +113,64 @@ export default function TabLayout() {
   //     handleDeepLink({ url: initialUrl });
   //   }
   // };
-
+ 
   return (
     <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'dark'].tint,
-        headerShown: false,
-        animationEnabled: false,
-        tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: 'absolute',
-          },
-          default: {},
-        }),
-      }}>
+    screenOptions={{
+      tabBarActiveTintColor: '#15f81b', // Change this to green
+      tabBarInactiveTintColor: 'green',
+      headerShown: false,
+      animationEnabled: false,
+      tabBarButton: HapticTab,
+      tabBarBackground: TabBarBackground,
+      tabBarStyle: Platform.select({
+        ios: {
+          // Use a transparent background on iOS to show the blur effect
+          position: 'absolute',
+          borderTopWidth: 0
+        },
+        default: {
+          position: 'absolute',
+          borderTopWidth: 0
+        },
+      }),
+    }}>
+    <Tabs.Screen
+      name="home"
+      options={{
+        title: 'Home',
+        tabBarIcon: ({ color }) => <IconSymbol size={30} name="house.fill" color={'grey'} />,
+      }}
+    />
       <Tabs.Screen
-        name="home"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={30} name="house.fill" color={'black'} />,
-        }}
-      />
-      <Tabs.Screen
-        name="upcoming"
-        options={{
-          title: 'Upcoming',
-          tabBarIcon: ({ color }) => <IconSymbol size={30} name="paperplane.fill" color={'black'} />,
-        }}
-      />
-      {/* Hidden screen for reset password flow */}
-      <Tabs.Screen
-        name="reset-password"
-        options={{
-          href: null, // This hides the tab but keeps the screen accessible via deep links
-        }}
-      />
-    </Tabs>
+      name="feeds"
+      options={{
+        title: 'Feeds',
+        tabBarIcon: ({ color }) => <IconSymbol size={30} name="newspaper.fill" color={'grey'} />,
+      }}
+    />
+    <Tabs.Screen
+      name="upcoming"
+      options={{
+        title: 'Upcoming',
+        tabBarIcon: ({ color }) => <IconSymbol size={30} name="music.note.tv.fill" color={'grey'} />,
+      }}
+    />
+  
+    <Tabs.Screen
+      name="profile"
+      options={{
+        title: 'Profile',
+        tabBarIcon: ({ color }) => <IconSymbol size={30} name="person.fill" color={'grey'} />,
+      }}
+    />
+    {/* Hidden screen for reset password flow */}
+    {/* <Tabs.Screen
+      name="reset-password"
+      options={{
+        href: null, // This hides the tab but keeps the screen accessible via deep links
+      }}
+    /> */}
+  </Tabs>
   );
 }

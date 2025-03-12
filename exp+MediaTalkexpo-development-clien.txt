@@ -1,0 +1,671 @@
+exp+MediaTalk://expo-development-client/?url=https://u.expo.dev/914fa909-af2f-4ae4-951d-30b3a259f8d3/group/edf1fce8-038e-4b7b-9b64-52792f92fa4a
+
+
+
+Microsoft Windows [Version 10.0.22631.4890]
+(c) Microsoft Corporation. All rights reserved.
+
+C:\Users\91859\Desktop\test-native>npm install
+npm WARN deprecated @types/expo@33.0.3: This is a stub types definition. expo provides its own type definitions, so you do not need this installed.
+npm WARN deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+npm WARN deprecated @babel/plugin-proposal-nullish-coalescing-operator@7.18.6: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-nullish-coalescing-operator instead.
+npm WARN deprecated @babel/plugin-proposal-class-properties@7.18.6: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-class-properties instead.
+npm WARN deprecated rimraf@2.6.3: Rimraf versions prior to v4 are no longer supported
+npm WARN deprecated rimraf@2.7.1: Rimraf versions prior to v4 are no longer supported
+npm WARN deprecated @babel/plugin-proposal-optional-chaining@7.21.0: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-optional-chaining instead.
+npm WARN deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+npm WARN deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm WARN deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm WARN deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm WARN deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm WARN deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm WARN deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm WARN deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm WARN deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm WARN deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm WARN deprecated abab@2.0.6: Use your platform's native atob() and btoa() methods instead
+npm WARN deprecated sudo-prompt@9.1.1: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+npm WARN deprecated domexception@4.0.0: Use your platform's native DOMException instead
+npm WARN deprecated sudo-prompt@8.2.5: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+npm WARN deprecated @xmldom/xmldom@0.7.13: this version is no longer supported, please update to at least 0.8.*
+
+> mediatalk@1.0.0 postinstall
+> patch-package
+
+patch-package 8.0.0
+Applying patches...
+react-native-pell-rich-editor@1.9.0 ✔
+
+added 1203 packages, and audited 1204 packages in 1m
+
+125 packages are looking for funding
+  run `npm fund` for details
+
+5 low severity vulnerabilities
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+
+C:\Users\91859\Desktop\test-native>npm run android
+
+> mediatalk@1.0.0 android
+> expo start --android
+
+Starting project at C:\Users\91859\Desktop\test-native
+› Port 8081 is being used by another process
+× Use port 8082 instead? ... yes
+
+C:\Users\91859\Desktop\test-native>npm run android
+
+> mediatalk@1.0.0 android
+> expo start --android
+
+Starting project at C:\Users\91859\Desktop\test-native
+Starting Metro Bundler
+The following packages should be updated for best compatibility with the installed expo version:
+  expo@52.0.27 - expected version: ~52.0.36
+  expo-constants@17.0.4 - expected version: ~17.0.7
+  expo-file-system@18.0.7 - expected version: ~18.0.11
+  expo-font@13.0.3 - expected version: ~13.0.4
+  expo-image@2.0.4 - expected version: ~2.0.6
+  expo-image-picker@16.0.4 - expected version: ~16.0.6
+  expo-linking@7.0.4 - expected version: ~7.0.5
+  expo-media-library@17.0.5 - expected version: ~17.0.6
+  expo-splash-screen@0.29.21 - expected version: ~0.29.22
+  expo-symbols@0.2.1 - expected version: ~0.2.2
+  expo-system-ui@4.0.7 - expected version: ~4.0.8
+  react-native@0.76.6 - expected version: 0.76.7
+  jest-expo@52.0.3 - expected version: ~52.0.5
+Your project may not work correctly until you install the expected versions of the packages.
+› Opening exp://192.168.29.240:8081 on moto_g31
+▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+█ ▄▄▄▄▄ █▀▄█▀ ▀█  █ ▄▄▄▄▄ █
+█ █   █ █▄   ▄██▄██ █   █ █
+█ █▄▄▄█ █ ▀█▀█ █ ▀█ █▄▄▄█ █
+█▄▄▄▄▄▄▄█ ▀▄█ █▄▀ █▄▄▄▄▄▄▄█
+█▄▄█ █▀▄▄██ ▀█ ▀▄█▀  ▄▀▄▄▀█
+█ ▄██▄█▄  ▄▄██  ██▄▀ ▀▀█▄▄█
+███▄ ▀▄▄▀ █▀▀   █▀█ ▄█ ██▀█
+█▄▀▄▄▄█▄▄▀ ██  ██ ▄▄ ▀▀██▄█
+█▄▄▄█▄█▄█▀▀ ▄▄█▄  ▄▄▄ █ ▄ █
+█ ▄▄▄▄▄ █▄█▄▀██▄  █▄█  ▀▄▄█
+█ █   █ █▀ █▄█ ▀▀▄ ▄▄ █▀▄██
+█ █▄▄▄█ █▀▄██▄  █  █▄  ▄█▄█
+█▄▄▄▄▄▄▄█▄▄█▄█▄▄█▄███▄▄█▄▄█
+
+› Metro waiting on exp://192.168.29.240:8081
+› Scan the QR code above with Expo Go (Android) or the Camera app (iOS)
+
+› Web is waiting on http://localhost:8081
+
+› Using Expo Go
+› Press s │ switch to development build
+
+› Press a │ open Android
+› Press w │ open web
+
+› Press j │ open debugger
+› Press r │ reload app
+› Press m │ toggle menu
+› shift+m │ more tools
+› Press o │ open project code in your editor
+
+› Press ? │ show all commands
+
+Logs for your project will appear below. Press Ctrl+C to exit.
+› Stopped server
+
+C:\Users\91859\Desktop\test-native>npm expo install expo@latest expo-constants@latest expo-file-system@latest expo-font@latest expo-image@latest expo-image-picker@latest expo-linking@latest expo-media-library@latest expo-splash-screen@latest expo-symbols@latest expo-system-ui@latest react-native@latest jest-expo@latest
+Unknown command: "expo"
+
+To see a list of supported npm commands, run:
+  npm help
+
+C:\Users\91859\Desktop\test-native>npm install expo@latest expo-constants@latest expo-file-system@latest expo-font@latest expo-image@latest expo-image-picker@latest expo-linking@latest exp
+o-media-library@latest expo-splash-screen@latest expo-symbols@latest expo-system-ui@latest react-native@latest jest-expo@latest
+npm WARN deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+
+added 30 packages, removed 21 packages, changed 85 packages, and audited 1213 packages in 45s
+
+125 packages are looking for funding
+  run `npm fund` for details
+
+5 low severity vulnerabilities
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+
+C:\Users\91859\Desktop\test-native>expo publish
+WARNING: The legacy expo-cli does not support Node +17. Migrate to the new local Expo CLI: https://blog.expo.dev/the-new-expo-cli-f4250d8e3421.
+┌───────────────────────────────────────────────────────────────────────────┐
+│                                                                           │
+│   The global expo-cli package has been deprecated.                        │
+│                                                                           │
+│   The new Expo CLI is now bundled in your project in the expo package.    │
+│   Learn more: https://blog.expo.dev/the-new-expo-cli-f4250d8e3421.        │
+│                                                                           │
+│   To use the local CLI instead (recommended in SDK 46 and higher), run:   │
+│   › npx expo <command>                                                    │
+│                                                                           │
+└───────────────────────────────────────────────────────────────────────────┘
+The last day to use expo publish is 2024-02-12 and SDK 49 is the last version to support it. Migrate to eas update.
+Learn more: https://blog.expo.dev/sunsetting-expo-publish-and-classic-updates-6cb9cd295378
+
+› Expo SDK: 52.0.0
+› Release channel: default
+› Workflow: Managed
+
+Building optimized bundles and generating sourcemaps...
+Warning: Invalid version react-native@0.78.0 for expo sdkVersion 52.0.0. Use react-native@0.76.7
+Error: react-native is not installed. Please run `npm install` or `yarn` in your project directory.
+Couldn't publish because errors were found. (See logs above.) Please fix the errors and try again.
+
+C:\Users\91859\Desktop\test-native>npm install react-native@0.76.7
+
+added 9 packages, removed 28 packages, changed 9 packages, and audited 1194 packages in 29s
+
+125 packages are looking for funding
+  run `npm fund` for details
+
+5 low severity vulnerabilities
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+
+C:\Users\91859\Desktop\test-native>expo publish
+WARNING: The legacy expo-cli does not support Node +17. Migrate to the new local Expo CLI: https://blog.expo.dev/the-new-expo-cli-f4250d8e3421.
+┌───────────────────────────────────────────────────────────────────────────┐
+│                                                                           │
+│   The global expo-cli package has been deprecated.                        │
+│                                                                           │
+│   The new Expo CLI is now bundled in your project in the expo package.    │
+│   Learn more: https://blog.expo.dev/the-new-expo-cli-f4250d8e3421.        │
+│                                                                           │
+│   To use the local CLI instead (recommended in SDK 46 and higher), run:   │
+│   › npx expo <command>                                                    │
+│                                                                           │
+└───────────────────────────────────────────────────────────────────────────┘
+The last day to use expo publish is 2024-02-12 and SDK 49 is the last version to support it. Migrate to eas update.
+Learn more: https://blog.expo.dev/sunsetting-expo-publish-and-classic-updates-6cb9cd295378
+
+› Expo SDK: 52.0.0
+› Release channel: default
+› Workflow: Managed
+
+Building optimized bundles and generating sourcemaps...
+Error: react-native is not installed. Please run `npm install` or `yarn` in your project directory.
+Couldn't publish because errors were found. (See logs above.) Please fix the errors and try again.
+
+C:\Users\91859\Desktop\test-native>yarn install
+yarn install v1.22.22
+warning ..\..\package.json: No license field
+[1/4] Resolving packages...
+[2/4] Fetching packages...
+[3/4] Linking dependencies...
+warning " > @rneui/themed@4.0.0-rc.8" has unmet peer dependency "@rneui/base@4.0.0-rc.7".
+warning "react-native > @react-native/codegen@0.76.7" has unmet peer dependency "@babel/preset-env@^7.1.6".
+warning "expo > babel-preset-expo > @react-native/babel-preset > @react-native/babel-plugin-codegen > @react-native/codegen > jscodeshift@0.14.0" has unmet peer dependency "@babel/preset-env@^7.1.6".
+warning "react-native-render-html > @native-html/transient-render-engine@11.2.3" has unmet peer dependency "@types/react-native@*".
+warning "react-native-render-html > @native-html/transient-render-engine > @native-html/css-processor@1.11.0" has unmet peer dependency "@types/react-native@*".
+warning "jest-expo > react-server-dom-webpack@19.0.0-rc-6230622a1a-20240610" has incorrect peer dependency "react@19.0.0-rc-6230622a1a-20240610".
+warning "jest-expo > react-server-dom-webpack@19.0.0-rc-6230622a1a-20240610" has incorrect peer dependency "react-dom@19.0.0-rc-6230622a1a-20240610".
+warning "jest-expo > react-server-dom-webpack@19.0.0-rc-6230622a1a-20240610" has unmet peer dependency "webpack@^5.59.0".
+[4/4] Building fresh packages...
+success Saved lockfile.
+$ patch-package
+patch-package 8.0.0
+Applying patches...
+react-native-pell-rich-editor@1.9.0 ✔
+Done in 106.31s.
+
+C:\Users\91859\Desktop\test-native>expo publish
+WARNING: The legacy expo-cli does not support Node +17. Migrate to the new local Expo CLI: https://blog.expo.dev/the-new-expo-cli-f4250d8e3421.
+┌───────────────────────────────────────────────────────────────────────────┐
+│                                                                           │
+│   The global expo-cli package has been deprecated.                        │
+│                                                                           │
+│   The new Expo CLI is now bundled in your project in the expo package.    │
+│   Learn more: https://blog.expo.dev/the-new-expo-cli-f4250d8e3421.        │
+│                                                                           │
+│   To use the local CLI instead (recommended in SDK 46 and higher), run:   │
+│   › npx expo <command>                                                    │
+│                                                                           │
+└───────────────────────────────────────────────────────────────────────────┘
+The last day to use expo publish is 2024-02-12 and SDK 49 is the last version to support it. Migrate to eas update.
+Learn more: https://blog.expo.dev/sunsetting-expo-publish-and-classic-updates-6cb9cd295378
+
+› Expo SDK: 52.0.0
+› Release channel: default
+› Workflow: Managed
+
+Building optimized bundles and generating sourcemaps...
+Error: react-native is not installed. Please run `npm install` or `yarn` in your project directory.
+Couldn't publish because errors were found. (See logs above.) Please fix the errors and try again.
+
+C:\Users\91859\Desktop\test-native>npm uninstall -g expo-cli
+
+removed 984 packages in 7s
+
+C:\Users\91859\Desktop\test-native>npx expo install react-native@0.76.7
+› Installing 1 other package using yarn
+› Using 0.76.7 instead of 0.76.7 for react-native because this version was explicitly provided. Packages excluded from dependency validation should be listed in expo.install.exclude in package.json. Learn more: https://docs.expo.dev/more/expo-cli/#configuring-dependency-validation
+> yarn add react-native@0.76.7
+yarn add v1.22.22
+warning ..\..\package.json: No license field
+[1/4] Resolving packages...
+[2/4] Fetching packages...
+[3/4] Linking dependencies...
+warning " > @rneui/themed@4.0.0-rc.8" has unmet peer dependency "@rneui/base@4.0.0-rc.7".
+warning "react-native > @react-native/codegen@0.76.7" has unmet peer dependency "@babel/preset-env@^7.1.6".
+warning "expo > babel-preset-expo > @react-native/babel-preset > @react-native/babel-plugin-codegen > @react-native/codegen > jscodeshift@0.14.0" has unmet peer dependency "@babel/preset-env@^7.1.6".
+warning "react-native-render-html > @native-html/transient-render-engine@11.2.3" has unmet peer dependency "@types/react-native@*".
+warning "react-native-render-html > @native-html/transient-render-engine > @native-html/css-processor@1.11.0" has unmet peer dependency "@types/react-native@*".
+warning "jest-expo > react-server-dom-webpack@19.0.0-rc-6230622a1a-20240610" has incorrect peer dependency "react@19.0.0-rc-6230622a1a-20240610".
+warning "jest-expo > react-server-dom-webpack@19.0.0-rc-6230622a1a-20240610" has incorrect peer dependency "react-dom@19.0.0-rc-6230622a1a-20240610".
+warning "jest-expo > react-server-dom-webpack@19.0.0-rc-6230622a1a-20240610" has unmet peer dependency "webpack@^5.59.0".
+[4/4] Building fresh packages...
+success Saved lockfile.
+success Saved 1 new dependency.
+info Direct dependencies
+└─ react-native@0.76.7
+info All dependencies
+└─ react-native@0.76.7
+$ patch-package
+patch-package 8.0.0
+Applying patches...
+react-native-pell-rich-editor@1.9.0 ✔
+Done in 37.94s.
+
+C:\Users\91859\Desktop\test-native>expo publish
+'expo' is not recognized as an internal or external command,
+operable program or batch file.
+
+C:\Users\91859\Desktop\test-native>npm install -g expo
+npm WARN deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+npm WARN deprecated @babel/plugin-proposal-class-properties@7.18.6: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-class-properties instead.
+npm WARN deprecated @babel/plugin-proposal-nullish-coalescing-operator@7.18.6: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-nullish-coalescing-operator instead.
+npm WARN deprecated rimraf@2.6.3: Rimraf versions prior to v4 are no longer supported
+npm WARN deprecated @babel/plugin-proposal-optional-chaining@7.21.0: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-optional-chaining instead.
+npm WARN deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+npm WARN deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm WARN deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm WARN deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm WARN deprecated sudo-prompt@9.1.1: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+npm WARN deprecated @xmldom/xmldom@0.7.13: this version is no longer supported, please update to at least 0.8.*
+npm WARN deprecated sudo-prompt@8.2.5: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+
+added 668 packages in 43s
+
+70 packages are looking for funding
+  run `npm fund` for details
+
+C:\Users\91859\Desktop\test-native>expo publish
+
+  $ expo publish is not supported in the local CLI, please use eas update instead
+
+
+C:\Users\91859\Desktop\test-native>expo --v
+unknown or unexpected option: --v
+
+C:\Users\91859\Desktop\test-native>expo -v
+0.22.18
+
+C:\Users\91859\Desktop\test-native>code .
+
+C:\Users\91859\Desktop\test-native>npm install -g eas-cli
+npm WARN deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+npm WARN deprecated lodash.get@4.4.2: This package is deprecated. Use the optional chaining (?.) operator instead.
+npm WARN deprecated rimraf@2.4.5: Rimraf versions prior to v4 are no longer supported
+npm WARN deprecated @oclif/screen@3.0.8: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+npm WARN deprecated glob@6.0.4: Glob versions prior to v9 are no longer supported
+npm WARN deprecated sudo-prompt@9.1.1: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+npm WARN deprecated @xmldom/xmldom@0.7.13: this version is no longer supported, please update to at least 0.8.*
+
+changed 442 packages in 47s
+
+53 packages are looking for funding
+  run `npm fund` for details
+
+C:\Users\91859\Desktop\test-native>eas update:configure
+EAS project not configured.
+√ Would you like to automatically create an EAS project for @mediatalkx/MediaTalk? ... yes
+√ Created @mediatalkx/MediaTalk: https://expo.dev/accounts/mediatalkx/projects/MediaTalk on EAS
+√ Linked local project to EAS project 914fa909-af2f-4ae4-951d-30b3a259f8d3
+💡 The following process will configure your project to use EAS Update. These changes only apply to your local project files and you can safely revert them at any time.
+√ Configured updates.url to "https://u.expo.dev/914fa909-af2f-4ae4-951d-30b3a259f8d3"
+√ Configured runtimeVersion for Android and iOS with "{"policy":"appVersion"}"
+
+All builds of your app going forward will be eligible to receive updates published with EAS Update.
+
+EAS Build is not configured. If you'd like to use EAS Build with EAS Update, run eas build:configure.
+
+🎉 Your app is configured to use EAS Update!
+
+- Run eas build:configure to complete your installation
+- Learn more about other capabilities of EAS Update: https://docs.expo.dev/eas-update/introduction/
+
+C:\Users\91859\Desktop\test-native>eas update --branch production --message "Your update message"
+[expo-cli] Starting Metro Bundler
+[expo-cli]
+[expo-cli] |
+[expo-cli] |
+[expo-cli] | #
+[expo-cli] | # Fatal error in , line 0
+[expo-cli] | # Fatal process out of memory: Zone
+[expo-cli] | #
+[expo-cli] | #
+[expo-cli] | #
+[expo-cli] | #FailureMessage Object: 000000F8C29F5A50
+[expo-cli] | ----- Native stack trace -----
+[expo-cli] |
+[expo-cli] |
+[expo-cli] |
+[expo-cli] | #
+[expo-cli] | # Fatal error in , line 0
+[expo-cli] | # Fatal process out of memory: Zone
+[expo-cli] | #
+[expo-cli] | #
+[expo-cli] | #
+[expo-cli] | #FailureMessage Object: 000000E28CFF6330
+[expo-cli] | ----- Native stack trace -----
+[expo-cli] |
+[expo-cli] |
+[expo-cli] |
+[expo-cli] | #
+[expo-cli] | # Fatal error in , line 0
+[expo-cli] | # Fatal process out of memory: Zone
+[expo-cli] | #
+[expo-cli] | #
+[expo-cli] | #
+[expo-cli] | #FailureMessage Object: 000000E28B7F57C0
+[expo-cli] | ----- Native stack trace -----
+[expo-cli] |
+[expo-cli] |
+[expo-cli] |
+[expo-cli] | #
+[expo-cli] | # Fatal error in , line 0
+[expo-cli] | # Fatal process out of memory: Zone
+[expo-cli] | #
+[expo-cli] | #
+[expo-cli] | #
+[expo-cli] | #FailureMessage Object: 0000009AAD7F61C0
+[expo-cli] | ----- Native stack trace -----
+[expo-cli] |
+[expo-cli] |
+[expo-cli] | <--- Last few GCs --->
+[expo-cli] |
+[expo-cli] | [18356:00000271A6015F90]     5701 ms: Scavenge 18.1 (30.4) -> 16.7 (30.4) MB, 3.75 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure;
+[expo-cli] | [18356:00000271A6015F90]     5805 ms: Scavenge 20.7 (30.4) -> 19.0 (31.9) MB, 24.13 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure;
+[expo-cli] |
+[expo-cli] |
+[expo-cli] | <--- JS stacktrace --->
+[expo-cli] |
+[expo-cli] |  1: 00007FF61EC96E7B
+[expo-cli] |  2: 00007FF61EB9622F
+[expo-cli] |  3: 00007FF61FA617F2
+[expo-cli] |  1: 00007FF61EC96E7B
+[expo-cli] |  4: 00007FF61F666F83
+[expo-cli] |  2: 00007FF61EB9622F
+[expo-cli] |  5: 00007FF61F1498D4
+[expo-cli] |  3: 00007FF61FA617F2
+[expo-cli] |  6: 00007FF61EF704D0
+[expo-cli] |  4: 00007FF61F666F83
+[expo-cli] |  7: 00007FF61FB85532
+[expo-cli] |  5: 00007FF61F1498D4
+[expo-cli] |  8: 00007FF61FB7851E
+[expo-cli] |  6: 00007FF61FC703E5
+[expo-cli] |  9: 00007FF61FB209DF
+[expo-cli] |  7: 00007FF61FC71602
+[expo-cli] | 10: 00007FF61FB2CEB1
+[expo-cli] |  8: 00007FF61FB28C12
+[expo-cli] | 11: 00007FF61FB2733F
+[expo-cli] |  9: 00007FF61FB2667C
+[expo-cli] | 12: 00007FF61FB222CA
+[expo-cli] | 10: 00007FF61FB222CA
+[expo-cli] | 13: 00007FF61F5D5791
+[expo-cli] | 11: 00007FF61F5D5791
+[expo-cli] | 14: 00007FF61F5A26B1
+[expo-cli] | 12: 00007FF61F5A26B1
+[expo-cli] | 15: 00007FF61EB98CDD
+[expo-cli] | 13: 00007FF61EB98CDD
+[expo-cli] | 16: 00007FF61ECE983D
+[expo-cli] | 14: 00007FF61ECE983D
+[expo-cli] | 17: 00007FF61FE83B00
+[expo-cli] | 15: 00007FF61FE83B00
+[expo-cli] | 18: 00007FFE0E2D259D
+[expo-cli] | 16: 00007FFE0E2D259D
+[expo-cli] | 19: 00007FFE0F50AF38
+[expo-cli] | 17: 00007FFE0F50AF38
+[expo-cli] |  1: 00007FF61EC96E7B
+[expo-cli] |  2: 00007FF61EB9622F
+[expo-cli] |  3: 00007FF61FA617F2
+[expo-cli] |  4: 00007FF61F666F83
+[expo-cli] |  5: 00007FF61F1498D4
+[expo-cli] |  6: 00007FF61FBF0CFE
+[expo-cli] |  7: 00007FF61FCCB37E
+[expo-cli] |  8: 00007FF61FC4136B
+[expo-cli] |  9: 00007FF61FC42A5A
+[expo-cli] | 10: 00007FF61FC3EF99
+[expo-cli] | 11: 00007FF61FC38BE6
+[expo-cli] | 12: 00007FF61FB73547
+[expo-cli] | 13: 00007FF61FB28591
+[expo-cli] | 14: 00007FF61FB73154
+[expo-cli] | 15: 00007FF61FB738C6
+[expo-cli] | 16: 00007FF61FB735D2
+[expo-cli] | 17: 00007FF61FB29A54
+[expo-cli] | 18: 00007FF61FB2174F
+[expo-cli] | 19: 00007FF61FB222A5
+[expo-cli] | 20: 00007FF61F5D5791
+[expo-cli] | 21: 00007FF61F5A26B1
+[expo-cli] | 22: 00007FF61EB98CDD
+[expo-cli] | 23: 00007FF61ECE983D
+[expo-cli] | 24: 00007FF61FE83B00
+[expo-cli] | 25: 00007FFE0E2D259D
+[expo-cli] | 26: 00007FFE0F50AF38 RtlUserThreadStart+40
+[expo-cli] |
+[expo-cli] |
+[expo-cli] | #
+[expo-cli] | # Fatal error in , line 0
+[expo-cli] | # Fatal process out of memory: Zone
+[expo-cli] | #
+[expo-cli] | #
+[expo-cli] | #
+[expo-cli] | #FailureMessage Object: 000000878CFF5CA0
+[expo-cli] | ----- Native stack trace -----
+[expo-cli] |
+[expo-cli] |
+[expo-cli] |
+[expo-cli] | #
+[expo-cli] | # Fatal error in , line 0
+[expo-cli] | # Fatal process out of memory: Zone
+[expo-cli] | #
+[expo-cli] | #
+[expo-cli] | #
+[expo-cli] | #FailureMessage Object: 000000878BFF5D70
+[expo-cli] | ----- Native stack trace -----
+[expo-cli] |
+[expo-cli] |  1: 00007FF61EC96E7B
+[expo-cli] |  2: 00007FF61EB9622F
+[expo-cli] |  3: 00007FF61FA617F2
+[expo-cli] |  4: 00007FF61F666F83
+[expo-cli] |  5: 00007FF61F1498D4
+[expo-cli] |  6: 00007FF61FB9CC9D
+[expo-cli] |  7: 00007FF61FB9CDBE
+[expo-cli] |  8: 00007FF61FB2A165
+[expo-cli] |  9: 00007FF61FB26825
+[expo-cli] | 10: 00007FF61FB222CA
+[expo-cli] | 11: 00007FF61F5D5791
+[expo-cli] | 12: 00007FF61F5A26B1
+[expo-cli] | 13: 00007FF61EB98CDD
+[expo-cli] | 14: 00007FF61ECE983D
+[expo-cli] | 15: 00007FF61FE83B00
+[expo-cli] | 16: 00007FFE0E2D259D
+[expo-cli] | 17: 00007FFE0F50AF38
+[expo-cli] |  1: 00007FF61EC96E7B
+[expo-cli] |  2: 00007FF61EB9622F
+[expo-cli] Android Bundling failed 81172ms node_modules\expo-router\entry.js (566 modules)
+[expo-cli] SyntaxError: node_modules\expo-router\build\qualified-entry.js: A jest worker process (pid=18356) was terminated by another process: signal=SIGTERM, exitCode=null. Operating system logs may contain more information on why this occurred.
+[expo-cli] Error: A jest worker process (pid=18356) was terminated by another process: signal=SIGTERM, exitCode=null. Operating system logs may contain more information on why this occurred.
+[expo-cli]     at ChildProcessWorker._onExit (C:\Users\91859\Desktop\test-native\node_modules\jest-worker\build\workers\ChildProcessWorker.js:370:23)
+[expo-cli]     at ChildProcess.emit (node:events:518:28)
+× Export failed
+C:\Users\91859\Desktop\test-native\node_modules\expo\bin\cli export --output-dir dist --dump-sourcemap --dump-assetmap --platform ios --platform android exited with non-zero code: 1
+    Error: update command failed.
+
+C:\Users\91859\Desktop\test-native>set NODE_OPTIONS=--max_old_space_size=4096
+
+C:\Users\91859\Desktop\test-native>expo start --clear
+Starting project at C:\Users\91859\Desktop\test-native
+Error: Cannot find module 'metro/src/lib/TerminalReporter'
+Require stack:
+- C:\Users\91859\AppData\Roaming\npm\node_modules\expo\node_modules\@expo\cli\build\src\start\server\metro\TerminalReporter.js
+- C:\Users\91859\AppData\Roaming\npm\node_modules\expo\node_modules\@expo\cli\build\src\start\server\metro\MetroTerminalReporter.js
+- C:\Users\91859\AppData\Roaming\npm\node_modules\expo\node_modules\@expo\cli\build\src\start\server\metro\instantiateMetro.js
+- C:\Users\91859\AppData\Roaming\npm\node_modules\expo\node_modules\@expo\cli\build\src\start\server\metro\MetroBundlerDevServer.js
+- C:\Users\91859\AppData\Roaming\npm\node_modules\expo\node_modules\@expo\cli\build\src\start\server\DevServerManager.js
+- C:\Users\91859\AppData\Roaming\npm\node_modules\expo\node_modules\@expo\cli\build\src\start\startAsync.js
+- C:\Users\91859\AppData\Roaming\npm\node_modules\expo\node_modules\@expo\cli\build\src\start\index.js
+- C:\Users\91859\AppData\Roaming\npm\node_modules\expo\node_modules\@expo\cli\build\bin\cli
+- C:\Users\91859\AppData\Roaming\npm\node_modules\expo\bin\cli
+Error: Cannot find module 'metro/src/lib/TerminalReporter'
+Require stack:
+- C:\Users\91859\AppData\Roaming\npm\node_modules\expo\node_modules\@expo\cli\build\src\start\server\metro\TerminalReporter.js
+- C:\Users\91859\AppData\Roaming\npm\node_modules\expo\node_modules\@expo\cli\build\src\start\server\metro\MetroTerminalReporter.js
+- C:\Users\91859\AppData\Roaming\npm\node_modules\expo\node_modules\@expo\cli\build\src\start\server\metro\instantiateMetro.js
+- C:\Users\91859\AppData\Roaming\npm\node_modules\expo\node_modules\@expo\cli\build\src\start\server\metro\MetroBundlerDevServer.js
+- C:\Users\91859\AppData\Roaming\npm\node_modules\expo\node_modules\@expo\cli\build\src\start\server\DevServerManager.js
+- C:\Users\91859\AppData\Roaming\npm\node_modules\expo\node_modules\@expo\cli\build\src\start\startAsync.js
+- C:\Users\91859\AppData\Roaming\npm\node_modules\expo\node_modules\@expo\cli\build\src\start\index.js
+- C:\Users\91859\AppData\Roaming\npm\node_modules\expo\node_modules\@expo\cli\build\bin\cli
+- C:\Users\91859\AppData\Roaming\npm\node_modules\expo\bin\cli
+    at Function.Module._resolveFilename (node:internal/modules/cjs/loader:1144:15)
+    at Function.Module._load (node:internal/modules/cjs/loader:985:27)
+    at Module.require (node:internal/modules/cjs/loader:1235:19)
+    at require (node:internal/modules/helpers:176:18)
+    at UpstreamTerminalReporter (C:\Users\91859\AppData\Roaming\npm\node_modules\expo\node_modules\@expo\cli\build\src\start\server\metro\TerminalReporter.js:26:55)
+    at Object.<anonymous> (C:\Users\91859\AppData\Roaming\npm\node_modules\expo\node_modules\@expo\cli\src\start\server\metro\TerminalReporter.ts:45:27)
+    at Module._compile (node:internal/modules/cjs/loader:1376:14)
+    at Object.Module._extensions..js (node:internal/modules/cjs/loader:1435:10)
+    at Module.load (node:internal/modules/cjs/loader:1207:32)
+    at Function.Module._load (node:internal/modules/cjs/loader:1023:12)
+
+C:\Users\91859\Desktop\test-native>set NODE_OPTIONS=--max_old_space_size=8096
+
+C:\Users\91859\Desktop\test-native>eas update --branch production --message "Your update message"
+[expo-cli] Starting Metro Bundler
+[expo-cli]
+[expo-cli] <--- Last few GCs --->
+[expo-cli]
+[expo-cli] [16824:000002A59A3CB530]    23829 ms: Scavenge 243.1 (267.0) -> 237.7 (271.3) MB, 92.42 / 0.12 ms  (average mu = 0.991, current mu = 0.992) task;
+[expo-cli] [16824:000002A59A3CB530]    25466 ms: Scavenge 250.8 (271.7) -> 241.3 (275.0) MB, 74.65 / 1.05 ms  (average mu = 0.991, current mu = 0.992) allocation failure;
+[expo-cli] [16824:000002A59A3CB530]    27048 ms: Scavenge 251.0 (275.0) -> 243.7 (278.0) MB, 18.74 / 0.24 ms  (average mu = 0.991, current mu = 0.992) task;
+[expo-cli]
+[expo-cli]
+[expo-cli] <--- JS stacktrace --->
+[expo-cli]
+[expo-cli] FATAL ERROR: AlignedAlloc Allocation failed - process out of memory
+[expo-cli] ----- Native stack trace -----
+[expo-cli] 1: 00007FF7999F6E7B node::SetCppgcReference+16075
+[expo-cli] 2: 00007FF79996D996 v8::base::CPU::num_virtual_address_bits+79190
+[expo-cli]  3: 00007FF79996FBA5 v8::base::CPU::num_virtual_address_bits+87909
+[expo-cli]  4: 00007FF79A3DD9E1 v8::Isolate::ReportExternalAllocationLimitReached+65
+[expo-cli]  5: 00007FF79A3C7178 v8::Function::Experimental_IsNopFunction+1336
+[expo-cli]  6: 00007FF799EAC5BC v8::internal::Version::GetString+10620
+[expo-cli]  7: 00007FF799FD5715 v8::base::Thread::StartSynchronously+390485
+[expo-cli]  8: 00007FF799FD5301 v8::base::Thread::StartSynchronously+389441
+[expo-cli]  9: 00007FF799FD43DB v8::base::Thread::StartSynchronously+385563
+[expo-cli] 10: 00007FF799FD5646 v8::base::Thread::StartSynchronously+390278
+[expo-cli] 11: 00007FF799F00A12 v8::CodeEvent::GetFunctionName+77010
+[expo-cli] 12: 00007FF799F023FA v8::CodeEvent::GetFunctionName+83642
+[expo-cli] 13: 00007FF73A45AAFA
+× Export failed
+C:\Users\91859\Desktop\test-native\node_modules\expo\bin\cli export --output-dir dist --dump-sourcemap --dump-assetmap --platform ios --platform android exited with non-zero code: 134
+    Error: update command failed.
+
+C:\Users\91859\Desktop\test-native>eas update --branch production --message "first launch"
+[expo-cli] Starting Metro Bundler
+[expo-cli]
+[expo-cli] iOS Bundled 53340ms node_modules\expo-router\entry.js (1905 modules)
+[expo-cli] Android Bundled 62138ms node_modules\expo-router\entry.js (1906 modules)
+[expo-cli] Creating asset map
+[expo-cli]
+[expo-cli] › Assets (110):
+[expo-cli] assets\images\defaultUser.png (4.06 kB)
+[expo-cli] assets\images\welcome.png (46.3 kB)
+[expo-cli] node_modules\@expo\vector-icons\build\vendor\react-native-vector-icons\Fonts\MaterialIcons.ttf (357 kB)
+[expo-cli] node_modules\@react-navigation\elements\lib\commonjs\assets\back-icon-mask.png (653 B)
+[expo-cli] node_modules\@react-navigation\elements\lib\commonjs\assets\back-icon.png (8 variations | 359 B)
+[expo-cli] node_modules\@react-navigation\elements\lib\commonjs\assets\clear-icon.png (4 variations | 425 B)
+[expo-cli] node_modules\@react-navigation\elements\lib\commonjs\assets\close-icon.png (4 variations | 235 B)
+[expo-cli] node_modules\@react-navigation\elements\lib\commonjs\assets\search-icon.png (7 variations | 592 B)
+[expo-cli] node_modules\expo-router\assets\error.png (469 B)
+[expo-cli] node_modules\expo-router\assets\file.png (138 B)
+[expo-cli] node_modules\expo-router\assets\forward.png (188 B)
+[expo-cli] node_modules\expo-router\assets\pkg.png (364 B)
+[expo-cli] node_modules\expo-router\assets\sitemap.png (465 B)
+[expo-cli] node_modules\expo-router\assets\unmatched.png (4.75 kB)
+[expo-cli] node_modules\react-native-pell-rich-editor\img\blockquote.png (3 variations | 3.11 kB)
+[expo-cli] node_modules\react-native-pell-rich-editor\img\bold.png (3 variations | 2.52 kB)
+[expo-cli] node_modules\react-native-pell-rich-editor\img\checkbox.png (3 variations | 2.54 kB)
+[expo-cli] node_modules\react-native-pell-rich-editor\img\code.png (3 variations | 3.48 kB)
+[expo-cli] node_modules\react-native-pell-rich-editor\img\fontSize.png (3 variations | 1.97 kB)
+[expo-cli] node_modules\react-native-pell-rich-editor\img\image.png (3 variations | 2.68 kB)
+[expo-cli] node_modules\react-native-pell-rich-editor\img\indent.png (3 variations | 1.91 kB)
+[expo-cli] node_modules\react-native-pell-rich-editor\img\italic.png (3 variations | 1.76 kB)
+[expo-cli] node_modules\react-native-pell-rich-editor\img\justify_center.png (3 variations | 1.32 kB)
+[expo-cli] node_modules\react-native-pell-rich-editor\img\justify_full.png (3 variations | 1.19 kB)
+[expo-cli] node_modules\react-native-pell-rich-editor\img\justify_left.png (3 variations | 1.27 kB)
+[expo-cli] node_modules\react-native-pell-rich-editor\img\justify_right.png (3 variations | 1.28 kB)
+[expo-cli] node_modules\react-native-pell-rich-editor\img\keyboard.png (3 variations | 2.18 kB)
+[expo-cli] node_modules\react-native-pell-rich-editor\img\line.png (3 variations | 684 B)
+[expo-cli] node_modules\react-native-pell-rich-editor\img\link.png (3 variations | 2.75 kB)
+[expo-cli] node_modules\react-native-pell-rich-editor\img\ol.png (3 variations | 1.8 kB)
+[expo-cli] node_modules\react-native-pell-rich-editor\img\outdent.png (3 variations | 1.94 kB)
+[expo-cli] node_modules\react-native-pell-rich-editor\img\redo.png (3 variations | 3 kB)
+[expo-cli] node_modules\react-native-pell-rich-editor\img\remove_format.png (3 variations | 2.31 kB)
+[expo-cli] node_modules\react-native-pell-rich-editor\img\strikethrough.png (3 variations | 3.15 kB)
+[expo-cli] node_modules\react-native-pell-rich-editor\img\subscript.png (792 B)
+[expo-cli] node_modules\react-native-pell-rich-editor\img\superscript.png (800 B)
+[expo-cli] node_modules\react-native-pell-rich-editor\img\table.png (3 variations | 1.86 kB)
+[expo-cli] node_modules\react-native-pell-rich-editor\img\ul.png (3 variations | 1.42 kB)
+[expo-cli] node_modules\react-native-pell-rich-editor\img\underline.png (3 variations | 2.1 kB)
+[expo-cli] node_modules\react-native-pell-rich-editor\img\undo.png (3 variations | 3.04 kB)
+[expo-cli] node_modules\react-native-pell-rich-editor\img\video.png (3 variations | 2.17 kB)
+[expo-cli] › ios bundles (2):
+[expo-cli] _expo/static/js/ios/entry-7615f355de7e76a2d3855c343eaca7dc.hbc (4.48 MB)
+[expo-cli] _expo/static/js/ios/entry-7615f355de7e76a2d3855c343eaca7dc.hbc.map (11.8 MB)
+[expo-cli] › android bundles (2):
+[expo-cli] _expo/static/js/android/entry-8b9c5aeebbfb95312ff3c6804b85ca20.hbc (4.49 MB)
+[expo-cli] _expo/static/js/android/entry-8b9c5aeebbfb95312ff3c6804b85ca20.hbc.map (11.8 MB)
+[expo-cli] › Files (2):
+[expo-cli] assetmap.json (33.7 kB)
+[expo-cli] metadata.json (14.2 kB)
+[expo-cli]
+[expo-cli] Exported: dist
+√ Exported bundle(s)
+√ Uploaded 2 app bundles
+√ Uploading assets skipped - no new assets found
+i 110 iOS assets, 110 Android assets (maximum: 2000 total per update). Learn more about asset limits: https://expo.fyi/eas-update-asset-limits
+⌛️ Computing the project fingerprints is taking longer than expected...
+⏩ To skip this step, set the environment variable: EAS_SKIP_AUTO_FINGERPRINT=1
+√ Computed project fingerprints
+√ Published!
+
+Branch             production
+Runtime version    1.0.0
+Platform           android, ios
+Update group ID    edf1fce8-038e-4b7b-9b64-52792f92fa4a
+Android update ID  f110f1e6-b8c1-47fd-8e03-c57b3c44c709
+iOS update ID      d7ddd784-6876-4032-8191-2a7eda98329c
+Message            first launch
+Commit             3797b0f4b018b76c67fe156eaf17ce1f16737249*
+EAS Dashboard      https://expo.dev/accounts/mediatalkx/projects/MediaTalk/updates/edf1fce8-038e-4b7b-9b64-52792f92fa4a
+
+
+C:\Users\91859\Desktop\test-native>^X

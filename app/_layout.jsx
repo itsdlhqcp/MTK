@@ -1146,6 +1146,7 @@ import { SplashScreen, Stack, useRouter, useSegments } from 'expo-router'
 import { AuthProvider, useAuth } from '../contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { getUserData } from '../services/userServices'
+import { PostProvider } from '../contexts/PostContext';
 
 // Keep existing LogBox configurations
 LogBox.ignoreLogs(['Warning: TNodeChildrenRenderer','Warning: MemoizedTNodeRenderer','Warning: TRenderEngineProvider','Warning: A props object containing a "key" prop is being spread into JSX', 'Warning: Text strings must be rendered within a <Text> component.'])
@@ -1153,7 +1154,9 @@ LogBox.ignoreLogs(['Warning: TNodeChildrenRenderer','Warning: MemoizedTNodeRende
 const _layout = () => {
   return (
     <AuthProvider>
-      <MainLayout />
+      <PostProvider>
+        <MainLayout />
+      </PostProvider>
     </AuthProvider>
   )
 }
@@ -1293,7 +1296,7 @@ const MainLayout = () => {
       }}
     >
       {/* Keep your existing modal screens */}
-      <Stack.Screen
+      {/* <Stack.Screen
         name="postDetails"
         options={{
           presentation: 'modal',
@@ -1335,7 +1338,23 @@ const MainLayout = () => {
             },
           }),
         }}
-      />
+      /> */}
+
+
+        {/* <Stack.Screen
+         name="postDetails"
+         options={{
+         presentation: 'modal',
+         animation: 'slide_from_bottom',
+         headerShown: false,  
+         gestureEnabled: true,
+         gestureDirection: 'vertical',
+         fullScreenGestureEnabled: true,
+         animationDuration: 200,
+      }}
+      /> */}
+
+
       <Stack.Screen
         name="releaseDetails"
         options={{

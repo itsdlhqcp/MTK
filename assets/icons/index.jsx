@@ -40,6 +40,13 @@ import Voot from './Voot';
 import Aha from './Aha';
 import SunNxt from './Sunnxt';
 import Menu from './Menu';
+import Dm from "./Dm";
+import Back from './back';
+import More from './more';
+import Bookmark from "./bookmark";
+import ThumbsUp from "./thumbsup";
+import ThumbsDown from "./thumbsDown";
+import YouTube from "./youTube";
 
 const icons = {
     home: Home,
@@ -81,8 +88,14 @@ const icons = {
     voot: Voot, 
     aha: Aha,
     sunnxt: SunNxt,
-    menu: Menu
-
+    menu: Menu,
+    dm: Dm,
+    back: Back,
+    more: More,
+    bookmark: Bookmark,
+    thumbsup: ThumbsUp,
+    thumbsdown: ThumbsDown,
+    youtube: YouTube
 }
 
 const Icon = ({name, ...props}) => {
