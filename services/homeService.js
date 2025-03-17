@@ -135,7 +135,7 @@ export const fetchPosts = async (limit=10) => {
   try {
     const { data, error } = await supabase
       .from('twists')
-      .select(`*,user: users (id, name, image)`)
+      .select(`*,user: users (id, name, image),commentLikes(*),commentUnlikes(*)`)
       .order('created_at', { ascending: false })
       .limit(limit);
     if (error) {
@@ -146,3 +146,86 @@ export const fetchPosts = async (limit=10) => {
     return { success: false, msg: 'Could not fetch the posts due to an exception' };
   }
 };
+
+// below is two parts which helps to add and remove twist likes
+
+  export const createTwistLikes = async (addlikes) => {
+
+    const { data, error } = await supabase
+    .from('commentLikes')
+    .insert(addlikes)
+    .select()
+    .single();
+      try{
+        if(error){
+          console.log('twist create like error: ', error);
+            return {success: false, msg: error?.message};
+        }
+         return {success: true, data}; 
+      }catch(error){
+        console.log('got twists like create error', error);
+        return {success: false, msg: error?.message};
+      }
+    }
+    
+    
+    export const removeTwistLikes = async (twistId, userId) => {
+    
+      const { error } = await supabase
+      .from('commentLikes')
+      .delete()
+      .eq('twistId', twistId)
+      .eq('userId', userId);
+        try{
+          if(error){
+            console.log('twist like remove error: ', error);
+              return {success: false, msg: error?.message};
+          }
+           return {success: true}; 
+        }catch(error){
+          console.log('got twist like removing error', error);
+          return {success: false, msg: error?.message};
+        }
+      }
+
+
+  // below is two parts which helps to add and remove twist unlikes
+
+  export const createTwistUnlikes = async (addUnlikes) => {
+
+    const { data, error } = await supabase
+    .from('commentUnlikes')
+    .insert(addUnlikes)
+    .select()
+    .single();
+      try{
+        if(error){
+          console.log('twist create unlike error: ', error);
+            return {success: false, msg: error?.message};
+        }
+         return {success: true, data}; 
+      }catch(error){
+        console.log('got twists unlike create error', error);
+        return {success: false, msg: error?.message};
+      }
+    }
+    
+    
+    export const removeTwistUnlikes = async (twistId, userId) => {
+    
+      const { error } = await supabase
+      .from('commentUnlikes')
+      .delete()
+      .eq('twistId', twistId)
+      .eq('userId', userId);
+        try{
+          if(error){
+            console.log('twist unlike remove error: ', error);
+              return {success: false, msg: error?.message};
+          }
+           return {success: true}; 
+        }catch(error){
+          console.log('got twist unlike removing error', error);
+          return {success: false, msg: error?.message};
+        }
+      }

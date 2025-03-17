@@ -30,7 +30,7 @@ const ReleaseCard = ({
 
     const handlePeopleReadReviews = () => {
         if (!item?.id) return null;
-        router.push({pathname: 'releasePeopleDetails', params: {releaseId: item.id}});
+        router.push({pathname: 'releasePeopleSection/releasePeopleDetails', params: {releaseId: item.id}});
     }
 
     const createdAt = item?.rDate ? moment(item.rDate).format('MMM D') : '';

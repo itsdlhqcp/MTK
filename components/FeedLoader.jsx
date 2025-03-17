@@ -6,7 +6,7 @@ import theme from '../constants/theme';
 const FeedLoader = ({ size = "large", color = "#FFA500" }) => {
   return (
     <View style={styles.container}>
-      <BallIndicator size={size === "small" ? 18 : 32} color={color} /> 
+      <SkypeIndicator size={size === "small" ? 18 : 32} color={color} /> 
     </View>
   );
 };

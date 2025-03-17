@@ -1224,7 +1224,7 @@
 
 
 import { Text, View, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import theme from '../constants/theme';
 import { wp, hp } from '../helpers/common';
 import Icon from '../assets/icons';
@@ -1235,6 +1235,8 @@ import { getSupabaseFileUrl } from '../services/userProfileImage';
 import TwistFooter from './TwistFooter';
 import { usePost } from '../contexts/PostContext';
 import YoutubeIframe from 'react-native-youtube-iframe';
+import { Button } from 'react-native';
+import Avatar from './Avatar';
 
 const textStyle = {
   color: theme.colors.light || '#E0E0E0', 
@@ -1285,6 +1287,17 @@ const TwistCard = ({
   const { registerPost } = usePost();
   const [youtubeVideoId, setYoutubeVideoId] = useState(null);
   const [playing, setPlaying] = useState(false);
+
+   const onStateChange = useCallback((state)=>{
+      if (state === 'ended'){
+        setPlaying(false);
+        Alert.alert('Video Ended', 'Video has finished playing!');
+      }
+    }, []);
+  
+    const tooglePlaying = useCallback(()=>{
+      setPlaying((prev) => !prev);
+    }, []);
   
   useEffect(() => {
     if (item?.id) {
@@ -1334,7 +1347,9 @@ const TwistCard = ({
           height={200}
           play={playing}
           videoId={youtubeVideoId}
+          onStateChange={onStateChange}
         />
+         {/* <Button title={playing ? 'Pause' : 'Play'} onPress={tooglePlaying} /> */}
       </View>
     );
   };
@@ -1344,7 +1359,12 @@ const TwistCard = ({
       {/* Header: User Info + Menu */}
       <View style={styles.header}>
         <View style={styles.userInfo}>
-          <Text style={styles.username}>{item?.username || 'Username'}</Text>
+           <Avatar
+              uri={item?.user?.image}
+              size={hp(3.5)}
+              rounded={theme.radius.xl}
+            />
+          <Text style={styles.username}>{item?.user?.name || 'Username'}</Text>
         </View>
 
         <View style={styles.headerRight}>

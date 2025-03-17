@@ -1046,41 +1046,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import { Text, View, StyleSheet, FlatList, Pressable, TextInput, Alert } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'expo-router'
@@ -1121,6 +1086,8 @@ const Feeds = () => {
     const [notificatuionCount, setNotificationCount] = useState(0);
     const [searchQuery, setSearchQuery] = useState('');
     const ITEMS_PER_PAGE = 4;
+
+    // console.log('posts', posts);
 
     // Handle real-time post updates (same as Home component)
     const handlePostEvent = async (payload) => {
@@ -1399,28 +1366,27 @@ const renderTrendingPosts = () => {
                 {/* Header - Fixed at top */}
                 <View style={styles.header}>
                     <View style={styles.welcomeContainer}>
-                        <Text style={styles.welcomeText}>Welcome Back</Text>
-                        <Text style={styles.username}>{user?.userName || "PloTwist"}</Text>
+                        {/* <Text style={styles.welcomeText}>Welcome Back</Text> */}
+                        {/* <Text style={styles.username}>{user?.userName || "PloTwist"}</Text> */}
+                        <Text style={styles.username}>{ "PlotTwist"}</Text>
                     </View>
-                  
 
                     <View style={styles.icons}>
-
-                    <Pressable onPress={() => router.push('messenger')}>
-                            <Icon name="dm" size={hp(3.5)} color="white" />
-                        </Pressable>
                         <Pressable onPress={() => router.push('addTwist')}>
-                            <Icon name="plus" size={hp(3.5)} color="white" />
-                        </Pressable>
-                    <Pressable onPress={() => router.push('profile')}>
-                        <Avatar 
-                            uri={user?.image}
-                            size={hp(4)}
-                            rounded={theme.radius.xs}
-                            style={{borderWidth: 1.3, borderColor: '#FFD700'}}
-                        />
-                    </Pressable>
-
+                                <Icon name="plus" size={hp(3.5)} color="white" />
+                            </Pressable>
+                        <Pressable onPress={() => router.push('/messenger')}>
+                                <Icon name="dm" size={hp(3.5)} color="white" />
+                            </Pressable>
+                        
+                        {/* <Pressable onPress={() => router.push('profile')}>
+                            <Avatar 
+                                uri={user?.image}
+                                size={hp(4)}
+                                rounded={theme.radius.xs}
+                                style={{borderWidth: 1.3, borderColor: '#FFD700'}}
+                            />
+                        </Pressable> */}
                     </View>
                    
                 </View>
@@ -1448,7 +1414,7 @@ const renderTrendingPosts = () => {
                             </View>
                             
                             {/* Trending posts section */}
-                            {renderTrendingPosts()}
+                            {/* {renderTrendingPosts()} */}
                         </>
                     )}
                     renderItem={({ item }) => (
@@ -1533,7 +1499,7 @@ const styles = StyleSheet.create({
     },
     username: {
         color: 'white',
-        fontSize: hp(2.5),
+        fontSize: hp(3),
         fontWeight: theme.fonts.bold
     },
     searchContainer: {
@@ -1593,7 +1559,8 @@ const styles = StyleSheet.create({
         width: wp(3),
     },
     listStyle: {
-        paddingHorizontal: wp(2)
+        paddingHorizontal: wp(1.4),
+        paddingBottom: hp(4)
     },
     noPosts: {
         fontSize: hp(2),
@@ -1604,7 +1571,8 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        minHeight: hp(30)
+        minHeight: hp(30),
+        // marginBottom: hp(44)
     },
     trendingOverlay: {
         position: 'absolute',

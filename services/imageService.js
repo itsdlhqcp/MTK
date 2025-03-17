@@ -483,6 +483,24 @@ export const shareContent = async ({ message, fileUrl, title }) => {
   }
 };
 
+/// downloadhome file services 
+
+  export const homeContentDownload = async (url) => {
+      try{
+         const {uri} = await FileSystem.downloadAsync(url, getLocalfeedFilePath(url));
+         return uri;
+      }catch(error){
+          console.error('download error:', error);
+          return null;
+      }
+  }
+
+  export const  getLocalfeedFilePath = filePath => {
+    // Ensure we have a valid filename by removing query parameters
+    let fileName = filePath.split('/').pop();
+    return `${FileSystem.documentDirectory}${fileName}`;
+};
+
   const getMimeType = (fileUrl) => {
     const extension = fileUrl.split('.').pop().toLowerCase();
     const mimeTypes = {

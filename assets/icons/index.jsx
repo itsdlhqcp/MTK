@@ -47,6 +47,14 @@ import Bookmark from "./bookmark";
 import ThumbsUp from "./thumbsup";
 import ThumbsDown from "./thumbsDown";
 import YouTube from "./youTube";
+import MessageCircle from "./message-circle";
+import PapperClip from "./PappeClip";
+import Cup from "./CupOfTea";
+import Popcorn from "./Popcorn";
+import UpVote from "./UpVote";
+import Rocket from "./Rocket";
+import Up from "./Up";
+import Down from "./Down";
 
 const icons = {
     home: Home,
@@ -95,7 +103,15 @@ const icons = {
     bookmark: Bookmark,
     thumbsup: ThumbsUp,
     thumbsdown: ThumbsDown,
-    youtube: YouTube
+    youtube: YouTube,
+    messageCircle: MessageCircle,
+    paperclip: PapperClip,
+    cup: Cup,
+    popcorn: Popcorn,
+    upvote: UpVote,
+    rocket: Rocket,
+    up: Up,
+    down: Down,
 }
 
 const Icon = ({name, ...props}) => {

@@ -37,9 +37,37 @@ const SectionTitle = ({ title }) => (
 );
 
 const ProfileSettings = () => {
-  const { setAuth, user } = useAuth();
+  const { logout, user } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+
+  // const onLogout = async () => {
+  //   Alert.alert('Confirm', 'Are you sure you want to logout?', [
+  //     {
+  //       text: 'Cancel',
+  //       style: 'cancel'
+  //     },
+  //     {
+  //       text: 'Logout',
+  //       style: 'destructive',
+  //       onPress: async () => {
+  //         try {
+  //           setLoading(true);
+  //           const { error } = await supabase.auth.signOut();
+  //           if (error) throw error;
+  //           // setAuth(null);
+  //         //  router.push('/login');
+  //            router.setParams({});   
+  //         } catch (error) {
+  //           console.error('Logout error:', error.message);
+  //           return { error };
+  //         } finally {
+  //           setLoading(false);
+  //         }
+  //       }
+  //     }
+  //   ]);
+  // };
 
   const onLogout = async () => {
     Alert.alert('Confirm', 'Are you sure you want to logout?', [
@@ -53,14 +81,20 @@ const ProfileSettings = () => {
         onPress: async () => {
           try {
             setLoading(true);
-            const { error } = await supabase.auth.signOut();
+            // Use the logout function from AuthContext which handles both
+            // secure storage clearing and Supabase signOut
+            const { error, success } = await logout();
+            
             if (error) throw error;
-            // setAuth(null);
-          //  router.push('/login');
-             router.setParams({});   
+            
+            if (success) {
+              // No need to call setAuth(null) as it's handled in the logout function
+              router.setParams({});
+              // router.replace('/login');  // Navigate to login screen after logout
+            }
           } catch (error) {
             console.error('Logout error:', error.message);
-            return { error };
+            Alert.alert('Error', 'Failed to logout. Please try again.');
           } finally {
             setLoading(false);
           }
@@ -69,10 +103,7 @@ const ProfileSettings = () => {
     ]);
   };
 
-
   // In ProfileSettings component (settings page)
-
-
     useFocusEffect(
           React.useCallback(() => {
             if (!user) {

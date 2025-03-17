@@ -206,14 +206,14 @@ const Home = () => {
                         <Pressable onPress={() => router.push('newOtt')}>
                             <Icon name="plus" size={hp(3.2)} color="red" />
                         </Pressable>
-                        <Pressable onPress={() => router.push('profile')}>
+                        {/* <Pressable onPress={() => router.push('profile')}>
                             <Avatar 
                                 uri={user?.image}
                                 size={hp(4)}
                                 rounded={theme.radius.xs}
                                 style={{borderWidth: 1.3, borderColor: 'white'}}
                             />
-                        </Pressable>
+                        </Pressable> */}
                     </View>
                 </View>
 

@@ -714,7 +714,6 @@ const ReleaseDetails = () => {
             }));
         }
     };
-
                 const subscribeToChanges = () => {
                     // Subscribe to new reviews
                     let reviewChannel = supabase

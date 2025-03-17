@@ -253,7 +253,8 @@ export const fetchPeoplesReleaseDetails = async (postId) => {
       .from('releases')
       .select(`*,
         user: users (id, name, image),
-        peoplesReview(*, user: users(id, name, image))
+        peoplesReview(*, user: users(id, name, image),
+         threviewupvote(*),threviewdownvote(*),replyPeopleReviews(count))
         `
        )
       .eq('id', postId)
@@ -327,7 +328,8 @@ export const fetchPeopleReviewReplies = async (reviewId) => {
       .from('replyPeopleReviews')
       .select(`
         *,
-        user: users(id, name, image)
+        user: users(id, name, image),
+        pepreplylikes(*)
       `)
       .eq('peoplesReviewId', reviewId)
       .order('created_at', { ascending: true });
@@ -358,3 +360,213 @@ export const removeReplyPeopleReview = async (reviewId) => {
     return { success: false, msg: 'Could not remove people release review reply' };
   }
 };
+
+
+//   // UPvote service
+//   export const createPostUpvote = async (postLike) => {
+//     try {
+//       // First check if upvote already exists
+//       const { data: existingLike } = await supabase
+//         .from('threviewupvote')
+//         .select()
+//         .match({ userId: postLike.userId, peoplesReviewId: postLike.peoplesReviewId })
+//         .single();
+  
+//       if (existingLike) {
+//         // Unlike if already liked
+//         const { error } = await supabase
+//           .from('threviewupvote')
+//           .delete()
+//           .match({ userId: postLike.userId, peoplesReviewId: postLike.peoplesReviewId });
+  
+//         if (error) throw error;
+//         return { success: true, data: null, action: 'unliked' };
+//       }
+  
+//       // Create new like if not exists
+//       const { data, error } = await supabase
+//         .from('threviewupvote')
+//         .insert(postLike)
+//         .select()
+//         .single();
+  
+//       if (error) throw error;
+//       return { success: true, data, action: 'liked' };
+  
+//     } catch (error) {
+//       console.log('people review upvote error: ', error);
+//       return { 
+//         success: false, 
+//         msg: 'Could not process upvote action' 
+//       };
+//     }
+//   };
+  
+    
+//     export const removePostUpvote = async (postId, userId) => {
+//       try {
+//         const {error} = await supabase.from('threviewupvote').
+//         delete().
+//         eq('peoplesReviewId', postId).  
+//         eq('userId', userId);
+     
+//         if (error) {
+//           console.log('postLike error: ', error);
+//           return { success: false, msg: 'Could not remove post like' };
+//         }
+//         return { success: true};
+//       } catch (error) {
+//         return { success: false, msg: 'Could not remove post like' };
+//       }
+//     };
+
+//     // Add this to your releaseService.js file
+// export const getPostLikes = async (postId) => {
+//   try {
+//     const { data, error } = await supabase
+//       .from('threviewupvote')
+//       .select('*')
+//       .eq('peoplesReviewId', postId);
+    
+//     if (error) throw error;
+//     return { success: true, data };
+//   } catch (error) {
+//     console.error('Get post likes error:', error);
+//     return { success: false, msg: 'Could not fetch post likes' };
+//   }
+// };
+
+
+export const createPeopleReviewUpvote = async (upvote) => {
+
+const { data, error } = await supabase
+.from('threviewupvote')
+.insert(upvote)
+.select()
+.single();
+  try{
+    if(error){
+      console.log('people review upvote error: ', error);
+        return {success: false, msg: error?.message};
+    }
+     return {success: true, data}; 
+  }catch(error){
+    console.log('got upvote create error', error);
+    return {success: false, msg: error?.message};
+  }
+
+}
+
+
+export const removePeopleReviewUpvote = async (peoplesReviewId, userId) => {
+
+  const { error } = await supabase
+  .from('threviewupvote')
+  .delete()
+  .eq('peoplesReviewId', peoplesReviewId)
+  .eq('userId', userId);
+    try{
+      if(error){
+        console.log('people review upvote remove error: ', error);
+          return {success: false, msg: error?.message};
+      }
+       return {success: true}; 
+    }catch(error){
+      console.log('got upvote removing error', error);
+      return {success: false, msg: error?.message};
+    }
+  
+  }
+
+
+  // Review downvote service threviewdownvote
+
+  export const createPeopleReviewDownvote = async (downupvote) => {
+
+    const { data, error } = await supabase
+    .from('threviewdownvote')
+    .insert(downupvote)
+    .select()
+    .single();
+      try{
+        if(error){
+          console.log('people review downvote error: ', error);
+            return {success: false, msg: error?.message};
+        }
+         return {success: true, data}; 
+      }catch(error){
+        console.log('got downvote create error', error);
+        return {success: false, msg: error?.message};
+      }
+    
+    }
+    
+    
+    export const removePeopleReviewDownvote = async (peoplesReviewId, userId) => {
+    
+      const { error } = await supabase
+      .from('threviewdownvote')
+      .delete()
+      .eq('peoplesReviewId', peoplesReviewId)
+      .eq('userId', userId);
+        try{
+          if(error){
+            console.log('people review downvote remove error: ', error);
+              return {success: false, msg: error?.message};
+          }
+           return {success: true}; 
+        }catch(error){
+          console.log('got downvote removing error', error);
+          return {success: false, msg: error?.message};
+        }
+      
+      }
+
+
+
+
+      // create and remove people review reply likes 
+
+      // Review downvote service threviewdownvote
+
+  export const createPeopleReviewReplyLike = async (addreply) => {
+
+    const { data, error } = await supabase
+    .from('pepreplylikes')
+    .insert(addreply)
+    .select()
+    .single();
+      try{
+        if(error){
+          console.log('people reply like error: ', error);
+            return {success: false, msg: error?.message};
+        }
+         return {success: true, data}; 
+      }catch(error){
+        console.log('got review reply like create error', error);
+        return {success: false, msg: error?.message};
+      }
+    
+    }
+    
+    
+    export const removePeopleReviewReplyLike = async (peoplesReviewId, userId) => {
+    
+      const { error } = await supabase
+      .from('pepreplylikes')
+      .delete()
+      .eq('peoplesReviewReplyId', peoplesReviewId)
+      .eq('userId', userId);
+        try{
+          if(error){
+            console.log('people review reply like remove error: ', error);
+              return {success: false, msg: error?.message};
+          }
+           return {success: true}; 
+        }catch(error){
+          console.log('got reply like removing error', error);
+          return {success: false, msg: error?.message};
+        }
+      
+      }
+  
