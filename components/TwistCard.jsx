@@ -370,7 +370,7 @@
 
 
 
-import { Text, View, StyleSheet, TouchableOpacity, Image, AppState } from 'react-native';
+import { Text, View, StyleSheet, TouchableOpacity, Image, AppState, Dimensions } from 'react-native';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import theme from '../constants/theme';
 import { wp, hp } from '../helpers/common';
@@ -439,6 +439,8 @@ const TwistCard = ({
   const appState = useRef(AppState.currentState);
   const [appStateVisible, setAppStateVisible] = useState(appState.current);
   const [showReplayButton, setShowReplayButton] = useState(false);
+  const [isVideoReady, setIsVideoReady] = useState(false);
+  const { width } = Dimensions.get("window");
 
   useFocusEffect(
     useCallback(() => {
@@ -451,7 +453,7 @@ const TwistCard = ({
 
    useEffect(() => {
       if (videoRef.current) {
-        if (isVisible) {
+        if (isVisible && playing) {   // remove && playing to amke it on visble auto playing
           videoRef.current.playAsync();
         } else {
           videoRef.current.pauseAsync();
@@ -557,11 +559,26 @@ const TwistCard = ({
     
     return (
       <View style={styles.youtubeContainer}>
+
+      {!isVideoReady && (
+          <Image
+            source={require('../assets/images/loader/homeldr.jpeg')}
+            alt="loading ##########"
+           // style={styles.youtubePlaceholder}
+          //  style={{ width: 400, height: 200 }} 
+           style={{ width: '100%', height: 200 }} 
+          />
+        )}
+           
         <YoutubeIframe
           height={200}
           play={playing}
           videoId={youtubeVideoId}
           onStateChange={onStateChange}
+          onReady={() => setIsVideoReady(true)} // Hide image when video is ready
+          webViewProps={{
+            onLoadStart: () => setIsVideoReady(false),
+          }}
         />
          {/* <Button title={playing ? 'Pause' : 'Play'} onPress={tooglePlaying} /> */}
       </View>

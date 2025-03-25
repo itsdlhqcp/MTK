@@ -488,6 +488,7 @@ import Button from '@/components/Button';
 import { updateUser } from '../services/userServices';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
+import PhoneVerification from '../components/MobileVerification';
 
 // TagInput Component/ TagInput Component
 const TagInput = ({ tags = [], setTags }) => { 
@@ -725,12 +726,13 @@ const imageSource = user.image
               value={user.name}
               onChangeText={(value) => setUser({ ...user, name: value })}
             />
-            <Input
+            {/* <Input
               icon={<Icon name="call" />}
               placeholder="Enter your Contact (Optional)"
               value={user.phoneNumber}
               onChangeText={(value) => setUser({ ...user, phoneNumber: value })}
-            />
+            /> */}
+            <PhoneVerification/>
              <Input
               icon={<Icon name="location" />}
               placeholder="Enter your Home Town (Optional)"
