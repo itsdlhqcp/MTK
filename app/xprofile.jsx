@@ -312,7 +312,7 @@ const FriendProfileHeader = ({
       <View style={styles.header}>
         <Text style={[styles.username, { color: theme.colors.textDark }]}>{profileUser?.name}</Text>
         <TouchableOpacity style={styles.backButton}>
-          <Icon name="back" color={theme.colors.textDark} />
+          <Icon name="menu" color={theme.colors.textDark} />
         </TouchableOpacity>
       </View>
 

@@ -267,7 +267,7 @@ const TwistFooter = ({
   const [twistlikes, setTwistlikes] = useState([]);
 
   useEffect(() => {
-    setTwistlikes(item?.commentLikes || []);
+    setTwistlikes(item?.twistLikes || []);
   }, [])
 
   const onLike = async () => {
@@ -298,7 +298,7 @@ const TwistFooter = ({
     const [twistunlikes, setTwistunlikes] = useState([]);
 
     useEffect(() => {
-      setTwistunlikes(item?.commentUnlikes || []);
+      setTwistunlikes(item?.twistUnlikes || []);
     }, [])
   
     const onunLike = async () => {

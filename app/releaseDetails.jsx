@@ -570,6 +570,7 @@ import FeedLoader from "../components/FeedLoader";
 import Icon from '../assets/icons';
 import { Text } from "react-native";
 
+
 const MIN_CHARS = 85;
 
 const ReleaseDetails = () => {
@@ -944,6 +945,8 @@ const ReleaseDetails = () => {
                                         onReplyReviewPress={() => toggleReplyBox(review.id)}
                                         replyCount={reviewReplies[review.id]?.length || 0}
                                         isReply={false}
+                                        // openProfilePopup={() => openProfilePopup(review.user)}
+                                        onShowProfile={() => openProfilePopup(review.user)}
                                     />
                                     
                                     {/* Render replies when reply box is open */}
@@ -996,7 +999,6 @@ const ReleaseDetails = () => {
                         </View>
                     )}
                 </View>
-
                 </ScrollView>
             </View>
         );

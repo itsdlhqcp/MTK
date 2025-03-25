@@ -101,9 +101,9 @@ const ReleaseList = ({ releases, currentUser, router, loading, hasMore, onLoadMo
     ListFooterComponent={renderFooter}
     showsVerticalScrollIndicator={false}
     contentContainerStyle={styles.listContainer}
-    stickyHeaderIndices={flatListData.map((item, index) => 
-      item.header ? index : null
-    ).filter(Boolean)}
+    // stickyHeaderIndices={flatListData.map((item, index) => 
+    //   item.header ? index : null
+    // ).filter(Boolean)}
     ListEmptyComponent={() => (
       <View style={styles.emptyContainer}>
         <Text style={styles.noMoreText}>

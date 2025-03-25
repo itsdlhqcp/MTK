@@ -19,6 +19,7 @@ import { Text } from "react-native";
 import RatingModal from "../../components/RatingModel";
 import PeoplesReviewItem from "../../components/PeopleReviewItem";
 import PeoplesReviewList from "./releasePeopleReview";
+import ProfilePopup from '../../components/profilePopup';
 // import PeoplesReviewList from "../releasePeopleReview";
 
 const MIN_CHARS = 85;
@@ -43,6 +44,15 @@ const ReleasePeopleDetails = () => {
     const [reviewRating, setReviewRating] = useState(0);
     const [cupOfTea, setCupOfTea] = useState(false);
     const [replyLoading, setReplyLoading] = useState({});
+    const [selectedUser, setSelectedUser] = useState(null);
+    const [isProfilePopupVisible, setIsProfilePopupVisible] = useState(false);
+
+    // function to open profile popup
+
+    const openProfilePopup = (userData) => {
+        setSelectedUser(userData);
+        setIsProfilePopupVisible(true);
+    };
 
     useEffect(() => {
         getReleaseDetails();
@@ -383,69 +393,6 @@ const ReleasePeopleDetails = () => {
                         showReviewButton={false}
                     />
 
-{/* // Replace the current input component section with this code
-{
-  // Check if current user has already posted a review
- 
-
-  // Only render the input component if the user hasn't posted a review yet
-  !hasUserPostedReview && (
-    <Animated.View
-      style={[styles.inputContainer, { transform: [{ translateX: shakeAnimation }] }]}
-    >
-      <View style={styles.inputWrapper}>
-        <Input
-          inputRef={inputRef}
-          placeholder={getInputPlaceholder()}
-          placeholderTextColor={theme.colors.textLight}
-          containerStyle={[
-            styles.input,
-            charCount > 0 && charCount < MIN_CHARS && styles.inputError,
-            charCount >= MIN_CHARS && styles.inputValid,
-          ]}
-          value={reviewText}
-          onChangeText={handleTextChange}
-          multiline={true}
-          textAlignVertical="top"
-        />
-        {charCount < MIN_CHARS && (
-          <View style={styles.charCountContainer}>
-            <Text
-              style={[styles.charCount, { color: getStatusColor() }]}
-            >{`${charCount}/${MIN_CHARS}`}</Text>
-          </View>
-        )}
-      </View>
-      {loading ? (
-        <View style={styles.loading}>
-          <FeedLoader size="small" color={theme.colors.primaryDark} />
-        </View>
-      ) : (
-        <TouchableOpacity
-          style={[
-            styles.sendIcon,
-            charCount < MIN_CHARS && styles.sendIconDisabled,
-          ]}
-          onPress={onNewReview}
-          disabled={charCount < MIN_CHARS}
-        >
-          <Icon
-            name="send"
-            size={hp(2)}
-            color={
-              charCount < MIN_CHARS
-                ? theme.colors.textLight
-                : theme.colors.primaryDark
-            }
-          />
-        </TouchableOpacity>
-      )}
-    </Animated.View>
-  )
-} */}
-
-
-
 {/* Input Component - always visible but disabled when user has already posted */}
 <Animated.View
   style={[styles.inputContainer, { transform: [{ translateX: shakeAnimation }] }]}
@@ -502,71 +449,22 @@ const ReleasePeopleDetails = () => {
     </TouchableOpacity>
   )}
 </Animated.View>
-
-
-                    {/* {isCurrentUserReview &&(
-                           <Animated.View style={[
-                            styles.inputContainer,
-                            { transform: [{ translateX: shakeAnimation }] }
-                        ]}>
-                            <View style={styles.inputWrapper}>
-                                <Input
-                                    inputRef={inputRef}
-                                    placeholder={getInputPlaceholder()}
-                                    placeholderTextColor={theme.colors.textLight}
-                                    containerStyle={[
-                                        styles.input,
-                                        charCount > 0 && charCount < MIN_CHARS && styles.inputError,
-                                        charCount >= MIN_CHARS && styles.inputValid
-                                    ]}
-                                    value={reviewText}
-                                    onChangeText={handleTextChange}
-                                    multiline={true}
-                                    textAlignVertical="top"
-                                />
-                                {charCount < MIN_CHARS && (
-                                    <View style={styles.charCountContainer}>
-                                        <Text style={[
-                                            styles.charCount,
-                                            { color: getStatusColor() }
-                                        ]}>
-                                            {`${charCount}/${MIN_CHARS}`}
-                                        </Text>
-                                    </View>
-                                )}
-                            </View>
-                            {loading ? (
-                                <View style={styles.loading}>
-                                    <FeedLoader size="small" color={theme.colors.primaryDark} />
-                                </View>
-                            ) : (
-                                <TouchableOpacity
-                                    style={[
-                                        styles.sendIcon,
-                                        charCount < MIN_CHARS && styles.sendIconDisabled
-                                    ]}
-                                    onPress={onNewReview}
-                                    disabled={charCount < MIN_CHARS}
-                                >
-                                    <Icon 
-                                        name="send" 
-                                        size={hp(2)} 
-                                        color={charCount < MIN_CHARS ? theme.colors.textLight : theme.colors.primaryDark} 
-                                    />
-                                </TouchableOpacity>
-                            )}
-                        </Animated.View>
-                    )} */}
-                   
-                   
-                    
+                       
                     <PeoplesReviewList
                             reviews={release?.peoplesReview || []}
                             releaseId={release.id}
                             releaseUserId={release.userId}
                             currentUser={user}
                             onDeleteReview={onDeleteReview}
+                            openProfilePopup={openProfilePopup}
                             />
+
+                    <ProfilePopup
+                        user={selectedUser}
+                        visible={isProfilePopupVisible}
+                        onClose={() => setIsProfilePopupVisible(false)}
+                        router={router}
+                    />
 
                 <RatingModal 
                     visible={ratingModalVisible}
@@ -584,7 +482,7 @@ export default ReleasePeopleDetails;
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: 'white',
+        backgroundColor: '#121212',
         paddingVertical: Math.round(wp(7))
     },
     list: {

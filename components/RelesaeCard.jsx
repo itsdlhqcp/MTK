@@ -88,7 +88,7 @@ const ReleaseCard = ({
                         )}
                     </View>
                     <Text style={styles.releaseDate}>
-                        Release Date: {createdAt || 'N/A'}
+                        {createdAt || 'N/A'}
                     </Text>
 
                     <View style={styles.box}>
@@ -177,9 +177,10 @@ const styles = StyleSheet.create({
         marginBottom: 5
     },
     releaseDate: {
-        color: 'white',
-        fontSize: hp(1.8),
-        marginBottom: 10
+        color: 'red',
+        fontSize: hp(2),
+        marginBottom: 10,
+        fontWeight: '400'
     },
     reviewSection: {
         flexDirection: 'row',

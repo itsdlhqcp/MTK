@@ -16,7 +16,7 @@
 // , "app/index.jsx", "app/_layout.jsx", "app/login.jsx", "app/signup.jsx", "app/welcome.jsx"  ]
 // }
 
-
+// add below modification if you want to use typescript
 {
   "extends": "./node_modules/expo/tsconfig.base",
   "compilerOptions": {

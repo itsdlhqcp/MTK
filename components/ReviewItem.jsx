@@ -84,9 +84,9 @@ const ReviewItem = ({
               <Text 
                 key={index} 
                 style={styles.usernameTag}
-                onPress={() => {
-                  onShowProfile({ name: username })
-                }}
+                // onPress={() => {
+                //   onShowProfile({ name: username })
+                // }}
               >
                 {part}
               </Text>
@@ -102,12 +102,14 @@ const ReviewItem = ({
     <View style={styles.container}>
       <Avatar
         uri={item?.user?.image}
-        onPress={handleUsernamePress}
+        // onPress={handleUsernamePress}
       />
       <View style={[styles.content, highlight && styles.highlight]}>
         <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
           <View style={styles.nameContainer}>
-            <TouchableOpacity onPress={handleUsernamePress}>
+            <TouchableOpacity
+            //  onPress={handleUsernamePress}
+             >
               <Text style={styles.text}>
                 {item?.user?.name}
               </Text>

@@ -135,7 +135,7 @@ export const fetchPosts = async (limit=10) => {
   try {
     const { data, error } = await supabase
       .from('twists')
-      .select(`*,user: users (id, name, image),commentLikes(*),commentUnlikes(*)`)
+      .select(`*,user: users (id, name, image),twistLikes(*),twistUnlikes(*)`)
       .order('created_at', { ascending: false })
       .limit(limit);
     if (error) {
@@ -152,7 +152,7 @@ export const fetchPosts = async (limit=10) => {
   export const createTwistLikes = async (addlikes) => {
 
     const { data, error } = await supabase
-    .from('commentLikes')
+    .from('twistLikes')
     .insert(addlikes)
     .select()
     .single();
@@ -172,7 +172,7 @@ export const fetchPosts = async (limit=10) => {
     export const removeTwistLikes = async (twistId, userId) => {
     
       const { error } = await supabase
-      .from('commentLikes')
+      .from('twistLikes')
       .delete()
       .eq('twistId', twistId)
       .eq('userId', userId);
@@ -194,7 +194,7 @@ export const fetchPosts = async (limit=10) => {
   export const createTwistUnlikes = async (addUnlikes) => {
 
     const { data, error } = await supabase
-    .from('commentUnlikes')
+    .from('twistUnlikes')
     .insert(addUnlikes)
     .select()
     .single();
@@ -214,7 +214,7 @@ export const fetchPosts = async (limit=10) => {
     export const removeTwistUnlikes = async (twistId, userId) => {
     
       const { error } = await supabase
-      .from('commentUnlikes')
+      .from('twistUnlikes')
       .delete()
       .eq('twistId', twistId)
       .eq('userId', userId);

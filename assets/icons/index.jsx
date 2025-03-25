@@ -55,6 +55,14 @@ import UpVote from "./UpVote";
 import Rocket from "./Rocket";
 import Up from "./Up";
 import Down from "./Down";
+import ReplyMsg from "./ReplyMsg";
+import UpVo from "./UpVo";
+import DownVo from "./DownVo";
+import CommentLike from "./CommentLike";
+import CommentUnlike from "./CommentUnlike";
+import Reload from "./Reload";
+import SpotLight from "./SpotLight";
+import Calender from "./Calender";
 
 const icons = {
     home: Home,
@@ -112,6 +120,14 @@ const icons = {
     rocket: Rocket,
     up: Up,
     down: Down,
+    replycmt: ReplyMsg,
+    upvo: UpVo,
+    downvo: DownVo,
+    commentlike: CommentLike,
+    commentunlike: CommentUnlike,
+    reload: Reload,
+    spotlight: SpotLight,
+    calender: Calender,
 }
 
 const Icon = ({name, ...props}) => {

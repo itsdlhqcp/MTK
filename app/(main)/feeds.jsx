@@ -1,5 +1,5 @@
 import { Text,  Alert, View, StyleSheet, Pressable, FlatList } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'expo-router'
 import theme from '../../constants/theme'
 import {useAuth} from '../../contexts/AuthContext'
@@ -18,6 +18,12 @@ import { useFocusEffect } from '@react-navigation/native';
 const Home = () => {
     const {user, setAuth, navigationGuard} = useAuth();
     const router = useRouter();
+    const viewabilityConfig = { viewAreaCoveragePercentThreshold: 50 };
+    const [visibleItems, setVisibleItems] = useState([]);
+  
+    const onViewableItemsChanged = useRef(({ viewableItems }) => {
+      setVisibleItems(viewableItems.map(item => item.item.id));
+    }).current;
 
     // Protect route on mount and user state change
     useFocusEffect(
@@ -27,23 +33,6 @@ const Home = () => {
           }
         }, [user])
       );
-
-        // Protect route on mount and user state change
-    //     useFocusEffect(
-    // useEffect(() => {
-    //     navigationGuard();
-    // }, [navigationGuard]))
-
-    // // Protect route on screen focus
-    // useEffect(() => {
-    //     const unsubscribe = router.addListener('focus', () => {
-    //         if (!user) {
-    //             router.replace('/welcome');
-    //         }
-    //     });
-
-    //     return unsubscribe;
-    // }, [user]);
     
     // State management
     const [posts, setPosts] = useState([]);
@@ -177,10 +166,6 @@ const Home = () => {
                 {/* Header */}
                 <View style={styles.header}>
                     <Text style={styles.title}>PloTwist</Text>
-                    {/* <View style={styles.icons}> */}
-                    {/* <View style={{marginLeft: hp(1.5), marginVertical: hp(-0.5)}}>
-                      <Icon name="plotwist" size={hp(7)}/>
-                    </View> */}
                     
                     <View style={styles.icons}>
                         <Pressable onPress={() => {
@@ -206,14 +191,6 @@ const Home = () => {
                         <Pressable onPress={() => router.push('newOtt')}>
                             <Icon name="plus" size={hp(3.2)} color="red" />
                         </Pressable>
-                        {/* <Pressable onPress={() => router.push('profile')}>
-                            <Avatar 
-                                uri={user?.image}
-                                size={hp(4)}
-                                rounded={theme.radius.xs}
-                                style={{borderWidth: 1.3, borderColor: 'white'}}
-                            />
-                        </Pressable> */}
                     </View>
                 </View>
 
@@ -228,8 +205,11 @@ const Home = () => {
                         item={item}
                         currentUser={user}
                         router={router}
+                        isVisible={visibleItems.includes(item.id)}
                     />
                 )}
+                onViewableItemsChanged={onViewableItemsChanged}
+                viewabilityConfig={viewabilityConfig}
                 onEndReached={() => {
                     if (hasMore && !loading) {
                         getPosts();

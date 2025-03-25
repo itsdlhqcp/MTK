@@ -4,10 +4,7 @@ const USER_DATA_KEY = 'user_data';
 
 /**
  * Service to securely store and retrieve user data
- * 
- * 
  */
-
 
 export const UserStorageService = {
   /**
@@ -22,6 +19,7 @@ export const UserStorageService = {
       // Convert userData object to string for storage
       const userDataString = JSON.stringify(userData);
       await SecureStore.setItemAsync(USER_DATA_KEY, userDataString);
+      console.log("User data stored successfully:", userData);
       return true;
     } catch (error) {
       console.error('Error storing user data:', error);
@@ -37,7 +35,7 @@ export const UserStorageService = {
     try {
       const userDataString = await SecureStore.getItemAsync(USER_DATA_KEY);
       if (!userDataString) return null;
-      
+      console.log("Retrieved user data:", JSON.parse(userDataString));
       return JSON.parse(userDataString);
     } catch (error) {
       console.error('Error retrieving user data:', error);

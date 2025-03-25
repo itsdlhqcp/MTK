@@ -254,7 +254,7 @@ export const fetchPeoplesReleaseDetails = async (postId) => {
       .select(`*,
         user: users (id, name, image),
         peoplesReview(*, user: users(id, name, image),
-         threviewupvote(*),threviewdownvote(*),replyPeopleReviews(count))
+         threviewupvote(*),threviewdownvote(*),replyPeopleReviews(*))
         `
        )
       .eq('id', postId)

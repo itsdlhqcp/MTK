@@ -5,6 +5,7 @@ import { Platform, Linking, View } from 'react-native';
 import { router } from 'expo-router';
 import { HapticTab } from '@/components/NavTabMain/HapticTab.tsx';
 import { IconSymbol } from '@/components/NavTabMain/ui/IconSymbol.tsx';
+import Icon from '@/assets/icons' 
 import TabBarBackground from '@/components/NavTabMain/ui/TabBarBackground.tsx';
 import { Colors } from '../../constants/mainTab.ts';
 import { useColorScheme } from '../../hooks/useColorScheme.ts';
@@ -144,21 +145,21 @@ export default function TabLayout() {
       name="home"
       options={{
         title: 'Home',
-        tabBarIcon: ({ color }) => <IconSymbol size={30} name="house.fill" color={'grey'} />,
+        tabBarIcon: ({ color }) => <IconSymbol size={27} name="house.fill" color={'grey'} />,
       }}
     />
       <Tabs.Screen
       name="feeds"
       options={{
-        title: 'Feeds',
-        tabBarIcon: ({ color }) => <IconSymbol size={30} name="newspaper.fill" color={'grey'} />,
+        title: 'Spotlight',
+        tabBarIcon: ({ color }) => <Icon name="spotlight" size={hp(3.5)} color={'#959695'} />,
       }}
     />
     <Tabs.Screen
       name="upcoming"
       options={{
         title: 'Upcoming',
-        tabBarIcon: ({ color }) => <IconSymbol size={30} name="music.note.tv.fill" color={'grey'} />,
+        tabBarIcon: ({ color }) => <Icon name="calender" size={hp(2.7)} color={'#959695'} />,
       }}
     />
   

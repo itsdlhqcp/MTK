@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { fetchPeopleReviewReplies, removeReplyPeopleReview, createPeopleReviewReply } from "../../services/releaseService";
 import { createNotifications } from '../../services/notificationService';
@@ -14,13 +14,16 @@ const PeoplesReviewList = ({
   releaseId, 
   releaseUserId, 
   currentUser, 
-  onDeleteReview 
+  onDeleteReview,
+  openProfilePopup
 }) => {
   const [openReplyBox, setOpenReplyBox] = useState(null);
   const [reviewReplies, setReviewReplies] = useState({});
   const [replyInputValues, setReplyInputValues] = useState({});
   const [replyLoading, setReplyLoading] = useState({});
   const replyRef = React.useRef('');
+
+  // console.log('below are pep reviews #########', reviews);
 
   const fetchRepliesForReview = async (reviewId) => {
     try {
@@ -36,12 +39,37 @@ const PeoplesReviewList = ({
     }
   };
 
-  const toggleReplyBox = (reviewId) => {
+  // const toggleReplyBox = (reviewId, username = null) => {
+  //   setOpenReplyBox(prev => prev === reviewId ? null : reviewId);
+
+  //    // Initialize with mention if username is provided
+  //     if (username) {
+  //       const mentionText = `@${username} `;
+  //       handleReplyInputChange(reviewId, mentionText);
+  //     } else if (!reviewReplies[reviewId]) {
+  //       fetchRepliesForReview(reviewId);
+  //     }
+
+  //   if (!reviewReplies[reviewId]) {
+  //     fetchRepliesForReview(reviewId);
+  //   }
+  // };
+
+  // In PeoplesReviewList.js - modify the toggleReplyBox function
+const toggleReplyBox = (reviewId, username = null) => {
+  // Always open the reply box if a username is provided (don't toggle closed)
+  if (username) {
+    setOpenReplyBox(reviewId);
+    const mentionText = `@${username} `;
+    handleReplyInputChange(reviewId, mentionText);
+  } else {
+    // Only toggle (open/close) when no username is provided
     setOpenReplyBox(prev => prev === reviewId ? null : reviewId);
     if (!reviewReplies[reviewId]) {
       fetchRepliesForReview(reviewId);
     }
-  };
+  }
+};
 
   const handleReplyInputChange = (reviewId, value) => {
     setReplyInputValues(prev => ({
@@ -159,9 +187,11 @@ const PeoplesReviewList = ({
               item={peoplesReview}
               onDelete={onDeleteReview}
               canDelete={currentUser.id === peoplesReview.userId || currentUser.id === releaseUserId}
-              onReplyReviewPress={() => toggleReplyBox(peoplesReview.id)}
+              // onReplyReviewPress={() => toggleReplyBox(peoplesReview.id)}
+              onReplyReviewPress={(id, username) => toggleReplyBox(id, username)}
               replyCount={reviewReplies[peoplesReview.id]?.length || 0}
               isReply={false}
+              onShowProfile={openProfilePopup}
             />
             
             {/* Render replies when reply box is open */}
@@ -171,8 +201,10 @@ const PeoplesReviewList = ({
                   item={reply}
                   onDelete={onDeleteReviewReply}
                   canDelete={currentUser.id === reply.userId || currentUser.id === releaseUserId}
+                  onReplyReviewPress={(id, username) => toggleReplyBox(peoplesReview.id, username)} 
                   replyCount={reviewReplies[peoplesReview.id]?.length || 0}
                   isReply={true}
+                  onShowProfile={openProfilePopup}
                 />
               </View>
             ))}
@@ -211,6 +243,8 @@ const PeoplesReviewList = ({
     </View>
   );
 };
+
+export default PeoplesReviewList;
 
 const styles = StyleSheet.create({
   reviewsContainer: {
@@ -259,4 +293,3 @@ const styles = StyleSheet.create({
   }
 });
 
-export default PeoplesReviewList;

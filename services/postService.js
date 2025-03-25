@@ -131,7 +131,9 @@ export const createPostLike = async (postLike) => {
           postLikes(*),
           comments(*,
            user: users(id, name, image),
-           reply(*))
+           reply(*),
+           commentLikes(*),
+           commentUnlikes(*))
           `,
           
         )
@@ -291,7 +293,8 @@ export const fetchCommentReplies = async (commentId) => {
       .from('reply')
       .select(`
         *,
-        user: users(id, name, image)
+        user: users(id, name, image),
+           replylikes(*) 
       `)
       .eq('commentId', commentId)
       .order('created_at', { ascending: true });
@@ -306,3 +309,130 @@ export const fetchCommentReplies = async (commentId) => {
     return { success: false, msg: 'Could not fetch replies' };
   }
 };
+
+// create and remove comment likes apis
+
+export const createCommentLike = async (addlike) => {
+
+  const { data, error } = await supabase
+  .from('commentLikes')
+  .insert(addlike)
+  .select()
+  .single();
+    try{
+      if(error){
+        console.log('comment like error: ', error);
+          return {success: false, msg: error?.message};
+      }
+       return {success: true, data}; 
+    }catch(error){
+      console.log('got comment like create error', error);
+      return {success: false, msg: error?.message};
+    }
+  
+  }
+  
+  
+  export const removeCommentLike = async (commentId, userId) => {
+  
+    const { error } = await supabase
+    .from('commentLikes')
+    .delete()
+    .eq('commentId', commentId)
+    .eq('userId', userId);
+      try{
+        if(error){
+          console.log('people comment like remove error: ', error);
+            return {success: false, msg: error?.message};
+        }
+         return {success: true}; 
+      }catch(error){
+        console.log('got comment like removing error', error);
+        return {success: false, msg: error?.message};
+      }
+    }
+
+// create and remove comment unlikes apis
+
+export const createCommentUnlike = async (removelike) => {
+
+  const { data, error } = await supabase
+  .from('commentUnlikes')
+  .insert(removelike)
+  .select()
+  .single();
+    try{
+      if(error){
+        console.log('comment unlike error: ', error);
+          return {success: false, msg: error?.message};
+      }
+       return {success: true, data}; 
+    }catch(error){
+      console.log('got comment unlike create error', error);
+      return {success: false, msg: error?.message};
+    }
+  
+  }
+  
+  
+  export const removeCommentUnlike = async (commentId, userId) => {
+  
+    const { error } = await supabase
+    .from('commentUnlikes')
+    .delete()
+    .eq('commentId', commentId)
+    .eq('userId', userId);
+      try{
+        if(error){
+          console.log('people comment unlike remove error: ', error);
+            return {success: false, msg: error?.message};
+        }
+         return {success: true}; 
+      }catch(error){
+        console.log('got comment unlike removing error', error);
+        return {success: false, msg: error?.message};
+      }
+    
+    }
+
+ // create and remove comment reply likes apis
+
+export const createCommentReplylike = async (replylike) => {
+
+  const { data, error } = await supabase
+  .from('replylikes')
+  .insert(replylike)
+  .select()
+  .single();
+    try{
+      if(error){
+        console.log('comment reply like error: ', error);
+          return {success: false, msg: error?.message};
+      }
+       return {success: true, data}; 
+    }catch(error){
+      console.log('got comment reply like create error', error);
+      return {success: false, msg: error?.message};
+    }
+  }
+  
+  
+  export const removeCommentReplyunlike = async (replyId, userId) => {
+  
+    const { error } = await supabase
+    .from('replylikes')
+    .delete()
+    .eq('replyId ', replyId)
+    .eq('userId', userId);
+      try{
+        if(error){
+          console.log('people comment reply like remove error: ', error);
+            return {success: false, msg: error?.message};
+        }
+         return {success: true}; 
+      }catch(error){
+        console.log('got comment reply like removing error', error);
+        return {success: false, msg: error?.message};
+      }
+    
+    }
