@@ -5,7 +5,7 @@ import { wp, hp, stripHtmlTags } from '../helpers/common'
 import Avatar from './Avatar'
 import Icon from '@/assets/icons'
 import moment from 'moment'
-import { fetchReviewReplies } from '../services/releaseService'
+import { fetchReviewReplies } from '../services/ottService'
 
 const ReviewItem = ({
   item, 
@@ -131,6 +131,7 @@ const ReviewItem = ({
                 </TouchableOpacity>
                 {replyCount > 0 && (
                   <Text style={styles.replyCount}>{replyCount}</Text>
+                  // <Text style={styles.replyCount}>{item?.previewsreply.length}</Text>
                 )}
               </>
             )}

@@ -5,14 +5,14 @@ import { wp, hp, stripHtmlTags } from '../helpers/common'
 import Avatar from './Avatar'
 import Icon from '@/assets/icons'
 import moment from 'moment'
-import { createPeopleReviewDownvote, createPeopleReviewReplyLike, createPeopleReviewUpvote, fetchPeopleReviewReplies, removePeopleReviewDownvote, removePeopleReviewReplyLike, removePeopleReviewUpvote } from '../services/releaseService'
+import { createPeopleReviewUpvote, removePeopleReviewUpvote, createPeopleReviewDownvote , removePeopleReviewDownvote, fetchPeopleReviewReplies,  createPeopleReviewReplyLike, removePeopleReviewReplyLike} from "../services/ottService"
 import RatingStars from './RatingStars'
 import LikeButton from './AnimatedUpVoteButton'
 import { useAuth } from '../contexts/AuthContext'
 import PratingStars from './pRatingStars'
 import { userService } from '../services/helperService'
 
-const PeoplesReviewItem = ({
+const  PeoplesPreviewItem = ({
   item, 
   canDelete = false,
   onDelete = () => {},
@@ -129,7 +129,7 @@ const PeoplesReviewItem = ({
   const [upvotes, setUpvotes] = useState([]);
 
   useEffect(() => {
-    setUpvotes(item?.threviewupvote || []);
+    setUpvotes(item?.dupvote || []);
   }, [])
 
   const onDownvote = async () => {
@@ -143,7 +143,7 @@ const PeoplesReviewItem = ({
     } else {
       let data = {
         userId: user?.id,
-        peoplesReviewId: item?.id
+        dpeopleReviewId: item?.id
       }
       setUpvotes([...upvotes, data]);
       const res = await createPeopleReviewUpvote(data);
@@ -158,7 +158,7 @@ const PeoplesReviewItem = ({
   const [downvotes, setDownvotes] = useState([]);
 
   useEffect(() => {
-    setDownvotes(item?.threviewdownvote || []);
+    setDownvotes(item?.ddownvotes || []);
   }, [])
 
   const onUpvote = async () => {
@@ -172,7 +172,7 @@ const PeoplesReviewItem = ({
     } else {
       let data = {
         userId: user?.id,
-        peoplesReviewId: item?.id
+        dpeopleReviewId: item?.id
       }
       setDownvotes([...downvotes, data]);
       const res = await createPeopleReviewDownvote(data);
@@ -190,7 +190,7 @@ const PeoplesReviewItem = ({
   const [likes, setLikes] = useState([]);
 
   useEffect(() => {
-    setLikes(item?.pepreplylikes || []);
+    setLikes(item?.dplikes || []);
   }, [])
 
   const handleRocketPress = async () => {
@@ -204,7 +204,7 @@ const PeoplesReviewItem = ({
     } else {
       let data = {
         userId: user?.id,
-        peoplesReviewReplyId: item?.id
+        replydpeoplereviewId: item?.id  
       }
       setLikes([...likes, data]);
       const res = await createPeopleReviewReplyLike(data);
@@ -386,7 +386,7 @@ const PeoplesReviewItem = ({
   )
 }
 
-export default PeoplesReviewItem
+export default PeoplesPreviewItem
 
 const styles = StyleSheet.create({
   container: {

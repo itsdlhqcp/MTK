@@ -135,7 +135,6 @@ export const createPostLike = async (postLike) => {
            commentLikes(*),
            commentUnlikes(*))
           `,
-          
         )
         .eq('id', postId)
         .order("created_at", { ascending: false, foreignTable: "comments", foreignColumn: "reply" })

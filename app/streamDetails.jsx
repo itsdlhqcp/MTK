@@ -2,25 +2,24 @@ import React, { useEffect, useRef, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StyleSheet, TouchableOpacity, Alert, Animated } from "react-native";
 import Input from '../components/Input';
-import { createReleaseReview, fetchReleaseDetails, removeReview ,createReviewReply, fetchReviewReplies } from "../services/releaseService";
-import { View } from "react-native";
+import { fetchReleaseDetails, createReleaseReview, removeReview, createReviewReply, fetchReviewReplies  } from '../services/ottService'
+import { View,  Text } from "react-native";
 import { createNotifications } from '../services/notificationService'
 import ReviewItem from "../components/ReviewItem";
+import Icon from '../assets/icons';
 import { hp, wp } from '../helpers/common';
 import theme from '../constants/theme';
 import { ScrollView } from "react-native";
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import ReleaeCard from '../components/RelesaeCard';
+import ReleaeCard from '../components/RelesaeCard';  // here you should try-out ott card - to use same card component
 import Loading from "../components/Loading";
 import FeedLoader from "../components/FeedLoader";
-import Icon from '../assets/icons';
-import { Text } from "react-native";
 
 const MIN_CHARS = 85;
 
-const ReleaseDetails = () => {
-    const { releaseId } = useLocalSearchParams();
+const StreamDetails = () => {
+    const { streamId } = useLocalSearchParams();
     const { user } = useAuth();
     const router = useRouter();
     const [startLoading, setStartLoading] = useState(false);
@@ -35,6 +34,8 @@ const ReleaseDetails = () => {
     const [openReplyBox, setOpenReplyBox] = useState(null);
     const [reviewReplies, setReviewReplies] = useState({});
 
+    // console.log('release logs ###', release)
+
     useEffect(() => {
         getReleaseDetails();
         subscribeToChanges();
@@ -45,7 +46,7 @@ const ReleaseDetails = () => {
 
     const getReleaseDetails = async () => {
         setStartLoading(true);
-        let res = await fetchReleaseDetails(releaseId);
+        let res = await fetchReleaseDetails(streamId);
         if (res.success) setRelease(res.data);
         setStartLoading(false);
     };
@@ -112,15 +113,15 @@ const ReleaseDetails = () => {
                         senderId: user.id,
                         receiverId: release.userId,
                         title: 'replied to your review',
-                        data: JSON.stringify({ releaseId: release.id, reviewId: parentReviewId })
+                        data: JSON.stringify({ releaseId: release.id, streamId: parentReviewId })
                     };
                     createNotifications(notify);
                 }
             } else {
-                Alert.alert('Reply', res.msg || 'Something went wrong');
+                Alert.alert('Preview Reply', res.msg || 'Something went wrong');
             }
         } catch (err) {
-            Alert.alert('Reply', 'Something went wrong');
+            Alert.alert('Preview Reply', 'Something went wrong');
         } finally {
             setLoading(false);
         }
@@ -164,17 +165,17 @@ const ReleaseDetails = () => {
                 const subscribeToChanges = () => {
                     // Subscribe to new reviews
                     let reviewChannel = supabase
-                        .channel('reviews')
+                        .channel('preview')
                         .on('postgres_changes', 
-                            {event: 'INSERT', schema: 'public', table: 'reviews', filter: `releaseId=eq.${releaseId}`}, 
+                            {event: 'INSERT', schema: 'public', table: 'preview', filter: `releaseId=eq.${streamId}`}, 
                             handleNewReview)
                         .subscribe();
 
                     // Subscribe to new replies
                     let replyChannel = supabase
-                        .channel('replies')
+                        .channel('previewsreply')
                         .on('postgres_changes', 
-                            {event: 'INSERT', schema: 'public', table: 'reviews', filter: `releaseId=eq.${releaseId}`}, 
+                            {event: 'INSERT', schema: 'public', table: 'preview', filter: `releaseId=eq.${streamId}`}, 
                             handleNewReply)
                         .subscribe();
 
@@ -192,7 +193,7 @@ const ReleaseDetails = () => {
             
             let data = {
                 userId: user.id,
-                releaseId: release.id,
+                streamId: release.id,
                 text: reviewRef.current
             }
             
@@ -210,10 +211,10 @@ const ReleaseDetails = () => {
                         }
                     };
     
-                    // Update the state directly
+                    // Update the state directly as OBJECT on user data
                     setRelease(prevRelease => ({
                         ...prevRelease,
-                        reviews: [newReview, ...prevRelease.reviews]
+                        preview: [newReview, ...prevRelease.preview]
                     }));
     
                     if(user.id !== release.userId){
@@ -221,7 +222,7 @@ const ReleaseDetails = () => {
                             senderId: user.id,
                             receiverId: release.userId,
                             title: 'reviewed on your release',
-                            data: JSON.stringify({releaseId: release.id, reviewId: res?.data?.id})
+                            data: JSON.stringify({releaseId: release.id, streamId: res?.data?.id})
                         }
                         createNotifications(notify);
                     }
@@ -248,13 +249,13 @@ const ReleaseDetails = () => {
                     // Update state directly instead of reloading
                     setRelease(prevRelease => ({
                         ...prevRelease,
-                        reviews: prevRelease.reviews.filter(r => r.id !== review.id)
+                        preview: prevRelease.preview.filter(r => r.id !== review.id)
                     }));
                 } else {
-                    Alert.alert('Review', res.msg || 'Something went wrong');
+                    Alert.alert('Preview', res.msg || 'Something went wrong');
                 }
             } catch (err) {
-                Alert.alert('Review', 'Something went wrong');
+                Alert.alert('Preview', 'Something went wrong');
             }
         }
     
@@ -315,14 +316,16 @@ const ReleaseDetails = () => {
 
                     {/* Card displayed here */}
                     <ReleaeCard
-                        item={{ ...release, reviews: [{ count: release?.reviews?.length }] }}
+                        item={{ ...release,
+                            preview: release?.preview || [] 
+                            //  preview: [{ count: release?.preview?.length }] 
+                            }}
                         currentUser={user}
                         router={router}
                         hasShadow={false}
                         showReviewButton={false}
                     />
     
-
                     {/* Input box rendering here */}
                     <Animated.View style={[
                         styles.inputContainer,
@@ -379,8 +382,8 @@ const ReleaseDetails = () => {
 
                     {/* Reviews rendering here */}
                     <View style={styles.reviewsContainer}>
-                    {release?.reviews?.length > 0 ? (
-                        release.reviews
+                    {release?.preview?.length > 0 ? (
+                        release.preview
                             .filter(review => !review.parentReviewId)
                             .map(review => (
                                 <View key={review?.id?.toString()}>
@@ -450,7 +453,7 @@ const ReleaseDetails = () => {
         );
     };
     
-    export default ReleaseDetails;
+    export default StreamDetails;
 
 const styles = StyleSheet.create({
     container: {

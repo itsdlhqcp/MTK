@@ -8,10 +8,11 @@ import moment from 'moment'
 import { getUserData } from '../../services/userServices';
 import { router } from 'expo-router'
 import { userService } from '../../services/helperService'
-import { createCommentLike, createCommentReplylike, createCommentUnlike, removeCommentLike, removeCommentReplyunlike, removeCommentUnlike } from '../../services/postService'
+import { createCommentLike, removeCommentLike ,createCommentUnlike, removeCommentUnlike, createCommentReplylike, removeCommentReplyunlike } from '../../services/homeService'
+  
 import { useAuth } from '../../contexts/AuthContext'
 
-const CommentItem = ({
+const TcommentItem = ({
   item, 
   canDelete=false,
   onDelete = () => {},
@@ -93,12 +94,12 @@ const CommentItem = ({
   const [cmtlikes, setCmtlikes] = useState([]);
   
   useEffect(() => {
-    setCmtlikes(item?.commentLikes || []);
+    setCmtlikes(item?.ctwistLikes || []);
   }, [])
   
   const handleCommentLike = async () => {
     if(cmtliked) {
-      let updatedCmtLikes = cmtlikes.filter(upvote => upvote.userId !== user?.id);
+      let updatedCmtLikes = cmtlikes?.filter(upvote => upvote.userId !== user?.id);
       setCmtlikes([...updatedCmtLikes]);
       const res = await removeCommentLike(item?.id, user?.id);
       if(!res.success){
@@ -107,7 +108,7 @@ const CommentItem = ({
     } else {
       let data = {
         userId: user?.id,
-        commentId: item?.id
+        tcommentId: item?.id
       }
       setCmtlikes([...cmtlikes, data]);
       const res = await createCommentLike(data);
@@ -123,12 +124,12 @@ const CommentItem = ({
   const [cmtunlikes, setCmtunlikes] = useState([]);
   
   useEffect(() => {
-    setCmtunlikes(item?.commentUnlikes || []);
+    setCmtunlikes(item?.ctwistUnlikes || []);
   }, [])
   
   const handleCommentUnlike = async () => {
     if(cmtunliked) {
-      let updatedCmtUnlikes = cmtunlikes.filter(unlike => unlike.userId !== user?.id);
+      let updatedCmtUnlikes = cmtunlikes?.filter(unlike => unlike.userId !== user?.id);
       setCmtunlikes([...updatedCmtUnlikes]);
       const res = await removeCommentUnlike(item?.id, user?.id);
       if(!res.success){
@@ -137,7 +138,7 @@ const CommentItem = ({
     } else {
       let data = {
         userId: user?.id,
-        commentId: item?.id
+        tcommentId: item?.id
       }
       setCmtunlikes([...cmtunlikes, data]);
       const res = await createCommentUnlike(data);
@@ -153,12 +154,12 @@ const CommentItem = ({
   const [cmtreplylikes, setCmtreplylikes] = useState([]);
   
   useEffect(() => {
-    setCmtreplylikes(item?.replylikes || []);
+    setCmtreplylikes(item?.treplyLikes || []); 
   }, [])
   
   const handleCommentReplylike = async () => {
     if(cmtreplyliked) {
-      let updatedCmtReplylikes = cmtreplylikes.filter(replylike => replylike.userId !== user?.id);
+      let updatedCmtReplylikes = cmtreplylikes?.filter(replylike => replylike.userId !== user?.id);
       setCmtreplylikes([...updatedCmtReplylikes]);
       const res = await removeCommentReplyunlike(item?.id, user?.id);
       if(!res.success){
@@ -167,7 +168,7 @@ const CommentItem = ({
     } else {
       let data = {
         userId: user?.id,
-        replyId: item?.id
+        treplyId: item?.id
       }
       setCmtreplylikes([...cmtreplylikes, data]);
       const res = await createCommentReplylike(data);
@@ -180,8 +181,8 @@ const CommentItem = ({
   const cmtreplyliked = cmtreplylikes?.filter(cmtreplylike => cmtreplylike?.userId === user?.id)[0] ? true : false;
 
   // Determine if the item is a comment or reply
-  const isReply = Boolean(item?.reply);
-
+  const isReply = Boolean(item?.treply);
+//  console.log('usernae##??', item);
   return (
     <View style={styles.container}>
       <TouchableOpacity onPress={handleUsernamePress}>
@@ -251,7 +252,7 @@ const CommentItem = ({
                   fill={cmtliked ? theme.colors.rose : 'transparent'}
                 />
                 <Text style={styles.count}>
-                  {cmtlikes.length}
+                  {cmtlikes.length}  
                 </Text>
               </TouchableOpacity>
             </>
@@ -288,7 +289,7 @@ const CommentItem = ({
               color={theme.colors.primary}  
             /> 
             <Text style={styles.count}>
-              {item?.reply?.length}
+              {item?.treply?.length}
             </Text>
           </TouchableOpacity>
         </View>
@@ -297,7 +298,7 @@ const CommentItem = ({
   )
 }
 
-export default CommentItem
+export default TcommentItem
 
 const styles = StyleSheet.create({
   container: {

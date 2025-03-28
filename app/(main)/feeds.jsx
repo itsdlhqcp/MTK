@@ -44,7 +44,7 @@ const Home = () => {
 
     // Handle real-time post updates
     const handlePostEvent = async (payload) => {
-        // handle inser new post on main stram
+        // handle insert new post on main stream
         if (payload.eventType === 'INSERT' && payload?.new?.id) {
             let newPost = {...payload.new};
             newPost.postLikes = [];

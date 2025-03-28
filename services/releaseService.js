@@ -54,7 +54,7 @@ export const fetchReleaseDetails = async (postId) => {
     const { data, error } = await supabase
       .from('releases')
       .select(`*,
-        user: users (id, name, image),
+        user: users(id, name, image),
         reviews(*, user: users(id, name, image))
         `
        )
@@ -555,7 +555,7 @@ export const removePeopleReviewUpvote = async (peoplesReviewId, userId) => {
       const { error } = await supabase
       .from('pepreplylikes')
       .delete()
-      .eq('peoplesReviewReplyId', peoplesReviewId)
+      .eq('peoplesReviewReplyId', peoplesReviewId)  
       .eq('userId', userId);
         try{
           if(error){

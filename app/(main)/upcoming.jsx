@@ -5,7 +5,7 @@ import { fetchReleases } from '../../services/releaseService';
 import { wp, hp } from '@/helpers/common';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from 'expo-router';
-import { fetchOtt } from '../../services/ottService';
+import { fetchOtt } from '../../services/ottService'; 
 import ReleaseList from '../../components/ReleaseList';
 import OttList from '../../components/OttList';
 import { supabase } from '../../lib/supabase';

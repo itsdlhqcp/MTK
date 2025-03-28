@@ -14,6 +14,7 @@ const OttCard = ({
 }) => {
     const [userRating, setUserRating] = useState(0);
     const [clickCount, setClickCount] = useState(0);
+    // console.log('item', item);
 
     const shadowStyle = {
         shadowOffset: {
@@ -25,9 +26,16 @@ const OttCard = ({
         elevation: 1
     }
 
+    // const handleReadReviews = () => {
+    //     if (!item?.id) return null;
+    //     router.push({ pathname: 'streamDetails', params: { streamId: item.id } });
+    // }
+
+    
+
     const handleReadReviews = () => {
         if (!item?.id) return null;
-        router.push({ pathname: 'postDetails', params: { postId: item.id } });
+        router.push({ pathname: 'streamPeopleSection/streamPeopleDetails', params: { streamId: item.id } });
     }
 
     const handleCardPress = () => {

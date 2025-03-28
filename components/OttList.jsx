@@ -100,7 +100,7 @@ const OttList = ({ streams, currentUser, router, loading, hasMore, onLoadMore })
       renderItem={renderItem}
       // Improved keyExtractor to handle both header and non-header items more explicitly
       keyExtractor={(item, index) => 
-        item.isHeader ? item.id : `stream-${item.id || index}`
+        item.header ? `header-${item.header}` : `stream-${item.id}`
       }
       
       onEndReached={onLoadMore}

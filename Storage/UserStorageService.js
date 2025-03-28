@@ -19,7 +19,7 @@ export const UserStorageService = {
       // Convert userData object to string for storage
       const userDataString = JSON.stringify(userData);
       await SecureStore.setItemAsync(USER_DATA_KEY, userDataString);
-      console.log("User data stored successfully:", userData);
+      //console.log("User data stored successfully:", userData);
       return true;
     } catch (error) {
       console.error('Error storing user data:', error);
