@@ -123,22 +123,22 @@ const LikeButton = ({
   return (
     <View style={styles.container}>
       <TouchableOpacity onPress={onLike} activeOpacity={0.7}>
-        <Animated.View
+        {/* <Animated.View
           style={{
             transform: [
               { scale: scaleAnim },
               { rotate: rotate }
             ]
           }}
-        >
+        > */}
           <Icon 
             name='heart' 
             size={24} 
-            fill={liked ? theme.colors.rose : 'transparent'} 
+            fill={liked ? theme.colors.primary : 'transparent'} 
             strokeWidth={1.4} 
-            color={liked ? theme.colors.blue : theme.colors.textDark}
+            color={liked ? theme.colors.blue : theme.colors.primary}
           />
-        </Animated.View>
+        {/* </Animated.View> */}
       </TouchableOpacity>
       <Text style={styles.count}>
         {likes?.length || 0}
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
     gap: 5,
   },
   count: {
-    color: theme.colors.text,
+    color: theme.colors.primaryDark,
     fontSize: hp(1.8),
     fontWeight: theme.fonts.medium
   }

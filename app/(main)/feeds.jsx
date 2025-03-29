@@ -40,7 +40,7 @@ const Home = () => {
     const [hasMore, setHasMore] = useState(true);
     const [page, setPage] = useState(1);
     const [notificatuionCount, setNotificationCount] = useState(0);
-    const ITEMS_PER_PAGE = 4;
+    const ITEMS_PER_PAGE = 12;
 
     // Handle real-time post updates
     const handlePostEvent = async (payload) => {
@@ -159,9 +159,11 @@ const Home = () => {
         );
     };
 
+    // bg={"#121212"}
+
     return (
        
-        <ScreenWrapper bg={"#E0E0E0"}>
+        <ScreenWrapper bg={"#121212"}>   
             <View style={styles.container}>
                 {/* Header */}
                 <View style={styles.header}>
@@ -254,7 +256,8 @@ const styles = StyleSheet.create({
     fontWeight: theme.fonts.bold
   }, 
   listStyle: {
-    paddingHorizontal: wp(2)
+    paddingHorizontal: wp(2),
+    paddingBottom: hp(4)
   }, 
   icons: {
     flexDirection: 'row', 

@@ -29,7 +29,8 @@ const ReleaseList = ({ releases, currentUser, router, loading, hasMore, onLoadMo
     if (diffDays === 0) return 'TODAY';
     if (diffDays === -1) return 'YESTERDAY';
     if (diffDays >= -7) return releaseDate.format('dddd').toUpperCase();
-    return releaseDate.format('MMMM D').toUpperCase();
+    if (diffDays < -7) return 'RECENT RELEASES';
+  //  return releaseDate.format('MMMM D').toUpperCase();
   };
 
   const groupedReleases = useMemo(() => {
@@ -121,7 +122,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: '4%'
   },
   headerContainer: {
-    paddingVertical: 2,
+    paddingBottom: 5,
     backgroundColor: 'transparent',
     alignItems: 'center',
     zIndex: 1,
@@ -129,7 +130,7 @@ const styles = StyleSheet.create({
   headerPill: {
     backgroundColor: '#424242',
     paddingHorizontal: 16,
-    paddingVertical: 6,
+    paddingVertical: 2,
     borderRadius: 20,
   },
   headerText: {

@@ -11,22 +11,34 @@ import PostFooter from './PostFooter'
 import { usePost } from '../contexts/PostContext';
 import { useFocusEffect } from '@react-navigation/native';
 
+// const textStyle = {
+//   color: theme.colors.dark, 
+//   fontSize: hp(1.75)
+// }
+
+// const tagsStyles = {
+//   div: textStyle,
+//   p: textStyle,
+//   ol: textStyle,
+//   h1: {
+//     color: theme.colors.dark,
+//   },
+//   h4: {
+//     color: theme.colors.dark
+//   }
+// }
 const textStyle = {
-  color: theme.colors.dark, 
+  color: theme.colors.light || '#E0E0E0', 
   fontSize: hp(1.75)
-}
+};
 
 const tagsStyles = {
   div: textStyle,
   p: textStyle,
   ol: textStyle,
-  h1: {
-    color: theme.colors.dark,
-  },
-  h4: {
-    color: theme.colors.dark
-  }
-}
+  h1: { color: theme.colors.light || '#E0E0E0' },
+  h4: { color: theme.colors.light || '#E0E0E0' }
+};
 
 const PostCard = ({
   item = {},
@@ -131,6 +143,7 @@ const PostCard = ({
       showDelete(item);
     }
   }
+
 
   if (!item) return null;
 
@@ -275,10 +288,14 @@ const styles = StyleSheet.create({
     borderCurve: 'continuous', 
     padding: 10,
     paddingVertical: 12,
-    backgroundColor: 'white',
-    borderWidth: 0.5,
-    borderColor: theme.colors.gray,
-    shadowColor: '#000'
+    // backgroundColor: 'white',
+    // borderWidth: 0.5,
+    // borderColor: theme.colors.gray,
+    // shadowColor: '#000'
+    backgroundColor: '#1A1A1A',
+    borderWidth: 1,
+    borderColor: '#333333',
+    overflow: 'hidden',
   },
   header: {
     flexDirection: 'row',
@@ -320,7 +337,7 @@ const styles = StyleSheet.create({
   },
   noTagsText: {
     fontSize: hp(1.3),
-    color: theme.colors.textLight || '#A8A8A8',
+    color: theme.colors.primary || '#A8A8A8',
     fontStyle: 'italic',
   },
   moreTagsText: {
@@ -332,7 +349,8 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   created: {
-    color: theme.colors.textDark || 'black',  
+   // color: theme.colors.textDark || 'black',  
+    color: theme.colors.gray || '#AAAAAA',
     fontSize: hp(1.5),
     fontWeight: theme.fonts.small,
     marginRight: 8,

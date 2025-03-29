@@ -55,7 +55,7 @@ export const fetchReleaseDetails = async (postId) => {
       .from('releases')
       .select(`*,
         user: users(id, name, image),
-        reviews(*, user: users(id, name, image))
+        reviews(*, user: users(id, name, image),replyReviews(*))
         `
        )
       .eq('id', postId)

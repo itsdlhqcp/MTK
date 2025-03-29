@@ -242,8 +242,10 @@ const getOtts = async () => {
         );
     };
 
+
+    // bg={"#121212"}
     return (
-        <ScreenWrapper bg="white">
+        <ScreenWrapper bg="#121212">
             <TabBar />
             {renderContent()}
         </ScreenWrapper>

@@ -97,30 +97,19 @@ const ReleaseCard = ({
                         <View style={styles.reviewSection}>
                             <TouchableOpacity 
                                 style={styles.reviewButton}
-                                onPress={handleReadReviews}
+                                // onPress={handleReadReviews}
+                                onPress={handlePeopleReadReviews}
                             >
                                 <Text style={styles.reviewButtonText}>READ REVIEWS</Text>
                             </TouchableOpacity>
                             <View style={styles.reviewCountBadge}>
-                                <Text style={styles.reviewCountText}>{reviewCount}</Text>
-                            </View>
-                        </View>
-                    )}
-
-                  {showReviewButton && (
-                        <View style={styles.reviewSection}>
-                            <TouchableOpacity 
-                                // style={styles.reviewButton}
-                                onPress={handlePeopleReadReviews}
-                            >
-                                {/* <Text style={styles.reviewButtonText}>PEOPLES REVIEWS</Text> */}
-                                <Icon name="comment01" size={hp(2)} color={theme.colors.primaryDark} />
-                            </TouchableOpacity>
-                            <View style={styles.reviewCountBadge2}>
+                                {/* <Text style={styles.reviewCountText}>{reviewCount}</Text>  peoplesReviewCount */}
                                 <Text style={styles.reviewCountText}>{peoplesReviewCount}</Text>
                             </View>
                         </View>
                     )}
+
+                
 
                 </View>
                 </View>
@@ -232,3 +221,25 @@ const styles = StyleSheet.create({
        gap: 24
     }
 })
+
+
+
+
+
+
+
+
+// {showReviewButton && (
+//     <View style={styles.reviewSection}>
+//         <TouchableOpacity 
+//             // style={styles.reviewButton}
+//             onPress={handlePeopleReadReviews}
+//         >
+//             {/* <Text style={styles.reviewButtonText}>PEOPLES REVIEWS</Text> */}
+//             <Icon name="comment01" size={hp(2)} color={theme.colors.primaryDark} />
+//         </TouchableOpacity>
+//         <View style={styles.reviewCountBadge2}>
+//             <Text style={styles.reviewCountText}>{peoplesReviewCount}</Text>
+//         </View>
+//     </View>
+// )}

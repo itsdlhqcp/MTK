@@ -288,7 +288,7 @@ const  PeoplesPreviewItem = ({
                   <Icon name="bubbleChatReply" size={hp(2.5)} color={theme.colors.primary} />
                 </TouchableOpacity>
                 {replyCount > 0 && (
-                  <Text style={styles.replyCount}>{item?.replyPeopleReviews?.length || 0}</Text>
+                  <Text style={styles.replyCount}>{item?.replydpeopreviews?.length || 0}</Text>
                 )}
               </>
             )}

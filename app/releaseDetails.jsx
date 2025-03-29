@@ -308,6 +308,7 @@ const ReleaseDetails = () => {
                 </View>
             );
         }
+
     
         return (
             <View style={styles.container}>

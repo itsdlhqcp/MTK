@@ -131,7 +131,7 @@ const ReviewItem = ({
                 </TouchableOpacity>
                
                   {/* <Text style={styles.replyCount}>{replyCount || 0}</Text> replyReviews */}
-                  <Text style={styles.replyCount}>{item?.previewsreply?.length}</Text>
+                  <Text style={styles.replyCount}>{item?.replyReviews?.length}</Text>
                 
               </>
             )}

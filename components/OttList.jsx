@@ -29,7 +29,8 @@ const OttList = ({ streams, currentUser, router, loading, hasMore, onLoadMore })
     if (diffDays === 0) return 'TODAY';
     if (diffDays === -1) return 'YESTERDAY';
     if (diffDays >= -7) return releaseDate.format('dddd').toUpperCase();
-    return releaseDate.format('MMMM D').toUpperCase();
+    if (diffDays < -7) return 'RECENT STREAMS';
+  
   };
 
   const groupedReleases = useMemo(() => {
@@ -98,7 +99,6 @@ const OttList = ({ streams, currentUser, router, loading, hasMore, onLoadMore })
     <FlatList
       data={flatListData}
       renderItem={renderItem}
-      // Improved keyExtractor to handle both header and non-header items more explicitly
       keyExtractor={(item, index) => 
         item.header ? `header-${item.header}` : `stream-${item.id}`
       }
@@ -108,9 +108,6 @@ const OttList = ({ streams, currentUser, router, loading, hasMore, onLoadMore })
       ListFooterComponent={renderFooter}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.listContainer}
-      // stickyHeaderIndices={flatListData.map((item, index) => 
-      //   item.isHeader ? index : null
-      // ).filter(Boolean)}
       ListEmptyComponent={() => (
         <View style={styles.emptyContainer}>
           <Text style={styles.noMoreText}>
@@ -128,7 +125,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: '4%'
   },
   headerContainer: {
-    paddingVertical: 2,
+    paddingBottom: 5,
     backgroundColor: 'transparent',
     alignItems: 'center',
     zIndex: 1,
@@ -136,7 +133,7 @@ const styles = StyleSheet.create({
   headerPill: {
     backgroundColor: '#424242',
     paddingHorizontal: 16,
-    paddingVertical: 6,
+    paddingVertical: 2,
     borderRadius: 20,
   },
   headerText: {

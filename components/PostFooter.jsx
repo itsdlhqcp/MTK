@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
     gap: 5,
   },
   count: {
-    color: theme.colors.text,
+    color: theme.colors.textLight,
     fontSize: hp(1.8),
     fontWeight: theme.fonts.medium
   }
