@@ -322,7 +322,7 @@ export default TwistCard;
 const styles = StyleSheet.create({
   container: {
     gap: 10, 
-    marginBottom: 15, 
+    marginBottom: 5.2, 
     borderRadius: theme.radius.xxl * 1.1,
     borderCurve: 'continuous', 
     padding: 14,
