@@ -151,7 +151,7 @@ const PostCard = ({
     <View style={[styles.container, hasShadow && shadowStyle]}>
       <View style={styles.header}>
         {/* Tags section on the left */}
-        <View style={styles.tagsContainer}>
+        {/* <View style={styles.tagsContainer}>
           {Array.isArray(parsedTags) && parsedTags.length > 0 ? (
             parsedTags.slice(0, 3).map((tag, index) => (
               <View 
@@ -167,7 +167,45 @@ const PostCard = ({
           {parsedTags.length > 3 && (
             <Text style={styles.moreTagsText}>+{parsedTags.length - 3}</Text>
           )}
-        </View>
+        </View> */}
+
+         <View style={styles.tagsContainer}>
+                {Array.isArray(parsedTags) && parsedTags.map((tag, index) => {
+                    // Determine tag styling based on tag name
+                    let tagStyle = {};
+                    let tagTextStyle = {};
+                    
+                    if (tag.toLowerCase() === 'rumour') {
+                    // Red styling for rumor tags
+                    tagStyle = { backgroundColor: '#262626', borderColor: '#333333' };
+                    tagTextStyle = { color: '#f83a15' };
+                    } else if (tag.toLowerCase() === 'official') {
+                    // Blue styling for official tags
+                    tagStyle = { backgroundColor: '#262626', borderColor: '#333333' };
+                    tagTextStyle = { color: '#1581f8' };
+                    }else if (tag.toLowerCase() === 'anime') {
+                        // Blue styling for official tags
+                        tagStyle = { backgroundColor: '#262626', borderColor: '#333333' };
+                        tagTextStyle = { color: '#FFC300' };
+                    } else {
+                    // Default styling for other tags
+                    tagStyle = { 
+                        backgroundColor: theme.colors.secondary || '#262626',
+                        borderColor: theme.colors.border || '#333333' 
+                    };
+                    tagTextStyle = { color: theme.colors.primary || '#0095F6' };
+                    }
+                    
+                    return (
+                    <View 
+                        key={index} 
+                        style={[styles.tagPill, tagStyle]}
+                    >
+                        <Text style={[styles.tagPillText, tagTextStyle]}>#{tag}</Text>
+                    </View>
+                    );
+                })}
+                </View>
 
         {/* Date on the right */}
         <View style={styles.dateContainer}>
