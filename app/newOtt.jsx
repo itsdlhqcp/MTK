@@ -32,6 +32,13 @@ const NewOtt = () => {
   const [rating, setRating] = useState(null);
   const [userRatingImpact, setUserRatingImpact] = useState(0);
   const [tags, setTags] = useState([]);
+  
+  // Available OTT platforms
+  const ottPlatforms = [
+    'netflix', 'prime', 'disney', 'hbo', 'hulu', 'amc', 'zee5', 'sonyliv', 
+    'paramountplus', 'appletvplus', 'hotstar', 'voot', 'aha', 'sunnxt', 
+    'appletv', 'paramountx', 'peacocktv'
+  ];
 
   const handleDateSelect = (date) => {
     console.log('Selected date:', date);
@@ -43,6 +50,7 @@ const NewOtt = () => {
       bodyRef.current = post.body; 
       setFile(post.file || null);
       setFilel(post.filel || null); // Added to handle existing second image
+      setTags(post.tags || []);
       setTimeout(() => {
         editorRef?.current?.setContentHTML(post.body);
       },300)
@@ -153,8 +161,15 @@ const NewOtt = () => {
     setUserRatingImpact(value);
   };
 
+  // Function to add a platform tag
+  const addPlatformTag = (platform) => {
+    if (!tags.includes(platform)) {
+      setTags([...tags, platform]);
+    }
+  };
+
   const onSubmit = async () => {
-    if (!selectedDate && !file && !bodyRef.current && !tags.length) {
+    if (!selectedDate && !file && filel && !bodyRef.current && !tags.length && !rating) {
       Alert.alert('Error', 'Enter Title, post img and release date');
       return;
     }
@@ -183,18 +198,12 @@ const NewOtt = () => {
       setFilel(null); // Clear second file on success
       bodyRef.current = ''; 
       editorRef.current?.setContentHTML('');
+      setTags([]);
       Alert.alert('Stream uploaded successfully');
       router.push('/upcoming');
     }else{
       Alert.alert('Release', res.msg);
     }
-    // below are the set of data console logs
-    // console.log('body#######: ', bodyRef.current);
-    // console.log('file#######: ', file);
-    // console.log('filel#######: ', filel); // Added log for second file
-    // console.log('date: ', selectedDate);
-    // console.log('rating:', rating);
-    // console.log('userRatingImpact:', userRatingImpact);
   };
 
   const handleEditorChange = (body) => {
@@ -206,7 +215,7 @@ const NewOtt = () => {
       <Header title={post?.id ? "Edit Ott Stream" : "Create Ott Stream"}
          showBackButton={true} />
       <View style={styles.container}>
-        <ScrollView contentContainerStyle={{ gap: 20 }}>
+        <ScrollView contentContainerStyle={{ gap: 20 }}  showsVerticalScrollIndicator={false}>
           <View style={styles.header}>
             <Avatar
               uri={user?.image}
@@ -297,6 +306,36 @@ const NewOtt = () => {
           />
           </View>
 
+          {/* Platform Pills Section */}
+          <View style={styles.platformsContainer}>
+            <Text style={styles.platformsTitle}>Available Platforms</Text>
+            <View style={styles.platformsScrollContainer}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <View style={styles.platformPills}>
+                  {ottPlatforms.map((platform, index) => (
+                    <TouchableOpacity 
+                      key={index} 
+                      style={[
+                        styles.platformPill,
+                        tags.includes(platform) && styles.platformPillSelected
+                      ]}
+                      onPress={() => addPlatformTag(platform)}
+                    >
+                      <Text 
+                        style={[
+                          styles.platformPillText,
+                          tags.includes(platform) && styles.platformPillTextSelected
+                        ]}
+                      >
+                        {platform}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </ScrollView>
+            </View>
+          </View>
+          
           <TagInput tags={tags} setTags={setTags} />
 
           <RatingInput
@@ -322,7 +361,7 @@ const NewOtt = () => {
   );
 };
 
-export default NewOtt
+export default NewOtt;
 
 const styles = StyleSheet.create({
   container: {
@@ -346,7 +385,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative'
-},
+  },
   media: {
     flexDirection: 'row', 
     justifyContent: 'space-between',
@@ -364,67 +403,109 @@ const styles = StyleSheet.create({
     fontWeight: theme.fonts.semibold,
     color: theme.colors.text,
     textAlign: 'center'
-    },
-    header: {
+  },
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    },
-    username: {
+  },
+  username: {
     fontSize: hp(2.2),
-    fontWeight: theme. fonts. semibold,
+    fontWeight: theme.fonts.semibold,
     color: theme.colors.text,
-    },
-    mediaIcons: {
-      flexDirection: 'row', 
-      alignItems: 'center', 
-      gap: 8,
-      marginLeft: 10
-    },
-    addImageText: {
-      fontSize: hp(2),
-      fontWeight: theme.fonts.semibold,
-      color: theme.colors.text,
-    },
-    avatar: {
+  },
+  mediaIcons: {
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 8,
+    marginLeft: 10
+  },
+  addImageText: {
+    fontSize: hp(2),
+    fontWeight: theme.fonts.semibold,
+    color: theme.colors.text,
+  },
+  avatar: {
     height: hp(6.5),
     width: hp(6.5),
-    borderRadius: theme. radius.xl,
+    borderRadius: theme.radius.xl,
     borderCurve: 'continuous',
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.1)'
-    },
-    publicText: {
-      fontSize: hp(1.7),
-      fontWeight: theme.fonts.medium,
-      color: theme.colors.textLight,
-      },
-      closeIcon: {
-        position: 'absolute',
-        top: 16,
-        right: 12,
-        padding: 6,
-        borderRadius: 50,
-        backgroundColor: 'rgba(97, 35, 35, 0.14)',
-       
-      },
-      label: {
-        fontSize: hp(2),
-        fontWeight: hp(4.5),
-        paddingStart: 10,
-        color: theme.colors.text,
-        paddingBottom: 5
-      },
-      dateInput: {
-        fontSize: hp(2),
-        fontWeight: theme.fonts.semibold,
-        color: theme.colors.text,
-        padding: 24,
-        borderWidth: 1,
-        borderColor: theme.colors.gray,
-        borderRadius: theme.radius.md,
-        borderCurve: 'continuous',
-        marginTop: 10,
-      },
-     
+  },
+  publicText: {
+    fontSize: hp(1.7),
+    fontWeight: theme.fonts.medium,
+    color: theme.colors.textLight,
+  },
+  closeIcon: {
+    position: 'absolute',
+    top: 16,
+    right: 12,
+    padding: 6,
+    borderRadius: 50,
+    backgroundColor: 'rgba(97, 35, 35, 0.14)',
+  },
+  label: {
+    fontSize: hp(2),
+    fontWeight: hp(4.5),
+    paddingStart: 10,
+    color: theme.colors.text,
+    paddingBottom: 5
+  },
+  dateInput: {
+    fontSize: hp(2),
+    fontWeight: theme.fonts.semibold,
+    color: theme.colors.text,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: theme.colors.gray,
+    borderRadius: theme.radius.md,
+    borderCurve: 'continuous',
+    marginTop: 10,
+  },
+  // New styles for platform pills
+  platformsContainer: {
+    marginVertical: 5
+  },
+  platformsTitle: {
+    fontSize: hp(2),
+    fontWeight: theme.fonts.semibold,
+    color: theme.colors.text,
+    marginBottom: 10
+  },
+  platformsScrollContainer: {
+    borderWidth: 1,
+    borderColor: theme.colors.gray,
+    borderRadius: theme.radius.md,
+    padding: 10,
+    borderCurve: 'continuous',
+  },
+  platformPills: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingVertical: 5,
+  },
+  platformPill: {
+    backgroundColor: '#f0f0f0',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  platformPillSelected: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  platformPillText: {
+    fontSize: hp(1.8),
+    fontWeight: theme.fonts.medium,
+    color: theme.colors.textLight,
+  },
+  platformPillTextSelected: {
+    color: '#ffffff',
+  },
 })
