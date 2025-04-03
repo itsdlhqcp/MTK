@@ -207,7 +207,7 @@ const OttGridCard = ({ item, router }) => {
       {item?.file?.includes('postImage') && (
         <View style={styles.gridImageContainer}>
           <Image
-            source={getSupabaseFileUrl(item.file)}
+            source={getSupabaseFileUrl(item.filel)}
             style={styles.gridItemImage}
             resizeMode="cover"
           />

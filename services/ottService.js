@@ -3,6 +3,7 @@ import { supabase } from "../lib/supabase";
 
 export const createOrUpdateOtt = async (post) => {
   try {
+    // Handle first file upload (file)
     if (post.file && typeof post.file === "object") {
       let isImage = post.file.type === "image";
       let folderName = isImage ? "postImage" : "postVideo";
@@ -13,6 +14,19 @@ export const createOrUpdateOtt = async (post) => {
         return fileResult;
       }
     }
+    
+    // Handle second file upload (filel)
+    if (post.filel && typeof post.filel === "object") {
+      let isImage = post.filel.type === "image";
+      let folderName = isImage ? "postImage" : "postVideo";
+      let fileResult = await uploadProfileImage(folderName, post.filel.uri, isImage);
+      if (fileResult.success) {
+        post.filel = fileResult.data;
+      } else {
+        return fileResult;
+      }
+    }
+    
     const {data, error} = await supabase.from('streams').upsert(post).select().single();
 
     if (error){

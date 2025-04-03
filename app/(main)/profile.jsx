@@ -267,6 +267,16 @@ const InstagramProfile = React.memo(({ user, router, handleLogout, theme, postCo
       {/* Header */}
       <View style={styles.header}>
         <Text style={[styles.username, { color: theme.colors.textDark }]}>{user?.name}</Text>
+
+        <Pressable onPress={() => router.push('createFeed')}>
+          <Icon name="plus" size={hp(3.2)} color="white" />
+        </Pressable>
+        <Pressable onPress={() => router.push('newRelease')}>
+          <Icon name="plus" size={hp(3.2)} color="green" />
+        </Pressable>
+        <Pressable onPress={() => router.push('newOtt')}>
+          <Icon name="plus" size={hp(3.2)} color="red" />
+        </Pressable>
         <TouchableOpacity 
           style={[styles.logoutButton]} 
           onPress={handleLogout}

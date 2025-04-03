@@ -448,6 +448,7 @@ const titleTagsStyles = {
 const screenWidth = Dimensions.get('window').width;
 const itemWidth = (screenWidth - (wp(4) * 2 + wp(2) * 2)) / 3;
 
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

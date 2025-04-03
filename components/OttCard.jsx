@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
         fontWeight: '500',
     },
     releaseDate: {
-        color: '#C0C0C0',
+        color: theme.colors.silver,
         fontSize: hp(2.4),
         marginTop: 2,
         textAlign: 'left',

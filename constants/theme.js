@@ -8,6 +8,7 @@ const theme = {
 
         // other aestatic colors
         star: '#de571a',
+        silver: '#C0C0C0',
 
         text: '#494949',
         textLight: '#7C7C7C',
