@@ -7,7 +7,7 @@ import theme from '../constants/theme';
 const MLoading = ({ size = "large", color = "#FFA500" }) => {
   return (
     <View style={styles.container}>
-      <BarIndicator size={size === "large" ? 56 : 34} color={color} /> {/* Dotted round loader */}
+      <BarIndicator size={size === "large" ? 38 : 34} color={color} /> {/* Dotted round loader */}
     </View>
   );
 };

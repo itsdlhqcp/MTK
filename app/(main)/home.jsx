@@ -81,21 +81,33 @@ const Header = memo(({ username, router }) => (
   </View>
 ));
 
-// Lightweight SearchBar component
-const SearchBar = memo(({ searchQuery, setSearchQuery }) => (
-  <View style={styles.searchContainer}>
-    <TextInput
-      style={styles.searchInput}
-      placeholder="Search for a video topic"
-      placeholderTextColor="#888"
-      value={searchQuery}
-      onChangeText={setSearchQuery}
-    />
-    <Pressable style={styles.searchButton}>
-      <Icon name="search" size={hp(2.5)} color="white" />
-    </Pressable>
-  </View>
-));
+const SearchBar = memo(({ searchQuery, setSearchQuery }) => {
+  const [localSearch, setLocalSearch] = useState(searchQuery);
+
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      setSearchQuery(localSearch);
+    }, 2000); // Adds a debounce of 300ms
+
+    return () => clearTimeout(delayDebounce);
+  }, [localSearch]);
+
+  return (
+    <View style={styles.searchContainer}>
+      <TextInput
+        style={styles.searchInput}
+        placeholder="Search for a video topic"
+        placeholderTextColor="#888"
+        value={localSearch}
+        onChangeText={setLocalSearch}
+      />
+      <Pressable style={styles.searchButton}>
+        <Icon name="search" size={hp(2.5)} color="white" />
+      </Pressable>
+    </View>
+  );
+});
+
 
 // Lightweight TrendingItem component
 const TrendingItem = memo(({ post, router }) => (

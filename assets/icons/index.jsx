@@ -63,6 +63,8 @@ import CommentUnlike from "./CommentUnlike";
 import Reload from "./Reload";
 import SpotLight from "./SpotLight";
 import Calender from "./Calender";
+import Grid from "./Grid";
+import List from "./List";
 
 const icons = {
     home: Home,
@@ -128,6 +130,8 @@ const icons = {
     reload: Reload,
     spotlight: SpotLight,
     calender: Calender,
+    grid: Grid,
+    list: List
 }
 
 const Icon = ({name, ...props}) => {

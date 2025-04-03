@@ -54,7 +54,7 @@ const AspectRatioImage = ({ source, maxHeight = hp(64), style = {} }) => {
           }
         ]}
         onLoad={onImageLoad}
-        resizeMode="cover" // Changed to cover to ensure full width
+        resizeMode="cover"
       />
     </View>
   );

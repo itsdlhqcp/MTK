@@ -12,7 +12,7 @@ const NotificationItem = ({item, router}) => {
     // open that specific post details
     router.push({pathname: 'postDetails', params: {postId, commentId}});
     }
-    console.log('item', item);
+   // console.log('item', item);
     const createdAt = moment(item?.created_at).format('MMM d');
 
     return (

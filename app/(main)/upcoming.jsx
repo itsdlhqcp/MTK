@@ -10,6 +10,7 @@ import ReleaseList from '../../components/ReleaseList';
 import OttList from '../../components/OttList';
 import { supabase } from '../../lib/supabase';
 import { useFocusEffect } from '@react-navigation/native';
+import theme from '../../constants/theme';
 
 const ITEMS_PER_PAGE = 4;
 
@@ -181,20 +182,38 @@ const getOtts = async () => {
         }
     };
 
+    // const TabBar = () => (
+    //     <View style={styles.tabContainer}>
+    //         <TouchableOpacity 
+    //             style={[
+    //                 styles.tab, 
+    //                 activeTab === 'upcoming' && styles.activeTab
+    //             ]}
+    //             onPress={() => handleTabPress('upcoming')}
+    //         >
+    //             <Text style={[
+    //                 styles.tabText,
+    //                 activeTab === 'upcoming' && styles.activeTabText
+    //             ]}>THEATRE</Text>
+    //         </TouchableOpacity>
+    //         <TouchableOpacity 
+    //             style={[
+    //                 styles.tab, 
+    //                 activeTab === 'ott' && styles.activeTab
+    //             ]}
+    //             onPress={() => handleTabPress('ott')}
+    //         >
+    //             <Text style={[
+    //                 styles.tabText,
+    //                 activeTab === 'ott' && styles.activeTabText
+    //             ]}>DIGITAL</Text>
+    //         </TouchableOpacity>
+    //     </View>
+    // );
+
+
     const TabBar = () => (
         <View style={styles.tabContainer}>
-            <TouchableOpacity 
-                style={[
-                    styles.tab, 
-                    activeTab === 'ott' && styles.activeTab
-                ]}
-                onPress={() => handleTabPress('ott')}
-            >
-                <Text style={[
-                    styles.tabText,
-                    activeTab === 'ott' && styles.activeTabText
-                ]}>DIGITAL</Text>
-            </TouchableOpacity>
             <TouchableOpacity 
                 style={[
                     styles.tab, 
@@ -206,6 +225,18 @@ const getOtts = async () => {
                     styles.tabText,
                     activeTab === 'upcoming' && styles.activeTabText
                 ]}>THEATRE</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+                style={[
+                    styles.tab, 
+                    activeTab === 'ott' && styles.activeTab
+                ]}
+                onPress={() => handleTabPress('ott')}
+            >
+                <Text style={[
+                    styles.tabText,
+                    activeTab === 'ott' && styles.activeTabText
+                ]}>DIGITAL</Text>
             </TouchableOpacity>
         </View>
     );
@@ -242,48 +273,73 @@ const getOtts = async () => {
         );
     };
 
-
     // bg={"#121212"}
     return (
-        <ScreenWrapper bg="#121212">
+        <ScreenWrapper bg="black">
             <TabBar />
             {renderContent()}
         </ScreenWrapper>
+      
     );
 };
 
 const styles = StyleSheet.create({
+    // tabContainer: {
+    //     flexDirection: 'row',
+    //     backgroundColor: 'transparent',
+    //     padding: 6,
+    //     marginHorizontal: 14,
+    //     marginTop: 4,
+    //     borderRadius: 8,
+    // },
+    // tab: {
+    //     flex: 1,
+    //     paddingVertical: 12,
+    //     alignItems: 'center',
+    //     borderRadius: 44,
+    //   //  backgroundColor: '#2C2C2E #E50914'
+    // },
+    // activeTab: {
+    //     backgroundColor: '#FFCC00',
+    //     shadowColor: 'rgba(255, 255, 255, 0.1)',
+    //     shadowOffset: {
+    //         width: 0,
+    //         height: 2,
+    //     },
+    //     shadowOpacity: 0.1,
+    //     shadowRadius: 3,
+    //     elevation: 3,
+    // },
+    // tabText: {
+    //     fontSize: 16,
+    //     color: '#B3B3B3',
+    // },
     tabContainer: {
         flexDirection: 'row',
-        backgroundColor: '#cfd6e3',
-        padding: 6,
-        marginHorizontal: 14,
-        marginTop: 8,
-        borderRadius: 8,
+        backgroundColor: '#000000',
+        width: '100%',
+        height: 50,
     },
     tab: {
         flex: 1,
-        paddingVertical: 12,
+        justifyContent: 'center',
         alignItems: 'center',
-        borderRadius: 6,
+        borderBottomWidth: 2,
+        borderBottomColor: 'transparent',
     },
     activeTab: {
-        backgroundColor: '#ffffff',
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.1,
-        shadowRadius: 3,
-        elevation: 3,
+        borderBottomColor: '#FFFFFF',
     },
     tabText: {
         fontSize: 16,
-        color: '#666',
+        color: '#777777',
+        fontWeight: '600',
     },
     activeTabText: {
-        color: '#000',
+        color: '#FFFFFF',
+    },
+    activeTabText: {
+        color: '#E50914',
         fontWeight: '600',
     },
     contentContainer: {
@@ -291,10 +347,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         paddingTop: 80,
+       
     },
     listStyle: {
-        padding: 10, 
+        padding: 18, 
         paddingHorizontal: wp(4)
+      
     }
 });
 

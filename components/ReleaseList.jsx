@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, FlatList } from 'react-native';
 import moment from 'moment';
 import ReleaseCard from '../components/RelesaeCard';
 import FeedLoader from './FeedLoader';
+import { hp } from '../helpers/common';
 
 const ReleaseDateHeader = ({ date }) => (
   <View style={styles.headerContainer}>
@@ -81,7 +82,7 @@ const ReleaseList = ({ releases, currentUser, router, loading, hasMore, onLoadMo
     if (releases.length === 0) return null;
 
     return (
-      <View style={{ marginVertical: 0, paddingBottom: 16 }}>
+      <View style={{ marginVertical: 0, paddingBottom: hp(14) }}>
         {loading && <FeedLoader />}
         {!hasMore && releases.length > 0 && (
           <Text style={styles.noMoreText}>No more releases to load!</Text>
@@ -102,9 +103,6 @@ const ReleaseList = ({ releases, currentUser, router, loading, hasMore, onLoadMo
     ListFooterComponent={renderFooter}
     showsVerticalScrollIndicator={false}
     contentContainerStyle={styles.listContainer}
-    // stickyHeaderIndices={flatListData.map((item, index) => 
-    //   item.header ? index : null
-    // ).filter(Boolean)}
     ListEmptyComponent={() => (
       <View style={styles.emptyContainer}>
         <Text style={styles.noMoreText}>

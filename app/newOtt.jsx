@@ -54,9 +54,8 @@ const NewOtt = () => {
         mediaTypes: isImage 
           ? ImagePicker.MediaTypeOptions.Images 
           : ImagePicker.MediaTypeOptions.Videos,
-        allowsEditing: true,
         aspect: [4, 3],
-        quality: 0.7,
+        quality: 1,
         base64: false,
         exif: false
       };

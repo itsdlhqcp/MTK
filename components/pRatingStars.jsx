@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { hp } from '@/helpers/common';
+import theme from '../constants/theme';
 
 const PratingStars = ({ rating = 0, showRatingText = true, starSize, textStyle }) => {
     const stars = Array(5).fill(0).map((_, index) => (
@@ -29,7 +30,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     star: {
-        color: '#de571a',
+        color: theme.colors.star,  // #00C26F #de571a'
         fontSize: hp(2),
         marginRight: 2
     },

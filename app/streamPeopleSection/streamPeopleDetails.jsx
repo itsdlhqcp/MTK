@@ -551,7 +551,7 @@ const StreamPeopleDetails = () => {
             adminReviewRef.current = text;
         };
 
-        const hasUserPostedReview = release?.peoplesReview?.some(
+        const hasUserPostedReview = release?.dpeopreviews?.some(
             (review) => review.user?.id === user?.id);
 
             // trigger to get data 
@@ -615,7 +615,7 @@ const StreamPeopleDetails = () => {
             <View style={styles.container}>
                 <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.list}>
                     <ReleaeCard
-                        item={{ ...release ,reviews: [{ count: release?.peoplesReview?.length || 0 }] }}
+                        item={{ ...release ,reviews: [{ count: release?.dpeopreviews?.length || 0 }] }}
                         currentUser={user}
                         router={router}
                         hasShadow={false}

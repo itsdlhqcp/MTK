@@ -1,10 +1,13 @@
 const theme = {
     colors: {
-        primary: '#00C26F',
+        primary: '#00C26F',  
         primaryDark: '#00ac62',
         dark: '#3E3E3E',
         darkLight: '#E1E1E1',
         gray: '#e3e3e3',
+
+        // other aestatic colors
+        star: '#de571a',
 
         text: '#494949',
         textLight: '#7C7C7C',

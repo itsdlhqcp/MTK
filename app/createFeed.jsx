@@ -56,7 +56,7 @@ const CreateFeed = () => {
           ? ImagePicker.MediaTypeOptions.Images 
           : ImagePicker.MediaTypeOptions.Videos,
         allowsEditing: false,
-        quality: 0.7,
+        quality: 1,
         base64: false,
         exif: false
       };
