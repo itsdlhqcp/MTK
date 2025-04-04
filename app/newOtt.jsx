@@ -399,55 +399,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Image, Pressable } from 'react-native'
 import React, { useRef, useState, useEffect } from 'react'
 import ScreenWrapper from '../components/ScreenWrapper'
@@ -702,11 +653,11 @@ const NewOtt = () => {
             <Text style={styles.addImageText}>Stick Digital Tile Post HERE</Text>
             <View style={styles.mediaIcons}>
               {/* This button will open the picker with allowsEditing: false */}
-              <TouchableOpacity onPress={() => onPick(true, false)}>
-                <Icon name="image" size={30} color={theme.colors.primary} />
-              </TouchableOpacity>
-              {/* This button will open the picker with allowsEditing: true (default) */}
               <TouchableOpacity onPress={() => onPick(true)}>
+                <Icon name="crop" size={30} color={theme.colors.dark} />
+              </TouchableOpacity>
+              {/* This button will open the picker with allowsEditing: true (default)   onPress={() => onPick(true)} */}
+              <TouchableOpacity onPress={() => onPick(true, false)}>
                 <Icon name="image" size={30} color={theme.colors.dark} />
               </TouchableOpacity>
             </View>

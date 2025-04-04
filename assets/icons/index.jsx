@@ -65,6 +65,8 @@ import SpotLight from "./SpotLight";
 import Calender from "./Calender";
 import Grid from "./Grid";
 import List from "./List";
+import Add from "./Add";
+import Crop from "./Crop";
 
 const icons = {
     home: Home,
@@ -131,7 +133,9 @@ const icons = {
     spotlight: SpotLight,
     calender: Calender,
     grid: Grid,
-    list: List
+    list: List,
+    add: Add,
+    crop: Crop,
 }
 
 const Icon = ({name, ...props}) => {

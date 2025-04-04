@@ -246,7 +246,10 @@ const imageSource = user.image
     <ScreenWrapper bg="white">
         <Header title="Edit Profile" showBackButton={true} />
       <View style={styles.container}>
-        <ScrollView style={{ flex: 1 }}>
+        <ScrollView 
+           style={{ flex: 1 }}
+           showsVerticalScrollIndicator={false}
+           >
           <View style={styles.form}>
             <View style={styles.avatarContainer}>
               <Image source={imageSource} style={styles.avatar} />
