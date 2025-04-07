@@ -262,3 +262,7 @@ const RatingModal = ({ visible, onClose, onSubmit }) => {
 };
 
 export default RatingModal;
+
+
+
+

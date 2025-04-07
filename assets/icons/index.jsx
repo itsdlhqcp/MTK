@@ -67,6 +67,9 @@ import Grid from "./Grid";
 import List from "./List";
 import Add from "./Add";
 import Crop from "./Crop";
+import ReviewPlus from "./Review";
+import Pencil from "./Pencil";
+import Pen from "./Pen";
 
 const icons = {
     home: Home,
@@ -136,6 +139,9 @@ const icons = {
     list: List,
     add: Add,
     crop: Crop,
+    reviewplus: ReviewPlus,
+    pencil: Pencil,
+    pen: Pen
 }
 
 const Icon = ({name, ...props}) => {

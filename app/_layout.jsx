@@ -6,16 +6,19 @@ import { supabase } from '@/lib/supabase'
 import { getUserData } from '../services/userServices'
 import { PostProvider } from '../contexts/PostContext';
 import { UserStorageService } from '../Storage/UserStorageService';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
  LogBox.ignoreAllLogs(true);
 
 const _layout = () => {
   return (
-    <AuthProvider>
-      <PostProvider>
-        <MainLayout />
-      </PostProvider>
-    </AuthProvider>
+     <GestureHandlerRootView style={{ flex: 1 }}>
+        <AuthProvider>
+             <PostProvider>
+                <MainLayout />
+             </PostProvider>
+        </AuthProvider>
+     </GestureHandlerRootView>
   )
 }
 
