@@ -70,6 +70,9 @@ import Crop from "./Crop";
 import ReviewPlus from "./Review";
 import Pencil from "./Pencil";
 import Pen from "./Pen";
+import Check from "./Check";
+import Eye from "./Eye";
+import Spoiler from "./Spoiler";
 
 const icons = {
     home: Home,
@@ -141,7 +144,10 @@ const icons = {
     crop: Crop,
     reviewplus: ReviewPlus,
     pencil: Pencil,
-    pen: Pen
+    pen: Pen,
+    check: Check,
+    eye: Eye,
+    spoiler: Spoiler
 }
 
 const Icon = ({name, ...props}) => {

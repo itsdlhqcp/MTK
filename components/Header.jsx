@@ -5,7 +5,7 @@ import BackButton from './BackButton'
 import theme from '../constants/theme'
 import { hp, wp } from '../helpers/common'
 
-const Header = ({title, showBackButton = false, mb = 10, ms = 10}) => {
+const Header = ({title, showBackButton = false, mb = 10, ms = 10, rightIcon}) => {
     const router = useRouter();
     return (
         <View style={[styles.container, {marginBottom: mb}, {marginLeft: ms}]}>
@@ -16,6 +16,11 @@ const Header = ({title, showBackButton = false, mb = 10, ms = 10}) => {
                     </View>
                 )}
                 <Text style={styles.title}>{title}</Text>
+                {rightIcon && (
+                    <View style={styles.rightButton}>
+                        {rightIcon}
+                    </View>
+                )}
             </View>
         </View>
     )
@@ -32,7 +37,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        position: 'relative'
+        position: 'relative',
+        width: '100%'
     },
     title: {
         fontSize: hp(2.7),
@@ -43,56 +49,10 @@ const styles = StyleSheet.create({
     backButton: {
         position: 'absolute',
         left: 0
+    },
+    rightButton: {
+        position: 'absolute',
+        right: 0,
+        paddingRight: wp(4)
     }
 })
-
-
-// import { useRouter } from 'expo-router';
-// import React from 'react'
-// import { StyleSheet, Text, View } from 'react-native'
-// import BackButton from './BackButton'
-// import { hp } from '../helpers/common'
-// import theme from '../constants/theme'
-
-// const Header = ({title, showBackButton = false, mb = 10}) => {
-//   const router = useRouter();
-//   return (
-//     <View style={[styles.container, {marginBottom: mb}]}>
-//       {
-//         showBackButton && (
-//           <View style={styles.showBackButton}>
-//             <BackButton router={router} />
-//           </View>
-//         )
-//       }
-//       <Text style={styles.title}>{title|| ""}</Text>
-//     </View>
-//   )
-// }
-
-// export default Header
-
-// const styles = StyleSheet.create({
-//   container:{
-//             flexDirection: 'row', 
-//              alignItems: 'center', 
-//              justifyContent: 'space-between', 
-//              marginTop: 28,
-//              gap: 10, 
-//              position: 'relative'
-//             }, 
-//          title:{
-//              fontSize: hp(2.7), 
-//              fontWeight: theme.fonts.semibold,
-//              color: theme.colors.textDark,
-//              marginLeft: 150 
-//          }, 
-//          backButton: {
-//              position: 'absolute', 
-//             left: 0
-//         },
-//         showBackButton: {
-//            position: 'absolute', 
-//             left: 0
-//         }
-// })

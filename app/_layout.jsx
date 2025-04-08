@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from '../contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { getUserData } from '../services/userServices'
 import { PostProvider } from '../contexts/PostContext';
+import { ReviewProvider } from '../contexts/ReviewContext';
 import { UserStorageService } from '../Storage/UserStorageService';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
@@ -14,11 +15,13 @@ const _layout = () => {
   return (
      <GestureHandlerRootView style={{ flex: 1 }}>
         <AuthProvider>
-             <PostProvider>
-                <MainLayout />
-             </PostProvider>
-        </AuthProvider>
-     </GestureHandlerRootView>
+           <ReviewProvider>
+                 <PostProvider>
+                     <MainLayout />
+                 </PostProvider>
+               </ReviewProvider>
+           </AuthProvider>
+      </GestureHandlerRootView>
   )
 }
 
