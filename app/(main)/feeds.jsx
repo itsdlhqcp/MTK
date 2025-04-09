@@ -88,7 +88,7 @@ const Header = memo(({ title, notificationCount, setNotificationCount, router })
       <Text style={styles.title}>{title}</Text>
       
       <View style={styles.icons}>
-        <Pressable onPress={() => {
+        {/* <Pressable onPress={() => {
           setNotificationCount(0);
           router.push('notifications');
         }}>
@@ -100,8 +100,8 @@ const Header = memo(({ title, notificationCount, setNotificationCount, router })
               </View>
             )
           }
-        </Pressable>
-        <Pressable onPress={() => router.push('createFeed')}>
+        </Pressable> */}
+        {/* <Pressable onPress={() => router.push('createFeed')}>
           <Icon name="plus" size={hp(3.2)} color="white" />
         </Pressable>
         <Pressable onPress={() => router.push('newRelease')}>
@@ -109,7 +109,20 @@ const Header = memo(({ title, notificationCount, setNotificationCount, router })
         </Pressable>
         <Pressable onPress={() => router.push('newOtt')}>
           <Icon name="plus" size={hp(3.2)} color="red" />
-        </Pressable>
+        </Pressable> */}
+
+        <Pressable onPress={() => router.push('newOtt')}>
+                  <Icon name="save" size={hp(3)} color="white" />
+                </Pressable>
+
+        {/* <Pressable 
+          style={styles.libraryButton}
+          onPress={() => router.push('library')}  
+          >
+          <Text style={styles.buttonTextTop}>PloTwist</Text>
+          <Text style={styles.buttonTextBottom}>Library</Text>
+      </Pressable> */}
+        
       </View>
     </View>
   );
@@ -296,7 +309,7 @@ const Home = () => {
         <View style={styles.container}>
           {/* Memoized Header */}
           <Header 
-            title="PloTwist" 
+            title="Spotlight" 
             notificationCount={notificationCount}
             setNotificationCount={setNotificationCount}
             router={router}
@@ -333,9 +346,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center', 
-    marginBottom: 10,
-    backgroundColor: '#121212',
-    padding: wp(3.2),
+   // marginBottom: 10,)rgb(12, 21, 36)
+    backgroundColor: 'rgb(21, 23, 24)',
+    padding: wp(2.4),
   }, 
   title:{
     color: 'white',
@@ -376,5 +389,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     minHeight: hp(78)
-  }
+  },
+    // New styles for the library button
+    libraryButton: {
+      backgroundColor: "#990000", // Or any color you prefer #990000 #1C3E76
+      paddingVertical: hp(0.3),
+      paddingHorizontal: wp(7.8),
+      borderRadius: 24,
+      alignItems: 'center',
+      justifyContent: 'center'
+    },
+    buttonTextTop: {
+      color: 'white',
+      fontSize: hp(1.7),
+      fontWeight: theme.fonts.bold,
+      lineHeight: hp(2.4)
+    },
+    buttonTextBottom: {
+      color: 'rgba(255, 255, 255, 0.9)', // Slightly transparent for hierarchy
+      fontSize: hp(1.6),
+      fontWeight: '500',
+      marginTop: -hp(0.5)
+    },
 })

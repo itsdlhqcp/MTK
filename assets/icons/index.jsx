@@ -73,6 +73,8 @@ import Pen from "./Pen";
 import Check from "./Check";
 import Eye from "./Eye";
 import Spoiler from "./Spoiler";
+import Library from "./Library";
+import Save from "./Save";
 
 const icons = {
     home: Home,
@@ -147,7 +149,9 @@ const icons = {
     pen: Pen,
     check: Check,
     eye: Eye,
-    spoiler: Spoiler
+    spoiler: Spoiler,
+    library: Library,
+    save: Save
 }
 
 const Icon = ({name, ...props}) => {

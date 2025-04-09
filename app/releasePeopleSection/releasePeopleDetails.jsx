@@ -18,11 +18,13 @@ import Icon from '../../assets/icons';
 import { Text } from "react-native";
 import RatingModal from "../../components/RatingModel";
 import PeoplesReviewItem from "../../components/PeopleReviewItem";
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import PeoplesReviewList from "./releasePeopleReview";
 import ProfilePopup from '../../components/profilePopup';
+import RatingBottomSheet from "../../components/RatingBottomSheet";
 // import PeoplesReviewList from "../releasePeopleReview";
 
-const MIN_CHARS = 85;
+const MIN_CHARS = 0;
 
 const ReleasePeopleDetails = () => {
     const { releaseId } = useLocalSearchParams();
@@ -360,23 +362,26 @@ const ReleasePeopleDetails = () => {
                 };
 
         const onNewReview = () => {
-            if(!reviewRef.current || !user?.id || !release?.id) return null;
-            if(charCount < MIN_CHARS) return null;
+            if( !user?.id || !release?.id) return null;
+           // if(charCount < MIN_CHARS) return null;
             
             setRatingModalVisible(true);
         };
 
         // below is a cup of tea variable which is a boolean value
 
-        const handleFinalReviewSubmit = async (rating, cupOfTea, emoji, mustWatch) => {
+        const handleFinalReviewSubmit = async (rating, cupOfTea, prefer, predict, repeat, reviewTextFromSheet) => {
+
+            const finalReviewText = reviewTextFromSheet || reviewRef.current;
             let data = {
                 userId: user.id,
                 releaseId: release.id,
-                text: reviewRef.current,
+                text:finalReviewText,
                 userRating: rating,
                 cupOfTea: cupOfTea, 
-                addings: emoji,
-                popCorn: mustWatch
+                prefer: prefer,
+                predict: predict,
+                repeat: repeat
             }
             
             setLoading(true);
@@ -579,6 +584,8 @@ const ReleasePeopleDetails = () => {
                     }
     
         return (
+
+    <GestureHandlerRootView style={{ flex: 1 }}>
             <View style={styles.container}>
                 <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.list}>
                     <ReleaeCard
@@ -626,7 +633,7 @@ const ReleasePeopleDetails = () => {
                    
 
                 {/* Input Component - always visible but disabled when user has already posted */}
-                <Animated.View
+                {/* <Animated.View
                 style={[styles.inputContainer, { transform: [{ translateX: shakeAnimation }] }]}
                 pointerEvents={hasUserPostedReview ? "none" : "auto"}
                 >
@@ -680,7 +687,7 @@ const ReleasePeopleDetails = () => {
                     />
                     </TouchableOpacity>
                 )}
-                </Animated.View>
+                </Animated.View> */}
 
 
 
@@ -744,14 +751,17 @@ const ReleasePeopleDetails = () => {
                                                     )}
                                                 </View>
                                             ))
-                                    ) : (
+                                    ) : ""}
+                                </View>
+
+
+                                {/* (
                                         <View style={styles.noReviews}>
                                             <Text style={styles.noReviewsText}>
                                                 Be the first to write a review!
                                             </Text>
                                         </View>
-                                    )}
-                                </View>
+                                    ) */}
                        
                     <PeoplesReviewList
                             reviews={release?.peoplesReview || []}
@@ -769,14 +779,45 @@ const ReleasePeopleDetails = () => {
                         router={router}
                     />
 
-                <RatingModal 
+                {/* <RatingModal 
                     visible={ratingModalVisible}
                     onClose={() => setRatingModalVisible(false)}
                     onSubmit={handleFinalReviewSubmit}
-                />
+                /> */}
 
-                </ScrollView>
-            </View>
+                   </ScrollView>
+
+
+
+                 {/* Adding the floating button */}
+
+
+                 {!hasUserPostedReview && (
+                        <TouchableOpacity 
+                        style={styles.floatingButton}
+                        onPress={onNewReview}
+                        >
+                        <Icon 
+                            name="pencil" 
+                            size={hp(3.2)} 
+                            color={theme.colors.primary}
+                        />
+                        </TouchableOpacity>
+                 )}
+                                
+
+
+                    {/* place outside of scrollview to work properly */}
+                       <RatingBottomSheet 
+                             item={release}
+                             visible={ratingModalVisible}
+                             onClose={() => setRatingModalVisible(false)}
+                             onSubmit={handleFinalReviewSubmit}
+                             router={router}
+                        />              
+
+                </View>
+            </GestureHandlerRootView>
         );
     };
     
@@ -913,5 +954,18 @@ const styles = StyleSheet.create({
         borderCurve: 'continuous',
         height: Math.round(hp(4.8)),
         width: Math.round(hp(4.8))
-    }
+    },
+    floatingButton: {
+        position: 'absolute',
+        bottom: hp(3),
+        right: wp(4),
+        width: hp(6),
+        height: hp(6),
+        borderRadius: hp(3),
+        backgroundColor: "black",
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 5,
+        shadowColor: '#000',
+    },
 });

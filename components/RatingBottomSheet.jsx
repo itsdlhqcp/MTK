@@ -138,23 +138,6 @@ const RatingBottomSheet = ({ visible, onClose, onSubmit, item }) => {
      }
    }, [visible, activeReview]);
 
-  // Add useEffect to listen for returned review text
-//  useEffect(() => {
-//   if (visible && router?.params?.reviewText) {
-//     setReviewText(router.params.reviewText);
-//     // Clear the param to avoid issues
-//     router.params.reviewText = undefined;
-//   }
-// }, [visible, router?.params]);
-
-// useEffect(() => {
-//   if (visible && params?.reviewText) {
-//     setReviewText(params.reviewText);
-//   }
-// }, [visible, params?.reviewText]);
-
-// consoling the review text
-
 useEffect(() => {
   console.log("Params received:", params);
   console.log("Review Text from Params:", params?.reviewText);
@@ -172,7 +155,7 @@ useEffect(() => {
   const titleTagsStyles = {
     div: {
          color: 'white',
-         fontSize: hp(1.7),
+         fontSize: hp(2),
          textAlign: 'left',
          fontWeight: '600'
     },
@@ -248,7 +231,8 @@ useEffect(() => {
       const movieData = {
         title: item?.body ? item.body.replace(/<[^>]*>/g, '') : 'Movie Title',
         year: item?.rDate ? moment(item.rDate).format('YYYY') : '',
-        id: item?.id || ''
+        id: item?.id || '',
+        image: item?.filel
       };
       
       router.push({
@@ -269,7 +253,8 @@ useEffect(() => {
       onChange={handleSheetChanges}
       enablePanDownToClose={true}
       backgroundStyle={styles.sheetBackground}
-      handleIndicatorStyle={styles.indicator}
+      // handleIndicatorStyle={styles.indicator}
+      handleIndicatorStyle={{ display: 'none' }}
       style={styles.bottomSheetContainer}
     >
       <View style={styles.contentContainer}>
@@ -283,9 +268,9 @@ useEffect(() => {
                                 />
                             )}
           </Text>
-          <Text style={styles.dtitle}>
+          {/* <Text style={styles.dtitle}>
             {releaseAt}
-          </Text>
+          </Text> */}
         </View>
         <View style={styles.greenBorderTop} />
         <StarRating rating={rating} onRatingChange={setRating} />
@@ -296,9 +281,9 @@ useEffect(() => {
             style={styles.writeReviewContainer} 
             onPress={handleNavigateToWriteReview}
           >
-            <Icon name="pencil" size={hp(2.8)} color={theme.colors.silver} />
+            <Icon name="pencil" size={hp(2.2)} color={theme.colors.silver} />
             <Text style={styles.writeReviewText}>{reviewText
-              ? `Your review: ${reviewText.length > 12 ? reviewText.slice(0, 12) + '...' : reviewText}`
+              ? `${reviewText.length > 12 ? reviewText.slice(0, 32) + '...' : reviewText}`
               : 'Write a review'}</Text>
           </TouchableOpacity>
 
@@ -453,13 +438,14 @@ useEffect(() => {
 };
 
 export default RatingBottomSheet;
-
+//  #1A252B
 const styles = StyleSheet.create({
   sheetBackground: {
-    backgroundColor:  'linear-gradient(to top,rgb(30, 30, 30),rgb(56, 56, 56))',
+    // backgroundColor:  'linear-gradient(to top,rgb(30, 30, 30),rgb(56, 56, 56))',
+    backgroundColor:  '#1A252B',
   },
   indicator: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'transparent',
     width: wp(10),
   },
   contentContainer: {
@@ -469,7 +455,7 @@ const styles = StyleSheet.create({
     paddingBottom: 0
   },
   title: {
-    fontSize: hp(1.7),
+    fontSize: hp(2.2),
     fontWeight: '600',
     marginBottom: hp(2),
     color: '#FFFFFF',
@@ -483,7 +469,7 @@ const styles = StyleSheet.create({
   ratingText: {
     textAlign: 'center',
     marginTop: hp(3),
-    fontSize: hp(1.8),
+    fontSize: hp(1.6),
     color: '#A0A0A0',
     marginBottom: hp(1),
   },

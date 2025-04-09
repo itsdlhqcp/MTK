@@ -5,14 +5,14 @@ import BackButton from './BackButton'
 import theme from '../constants/theme'
 import { hp, wp } from '../helpers/common'
 
-const Header = ({title, showBackButton = false, mb = 10, ms = 10, rightIcon}) => {
+const Header = ({title, showBackButton = false, mb = 10, ms = 10, rightIcon, backButtonColor}) => {
     const router = useRouter();
     return (
         <View style={[styles.container, {marginBottom: mb}, {marginLeft: ms}]}>
             <View style={styles.titleContainer}>
                 {showBackButton && (
                     <View style={styles.backButton}>
-                        <BackButton router={router} />
+                        <BackButton router={router} color={backButtonColor} />
                     </View>
                 )}
                 <Text style={styles.title}>{title}</Text>

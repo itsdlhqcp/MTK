@@ -63,6 +63,17 @@ const EmptyListComponent = memo(({ loading }) => {
   );
 });
 
+
+{/* <Pressable 
+style={styles.libraryButton}
+onPress={() => router.push('library')}  
+> */}
+{/* <Text style={styles.buttonTextTop}>PloTwist</Text> */}
+{/* <Text style={styles.buttonTextBottom}>Library</Text>
+</Pressable> */}
+
+
+
 // Lightweight Header component
 const Header = memo(({ username, router }) => (
   <View style={styles.header}>
@@ -71,12 +82,39 @@ const Header = memo(({ username, router }) => (
     </View>
 
     <View style={styles.icons}>
+   
+       <Pressable onPress={() => {
+          setNotificationCount(0);
+          router.push('notifications');
+        }}>
+          <Icon name="heart" size={hp(3.2)} color='white' />
+          {/* {
+            notificationCount > 0 && (
+              <View style={styles.pill}>
+                <Text style={styles.pillText}>{notificationCount}</Text>
+              </View>
+            )
+          } */}
+        </Pressable>
+        <Pressable 
+          onPress={() => router.push('library')}
+        >
+          <Icon name="library" size={hp(3.2)} color='white' />
+          {/* {
+            notificationCount > 0 && (
+              <View style={styles.pill}>
+                <Text style={styles.pillText}>{notificationCount}</Text>
+              </View>
+            )
+          } */}
+        </Pressable>
       <Pressable onPress={() => router.push('addTwist')}>
         <Icon name="plus" size={hp(3.5)} color="white" />
       </Pressable>
       <Pressable onPress={() => router.push('/messenger')}>
         <Icon name="dm" size={hp(3.5)} color="white" />
       </Pressable>
+     
     </View>
   </View>
 ));
@@ -470,8 +508,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: wp(4),
-    paddingVertical: hp(2),
-    backgroundColor: '#121212',
+    paddingVertical: hp(1.2),
+    backgroundColor: 'rgb(21, 23, 24)',
   },
   welcomeContainer: {
     flexDirection: 'column',
@@ -583,8 +621,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 18
+    gap: 12
   },
+   // New styles for the library button
+   libraryButton: {
+    backgroundColor: theme.colors.text, // Or any color you prefer #990000 #1C3E76
+    paddingVertical: hp(0.3),
+    paddingHorizontal: wp(7.8),
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  buttonTextTop: {
+    color: 'white',
+    fontSize: hp(1.7),
+    fontWeight: theme.fonts.bold,
+    lineHeight: hp(2.4)
+  },
+  buttonTextBottom: {
+    color: 'rgba(255, 255, 255, 0.9)', // Slightly transparent for hierarchy
+    fontSize: hp(2),
+    fontWeight: '500',
+    marginTop: -hp(0.5)
+  },
+
 });
 
 

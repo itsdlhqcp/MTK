@@ -1,11 +1,97 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native'
-import React, { useState, useEffect } from 'react'
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image } from 'react-native'
+import React, { useState, useEffect, memo, useMemo, useRef } from 'react'
 import ScreenWrapper from '../components/ScreenWrapper'
 import Header from '../components/Header'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { hp, wp } from '@/helpers/common'
 import Icon from '@/assets/icons'
 import { useReview } from '../contexts/ReviewContext'
+import RenderHTML from 'react-native-render-html'
+import { getSupabaseFileUrl } from '../services/userProfileImage'
+
+// Simple cache mechanism
+const apiCache = {
+  data: new Map(),
+  timestamp: new Map(),
+  get: function(key) {
+    // Check if cached data exists and is less than 5 minutes old
+    const cachedTime = this.timestamp.get(key);
+    if (cachedTime && (Date.now() - cachedTime < 5 * 60 * 1000)) {
+      return this.data.get(key);
+    }
+    return null;
+  },
+  set: function(key, value) {
+    this.data.set(key, value);
+    this.timestamp.set(key, Date.now());
+  }
+};
+
+// API throttling utility
+const useApiThrottle = () => {
+  const lastCallTime = useRef({});
+  const pendingPromises = useRef({});
+  
+  const throttledApiCall = async (key, apiFunction, ...args) => {
+    // Check cache first
+    const cachedData = apiCache.get(key);
+    if (cachedData) {
+      console.log(`Using cached data for: ${key}`);
+      return cachedData;
+    }
+    
+    // If there's already a pending request for this key, return that promise
+    if (pendingPromises.current[key]) {
+      console.log(`Request already in progress for: ${key}`);
+      return pendingPromises.current[key];
+    }
+    
+    // Throttle time - 2 seconds between same API calls
+    const now = Date.now();
+    const lastCall = lastCallTime.current[key] || 0;
+    const timeToWait = Math.max(0, 2000 - (now - lastCall));
+    
+    if (timeToWait > 0) {
+      console.log(`Throttling API call for: ${key}, waiting ${timeToWait}ms`);
+      await new Promise(resolve => setTimeout(resolve, timeToWait));
+    }
+    
+    try {
+      // Set this request as pending
+      const promise = apiFunction(...args);
+      pendingPromises.current[key] = promise;
+      
+      // Execute the API call
+      lastCallTime.current[key] = Date.now();
+      const result = await promise;
+      
+      // Cache the result
+      apiCache.set(key, result);
+      
+      // Clear pending promise
+      delete pendingPromises.current[key];
+      
+      return result;
+    } catch (error) {
+      // Clear pending promise on error too
+      delete pendingPromises.current[key];
+      throw error;
+    }
+  };
+  
+  return throttledApiCall;
+};
+
+// Memoized component for rendering HTML content
+const WebDisplay = memo(function WebDisplay({ html, contentWidth, tagsStyles }) {
+  return (
+    <RenderHTML
+      contentWidth={contentWidth}
+      source={{ html }}
+      tagsStyles={tagsStyles}
+    />
+  );
+});
 
 export default function CreateReview() {
   const params = useLocalSearchParams();
@@ -15,15 +101,46 @@ export default function CreateReview() {
   const [movieId, setMovieId] = useState('');
   const [movieData, setMovieData] = useState(null);
   const [reviewState, setReviewState] = useState(null);
-
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { updateReviewData } = useReview();
+  const throttledApiCall = useApiThrottle();
+  
+  // Track if component is mounted to prevent state updates after unmounting
+  const isMounted = useRef(true);
+
+  // Create HTML content for the movie title without year
+  const movieTitleHtml = useMemo(() => (
+    movieData && movieData.title ? `<b>${movieData.title}</b>` : ''
+  ), [movieData?.title]);
+  
+  // Define styles once to maintain stable reference
+  const titleTagsStyles = useMemo(() => ({
+    div: {
+      color: 'white',
+      fontSize: hp(1.7),
+      textAlign: 'left',
+      fontWeight: '600'
+    },
+    b: {
+      color: 'white',
+      fontSize: hp(2.5),
+      textAlign: 'left',
+      fontWeight: 'bold'
+    }
+  }), []);
+
+  // Cleanup function to handle component unmounting
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   useEffect(() => {
-    // Get current date in the format "Day of week, DD Month, YYYY"
+
     const currentDate = new Date();
     const options = { 
-      weekday: 'long', 
+    //   weekday: 'long', 
       day: 'numeric', 
       month: 'long', 
       year: 'numeric' 
@@ -81,33 +198,91 @@ export default function CreateReview() {
     }
   }, [params]);
 
-  const onSubmit = async () => {
-    // Prepare the review data
-    let reviewData = {
-      body: body,
-      date: date,
-      movieId: movieId
+  // Debounce function for text input
+  const debounce = (func, delay) => {
+    let timeoutId;
+    return (...args) => {
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        func(...args);
+      }, delay);
     };
-
-    console.log('Submitting review:', reviewData);
-    
-    // Update the global context with review data
-    updateReviewData({
-      reviewText: body,
-      reviewDate: date
-    });
-    
-    // Navigate back
-    router.back();
   };
+
+  // Debounced state updater for better performance
+  const debouncedSetBody = useMemo(
+    () => debounce((text) => {
+      if (isMounted.current) {
+        setBody(text);
+      }
+    }, 300),
+    []
+  );
+
+  const onSubmit = async () => {
+    if (isSubmitting) return;
+    
+    try {
+      setIsSubmitting(true);
+      
+      // Prepare the review data
+      let reviewData = {
+        body: body,
+        date: date,
+        movieId: movieId
+      };
+
+      console.log('Submitting review:', reviewData);
+      
+      // Use throttled API call for submission
+      const cacheKey = `submitReview_${movieId}`;
+      
+      await throttledApiCall(
+        cacheKey,
+        async () => {
+          // This would be your actual API submission function
+          // For example: return await submitReviewToAPI(reviewData);
+          
+          // Simulate API call with timeout
+          await new Promise(resolve => setTimeout(resolve, 500));
+          return { success: true };
+        }
+      );
+      
+      // Update the global context with review data
+      updateReviewData({
+        reviewText: body,
+        reviewDate: date
+      });
+      
+      // Navigate back
+      if (isMounted.current) {
+        router.back();
+      }
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      // Handle submission error here
+    } finally {
+      if (isMounted.current) {
+        setIsSubmitting(false);
+      }
+    }
+  };
+
+  //console.log("movie data", movieData);
 
   return (
     <ScreenWrapper bg="#1A252B">
       <Header 
         title="" 
         showBackButton={true}
+        backButtonColor="white"
         rightIcon={
-          <TouchableOpacity onPress={onSubmit}>
+          <TouchableOpacity 
+            onPress={onSubmit} 
+            disabled={isSubmitting}
+            style={{ opacity: isSubmitting ? 0.5 : 1 }}
+          >
             <Icon name="check" size={28} color="white" />
           </TouchableOpacity>
         }
@@ -117,11 +292,37 @@ export default function CreateReview() {
           contentContainerStyle={{ gap: 20 }}
           showsVerticalScrollIndicator={false}
         >
-          {/* Display movie title if available */}
+          {/* Display movie title without year or date */}
           {movieData && movieData.title && (
-            <View style={styles.movieTitleContainer}>
-              <Text style={styles.movieTitle}>{movieData.title}</Text>
-              {movieData.year && <Text style={styles.movieYear}>({movieData.year})</Text>}
+            <View style={styles.titleContainer}>
+              <View style={styles.titleRow}>
+                <View style={styles.titleTextContainer}>
+                  <WebDisplay 
+                    html={movieTitleHtml}
+                    contentWidth={wp(60)}
+                    tagsStyles={titleTagsStyles}
+                  />
+                </View>
+                
+                {/* Movie Image - Updated to use Supabase URL for postImage files */}
+                {movieData.image && (
+                  <View style={styles.imageContainer}>
+                    {movieData.image.includes('postImage') ? (
+                      <Image
+                        source={getSupabaseFileUrl(movieData.image)}
+                        style={styles.movieImage}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <Image 
+                        source={{ uri: movieData.image }} 
+                        style={styles.movieImage}
+                        resizeMode="cover"
+                      />
+                    )}
+                  </View>
+                )}
+              </View>
             </View>
           )}
 
@@ -129,9 +330,6 @@ export default function CreateReview() {
             <Text style={styles.dateLabel}>Date</Text>
             <View style={styles.dateValueContainer}>
               <Text style={styles.dateValue}>{date}</Text>
-              <TouchableOpacity style={styles.dateEditButton}>
-                <Icon name="close" size={20} color="white" />
-              </TouchableOpacity>
             </View>
           </View>
 
@@ -143,8 +341,23 @@ export default function CreateReview() {
               multiline={true}
               numberOfLines={6}
               value={body}
-              onChangeText={setBody}
+              onChangeText={(text) => {
+                // Update local state immediately for UI responsiveness
+                setBody(text);
+                // Debounce the actual processing
+                debouncedSetBody(text);
+              }}
             />
+          </View>
+          
+          {/* Note section added below review area */}
+          <View style={styles.noteContainer}>
+            <Text style={styles.noteText}>
+              Note: You can post only one review per movie.
+            </Text>
+            <Text style={styles.noteText}>
+              Reviews can be edited or deleted within 12 hours of submission. After that, reviews are locked to maintain authenticity.
+            </Text>
           </View>
         </ScrollView>
       </View>
@@ -158,23 +371,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: wp(4),
     paddingTop: hp(1),
   },
-  movieTitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  titleContainer: {
     marginBottom: hp(1),
     paddingBottom: hp(1),
     borderBottomWidth: 1,
     borderBottomColor: '#2C3E50',
   },
-  movieTitle: {
-    fontSize: hp(2.2),
-    color: 'white',
-    fontWeight: 'bold',
+  titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  movieYear: {
-    fontSize: hp(2),
-    color: '#6D8296',
-    marginLeft: wp(1),
+  titleTextContainer: {
+    flex: 1,
+    paddingRight: wp(2),
+  },
+  imageContainer: {
+    width: wp(25),
+    height: wp(25),
+    borderRadius: 8,
+    overflow: 'hidden',
+    backgroundColor: '#2C3E50',
+  },
+  movieImage: {
+    width: '100%',
+    height: '100%',
   },
   dateContainer: {
     borderBottomWidth: 1,
@@ -195,14 +416,6 @@ const styles = StyleSheet.create({
     fontSize: hp(2),
     color: 'white',
   },
-  dateEditButton: {
-    width: hp(3.5),
-    height: hp(3.5),
-    borderRadius: hp(1.75),
-    backgroundColor: '#3D5A73',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   reviewTextContainer: {
     borderBottomWidth: 1,
     borderBottomColor: '#2C3E50',
@@ -213,5 +426,16 @@ const styles = StyleSheet.create({
     fontSize: hp(2),
     minHeight: hp(15),
     textAlignVertical: 'top',
+  },
+  // New styles for the note section
+  noteContainer: {
+    paddingVertical: hp(2),
+    marginBottom: hp(2),
+  },
+  noteText: {
+    color: '#6D8296',
+    fontSize: hp(1.5),
+    lineHeight: hp(2.2),
+    marginBottom: hp(0.5),
   }
 });
