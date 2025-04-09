@@ -11,6 +11,7 @@ import LikeButton from './AnimatedUpVoteButton'
 import { useAuth } from '../contexts/AuthContext'
 import PratingStars from './pRatingStars'
 import { userService } from '../services/helperService'
+import ReviewIndicators from './ReviewIndicator'
 
 const  PeoplesPreviewItem = ({
   item, 
@@ -370,17 +371,25 @@ const  PeoplesPreviewItem = ({
               </View>
             )}
             
-            <Text style={[styles.text, {fontWeight: 'normal'}]}>
-              {renderTextWithTags(item?.text)}
-            </Text>
+            {item?.text && (
+                <Text style={[styles.text, {fontWeight: 'normal'}]}>
+                     {renderTextWithTags(item?.text)}
+                 </Text>
+            )}
+           
             
-            {/* Cup of Tea indicator */}
-            {!isReply && item?.cupOfTea && (
+            {/* Indicator need to be updated with new component*/}
+            {/* {!isReply && item?.cupOfTea && (
               <View style={styles.cupOfTeaContainer}>
                 <Icon name="cup" size={hp(1.8)} color={theme.colors.primary} />
                 <Text style={styles.cupOfTeaText}>Not Everyone's Cup</Text>
               </View>
-            )}
+            )} */}
+
+            {/* Using the new ReviewIndicators component for all indicator types */}
+              {!isReply && (
+                <ReviewIndicators item={item} />
+              )}
           </View>
     </View>
   )

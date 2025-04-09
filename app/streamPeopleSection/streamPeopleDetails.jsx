@@ -61,7 +61,6 @@ const StreamPeopleDetails = () => {
         React.useCallback(() => {
           const params = router.current?.params;
           if (params?.reviewText) {
-            console.log("Got review text:", params.reviewText);
             // Update reviewRef with the returned text
             reviewRef.current = params.reviewText;
             // Show the rating modal again if it was previously open
@@ -353,6 +352,22 @@ const StreamPeopleDetails = () => {
             
             setRatingModalVisible(true);
         };
+
+        // const onNewReview = () => {
+        //     // If there's no user or release, return null
+        //     if(!user?.id || !release?.id) return null;
+        
+        //     // If there's no text in reviewRef.current, set it to "Nothing to say"
+        //     if(!reviewRef.current || reviewRef.current.trim() === '') {
+        //         reviewRef.current = "Nothing to say";
+        //         // Update the displayed text in the input field
+        //         setReviewText("Nothing to say");
+        //         setCharCount("Nothing to say".length);
+        //     }
+            
+        //     // Always proceed to open rating modal since we now have text
+        //     setRatingModalVisible(true);
+        // };
 
         // below is a cup of tea variable which is a boolean value
 

@@ -370,11 +370,14 @@ const PeoplesReviewItem = ({
               </View>
             )}
             
-            <Text style={[styles.text, {fontWeight: 'normal'}]}>
-              {renderTextWithTags(item?.text)}
-            </Text>
+            {item?.text && (
+                    <Text style={[styles.text, {fontWeight: 'normal'}]}>
+                    {renderTextWithTags(item?.text)}
+                  </Text>
+            )}
             
             {/* Cup of Tea indicator */}
+            {/* Remove this and convert it into a new component */}
             {!isReply && item?.cupOfTea && (
               <View style={styles.cupOfTeaContainer}>
                 <Icon name="cup" size={hp(1.8)} color={theme.colors.primary} />

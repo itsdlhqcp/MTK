@@ -192,7 +192,6 @@ const ReleasePeopleDetails = () => {
     //     }
     // };
 
-
       const onSubmitReply = async (parentReviewId) => {
                 if (!replyRef.current || !user?.id) return null;
         
@@ -367,6 +366,22 @@ const ReleasePeopleDetails = () => {
             
             setRatingModalVisible(true);
         };
+
+        // const onNewReview = () => {
+        //     // If there's no user or release, return null
+        //     if(!user?.id || !release?.id) return null;
+        
+        //     // If there's no text in reviewRef.current, set it to "Nothing to say"
+        //     if(!reviewRef.current || reviewRef.current.trim() === '') {
+        //         reviewRef.current = "Nothing to say";
+        //         // Update the displayed text in the input field
+        //         setReviewText("Nothing to say");
+        //         setCharCount("Nothing to say".length);
+        //     }
+            
+        //     // Always proceed to open rating modal since we now have text
+        //     setRatingModalVisible(true);
+        // };
 
         // below is a cup of tea variable which is a boolean value
 
@@ -786,11 +801,7 @@ const ReleasePeopleDetails = () => {
                 /> */}
 
                    </ScrollView>
-
-
-
                  {/* Adding the floating button */}
-
 
                  {!hasUserPostedReview && (
                         <TouchableOpacity 
@@ -804,8 +815,6 @@ const ReleasePeopleDetails = () => {
                         />
                         </TouchableOpacity>
                  )}
-                                
-
 
                     {/* place outside of scrollview to work properly */}
                        <RatingBottomSheet 
@@ -815,7 +824,6 @@ const ReleasePeopleDetails = () => {
                              onSubmit={handleFinalReviewSubmit}
                              router={router}
                         />              
-
                 </View>
             </GestureHandlerRootView>
         );

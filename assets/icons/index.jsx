@@ -75,6 +75,11 @@ import Eye from "./Eye";
 import Spoiler from "./Spoiler";
 import Library from "./Library";
 import Save from "./Save";
+import Chevronup from "./Chevronup"; 
+import Chevrondown from "./Chevrondown";
+import Tv from "./Tv";
+import Plot from "./Plot";
+import Repeat from "./Repeat";
 
 const icons = {
     home: Home,
@@ -151,7 +156,12 @@ const icons = {
     eye: Eye,
     spoiler: Spoiler,
     library: Library,
-    save: Save
+    save: Save,
+    chevrondown: Chevrondown,
+    chevronup: Chevronup,
+    tv: Tv,
+    plot: Plot,
+    repeat: Repeat
 }
 
 const Icon = ({name, ...props}) => {
