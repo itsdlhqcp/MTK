@@ -608,6 +608,38 @@ export const removePeopleReviewUpvote = async (peoplesReviewId, userId) => {
           console.log('got reply like removing error', error);
           return {success: false, msg: error?.message};
         }
-      
       }
+
+      // api to edit the people review  
+      export const updatePeopleReview = async (reviewId, reviewData) => {
+        try {
+          const { data, error } = await supabase
+            .from('peoplesReview')
+            .update({
+              text: reviewData.text,
+              favour: reviewData.favour
+            })
+            .eq('id', reviewId)
+      
+          if (error) {
+            console.log('update people review error: ', error);
+            return { 
+              success: false, 
+              msg: 'Could not update people review' 
+            };
+          }
+          return { 
+            success: true, 
+            data, 
+            action: 'people review updated'
+          };
+      
+        } catch (error) {
+          console.log('update people review error: ', error);
+          return { 
+            success: false, 
+            msg: 'Could not process people review update action' 
+          };
+        }
+      };
   

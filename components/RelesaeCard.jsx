@@ -26,7 +26,7 @@ const ReleaseCard = ({
 
         const handleCardPress = () => {
            if (!item?.id) return null;
-            router.push({ pathname: 'releasePeopleSection/releasePeopleDetails', params: { releaseId: item.id } });
+            router.push({ pathname: 'releaseInfo', params: { releaseId: item.id } });
     }
 
     const renderRating = () => {

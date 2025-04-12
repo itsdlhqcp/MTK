@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
   stackedIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(71, 133, 168, 0.1)',
+    backgroundColor: 'rgba(71, 133, 168, 0.1)', 
     borderRadius: hp(1),
     paddingHorizontal: wp(2),
     paddingVertical: hp(0.5),

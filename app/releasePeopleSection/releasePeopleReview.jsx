@@ -13,9 +13,11 @@ const PeoplesReviewList = ({
   reviews = [], 
   releaseId, 
   releaseUserId, 
-  currentUser, 
+  currentUser,       
   onDeleteReview,
-  openProfilePopup
+  onhandleEdit,
+  openProfilePopup,
+  reviewId
 }) => {
   const [openReplyBox, setOpenReplyBox] = useState(null);
   const [reviewReplies, setReviewReplies] = useState({});
@@ -38,22 +40,6 @@ const PeoplesReviewList = ({
       console.error('Error fetching replies', error);
     }
   };
-
-  // const toggleReplyBox = (reviewId, username = null) => {
-  //   setOpenReplyBox(prev => prev === reviewId ? null : reviewId);
-
-  //    // Initialize with mention if username is provided
-  //     if (username) {
-  //       const mentionText = `@${username} `;
-  //       handleReplyInputChange(reviewId, mentionText);
-  //     } else if (!reviewReplies[reviewId]) {
-  //       fetchRepliesForReview(reviewId);
-  //     }
-
-  //   if (!reviewReplies[reviewId]) {
-  //     fetchRepliesForReview(reviewId);
-  //   }
-  // };
 
   // In PeoplesReviewList.js - modify the toggleReplyBox function
 const toggleReplyBox = (reviewId, username = null) => {
@@ -177,6 +163,8 @@ const toggleReplyBox = (reviewId, username = null) => {
     );
   }
 
+  console.log("reviewId", reviewId);
+
   return (
     <View style={styles.reviewsContainer}>
       {reviews
@@ -192,6 +180,8 @@ const toggleReplyBox = (reviewId, username = null) => {
               replyCount={reviewReplies[peoplesReview.id]?.length || 0}
               isReply={false}
               onShowProfile={openProfilePopup}
+              highlight={reviewId == peoplesReview.id} 
+              handleEdit={onhandleEdit}
             />
             
             {/* Render replies when reply box is open */}

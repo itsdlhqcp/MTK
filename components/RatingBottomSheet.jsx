@@ -7,7 +7,7 @@ import theme from '../constants/theme';
 import RenderHtml from 'react-native-render-html';
 import moment from 'moment';
 import Icon from '../assets/icons';
-import { useReview } from '../contexts/ReviewContext'
+import { useReview, updateReviewData } from '../contexts/ReviewContext'
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 const StarIcon = ({ fillPercentage = 0 }) => {
@@ -121,35 +121,38 @@ const RatingBottomSheet = ({ visible, onClose, onSubmit, item }) => {
   const [prefer, setPrefer] = useState(null);
   const [predict, setPredict] = useState(null);
   const [repeat, setRepeat] = useState(null);
+  const [favour, setFavour] = useState(false);
   const [reviewText, setReviewText] = useState('');
   const bottomSheetRef = useRef(null);
   const router = useRouter();
   const params = useLocalSearchParams();
+  console.log("value of favour favour", favour);
 
    // Use the review context
-   const { activeReview, clearReviewData } = useReview();
-
+   const { activeReview, clearReviewData, updateFavoriteStatus } = useReview();
+  
    // Update the reviewText from context when the sheet becomes visible
    useEffect(() => {
      if (visible && activeReview.reviewText) {
        setReviewText(activeReview.reviewText);
-       console.log("Review text from context:", activeReview.reviewText);
+       setFavour(activeReview.isFavorite);
+      // console.log("Review text from context:", activeReview.reviewText);
      }
    }, [visible, activeReview]);
 
-useEffect(() => {
-  console.log("Params received:", params);
-  console.log("Review Text from Params:", params?.reviewText);
-}, [params]);
+// useEffect(() => {
+//   console.log("Params received:", params);
+//   console.log("Review Text from Params:", params?.reviewText);
+// }, [params]);
 
 
-useEffect(() => {
-  // When reviewText changes (from router params), update the component state
-  if (reviewText) {
-    // For debugging - check if reviewText is actually populated
-    console.log("Review text received in bottom sheet:", reviewText);
-  }
-}, [reviewText]);
+// useEffect(() => {
+//   // When reviewText changes (from router params), update the component state
+//   if (reviewText) {
+//     // For debugging - check if reviewText is actually populated
+//     console.log("Review text received in bottom sheet:", reviewText);
+//   }
+// }, [reviewText]);
 
   const titleTagsStyles = {
     div: {
@@ -167,7 +170,7 @@ useEffect(() => {
 }
   
   // Snap points for the bottom sheet (50% of screen height)
-  const snapPoints = useMemo(() => ['65%'], []);
+  const snapPoints = useMemo(() => ['63%'], []);
 
   // Callbacks
   const handleSheetChanges = useCallback((index) => {
@@ -178,7 +181,7 @@ useEffect(() => {
 
   const handleSubmit = () => {
     // Pass all values to onSubmit
-    onSubmit(rating, cupOfTea, prefer, predict, repeat, activeReview.reviewText || reviewText);
+    onSubmit(rating, cupOfTea, prefer, predict, repeat, activeReview.reviewText || reviewText, favour);
     resetState();
     clearReviewData();
     bottomSheetRef.current?.close();
@@ -196,6 +199,7 @@ useEffect(() => {
     setPredict(null);
     setRepeat(null);
     setReviewText('');
+    updateFavoriteStatus(false);
     clearReviewData();
   };
 

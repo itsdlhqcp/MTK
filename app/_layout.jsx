@@ -8,6 +8,7 @@ import { PostProvider } from '../contexts/PostContext';
 import { ReviewProvider } from '../contexts/ReviewContext';
 import { UserStorageService } from '../Storage/UserStorageService';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { ToastProvider } from '../contexts/ToastContext';
 
  LogBox.ignoreAllLogs(true);
 
@@ -15,11 +16,13 @@ const _layout = () => {
   return (
      <GestureHandlerRootView style={{ flex: 1 }}>
         <AuthProvider>
+          <ToastProvider>
            <ReviewProvider>
                  <PostProvider>
-                     <MainLayout />
-                 </PostProvider>
-               </ReviewProvider>
+                         <MainLayout />
+                     </PostProvider>
+                 </ReviewProvider>
+               </ToastProvider>
            </AuthProvider>
       </GestureHandlerRootView>
   )
@@ -192,6 +195,49 @@ const MainLayout = () => {
     >
       <Stack.Screen
         name="releaseDetails"
+        options={{
+          presentation: 'modal',
+          animation: 'slide_from_bottom',
+          headerShown: false,
+          gestureEnabled: true,
+          gestureDirection: 'vertical',
+          fullScreenGestureEnabled: true,
+          animationDuration: 200,
+          animationTypeForReplace: 'push',
+          customAnimationOnGesture: true,
+          gestureResponseDistance: {
+            vertical: 800
+          },
+          transitionSpec: {
+            open: {
+              animation: 'timing',
+              config: { duration: 200 },
+            },
+            close: {
+              animation: 'timing',
+              config: { duration: 800 },
+            },
+          },
+          cardStyleInterpolator: ({ current, layouts }) => ({
+            cardStyle: {
+              transform: [{
+                translateY: current.progress.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [layouts.screen.height, 0],
+                }),
+              }],
+            },
+            overlayStyle: {
+              opacity: current.progress.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, 0.5],
+              }),
+            },
+          }),
+        }}
+      />
+       <Stack.Screen
+        name="releasePeopleSection/releasePeopleDetails"
         options={{
           presentation: 'modal',
           animation: 'slide_from_bottom',

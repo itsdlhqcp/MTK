@@ -6,6 +6,10 @@ const theme = {
         darkLight: '#E1E1E1',
         gray: '#e3e3e3',
 
+        // aestatics
+        bmw: '#0066B1',
+        assent: '#FFD700',
+
         // other aestatic colors
         star: '#de571a',
         silver: '#C0C0C0',

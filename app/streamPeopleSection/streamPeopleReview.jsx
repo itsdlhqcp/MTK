@@ -14,8 +14,10 @@ const PeoplesPreviewList = ({
   releaseId, 
   releaseUserId, 
   currentUser, 
+  onhandleEdit,
   onDeleteReview,
-  openProfilePopup
+  openProfilePopup,
+  reviewId
 }) => {
   const [openReplyBox, setOpenReplyBox] = useState(null);
   const [reviewReplies, setReviewReplies] = useState({});
@@ -176,7 +178,8 @@ const toggleReplyBox = (reviewId, username = null) => {
       </View>
     );
   }
-
+// console.log("reviewId", reviewId);
+// console.log("dpeoples reviews id", reviews.id);
   return (
     <View style={styles.reviewsContainer}>
       {reviews
@@ -192,6 +195,9 @@ const toggleReplyBox = (reviewId, username = null) => {
               replyCount={reviewReplies[dpeoplesReview.id]?.length || 0}
               isReply={false}
               onShowProfile={openProfilePopup}
+              highlight={reviewId == dpeoplesReview.id}  
+              handleEdit={onhandleEdit}
+              // highlight="true"
             />
             
             {/* Render replies when reply box is open */}
@@ -205,6 +211,8 @@ const toggleReplyBox = (reviewId, username = null) => {
                   replyCount={reviewReplies[dpeoplesReview.id]?.length || 0}
                   isReply={true}
                   onShowProfile={openProfilePopup}
+                  // highlight={reviewId === dpeoplesReview.id}  
+                  // highlight="true"
                 />
               </View>
             ))}

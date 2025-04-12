@@ -1,4 +1,5 @@
 import { Alert, StyleSheet, Text, TouchableOpacity, View, Animated } from 'react-native'
+
 import React, { useEffect, useState, useRef } from 'react'
 import theme from '../constants/theme'
 import { wp, hp, stripHtmlTags } from '../helpers/common'
@@ -11,11 +12,13 @@ import LikeButton from './AnimatedUpVoteButton'
 import { useAuth } from '../contexts/AuthContext'
 import PratingStars from './pRatingStars'
 import { userService } from '../services/helperService'
+import ReviewIndicators from './ReviewIndicator'
 
 const PeoplesReviewItem = ({
   item, 
   canDelete = false,
   onDelete = () => {},
+  handleEdit = () => {},
   highlight = false,
   onReplyReviewPress,
   onShowProfile,
@@ -71,6 +74,20 @@ const PeoplesReviewItem = ({
       }
     ])
   }
+
+    const handleEditButtonPress = () => {
+      Alert.alert('Confirm', 'Are you sure! you have chaged your mind?', [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Edit',
+          style: 'destructive',
+          onPress: () => handleEdit(item)
+        }
+      ])
+    }
 
   const handleUsernamePress = () => {
     if (onShowProfile) {
@@ -294,14 +311,18 @@ const PeoplesReviewItem = ({
             )}
           </View>
 
-         
+            <View style={styles.replySection}>
+            {canDelete && (
+                <TouchableOpacity onPress={handleDelete}>
+                  <Icon name="delete" size={15} color={theme.colors.rose} />
+                </TouchableOpacity>
+              )}
+              {!isReply && canDelete && (
+                 <TouchableOpacity onPress={handleEditButtonPress}>
+                       <Icon name="edit" size={15} color={theme.colors.gray} />
+                 </TouchableOpacity>
+              )}
 
-        <View style={styles.replySection}>
-        {canDelete && (
-            <TouchableOpacity onPress={handleDelete}>
-              <Icon name="delete" size={15} color={theme.colors.rose} />
-            </TouchableOpacity>
-          )}
                 {isReply && (
                   <TouchableOpacity 
                     onPress={handleRocketPress}
@@ -334,7 +355,6 @@ const PeoplesReviewItem = ({
                   </TouchableOpacity>
                 )}
              
-
             {/* below is the code for comment reply button */}
 
                {isReply && (
@@ -378,12 +398,16 @@ const PeoplesReviewItem = ({
             
             {/* Cup of Tea indicator */}
             {/* Remove this and convert it into a new component */}
-            {!isReply && item?.cupOfTea && (
+            {/* {!isReply && item?.cupOfTea && (
               <View style={styles.cupOfTeaContainer}>
                 <Icon name="cup" size={hp(1.8)} color={theme.colors.primary} />
                 <Text style={styles.cupOfTeaText}>Not Everyone's Cup</Text>
               </View>
-            )}
+            )} */}
+
+              {!isReply && (
+                            <ReviewIndicators item={item} />
+                          )}
           </View>
     </View>
   )
@@ -420,16 +444,17 @@ const styles = StyleSheet.create({
     fontWeight: theme.fonts.textDark,
   },
   highlight: {
-    borderWidth: 0.2,
-    borderColor: '#444',
-    shadowColor: theme.colors.dark, 
+    borderWidth: 1,
+    borderColor: theme.colors.bmw, // Fallback color if gradient can't be applied
+    // Use a LinearGradient component for the border in your render method
+    shadowColor: '#4A00E0',
     shadowOffset: {
-      width: 0,
-      height: 2
+      width: 0.7,
+      height: 4
     },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5
+    shadowOpacity: 0.6,
+    shadowRadius: 24,
+    elevation: 34
   },
   usernameTag: {
     color: theme.colors.primaryDark,

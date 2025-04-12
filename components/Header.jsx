@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: hp(2.7),
         fontWeight: theme.fonts.semibold,
-        color: theme.colors.textDark,
+        color: theme.colors.bmw,
         textAlign: 'center'
     },
     backButton: {

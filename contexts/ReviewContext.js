@@ -8,6 +8,7 @@ export const ReviewProvider = ({ children }) => {
   const [activeReview, setActiveReview] = useState({
     reviewText: '',
     reviewDate: '',
+    isFavorite: false,
   });
   
   // Update review data
@@ -28,15 +29,25 @@ export const ReviewProvider = ({ children }) => {
     setActiveReview({
       reviewText: '',
       reviewDate: '',
+      isFavorite: false,
     });
   };
+
+    // Add a dedicated function to update the favorite status
+    const updateFavoriteStatus = (status) => {
+      setActiveReview(prev => ({
+        ...prev,
+        isFavorite: status
+      }));
+    };
   
   return (
     <ReviewContext.Provider value={{ 
       activeReview, 
       updateReviewData, 
       getReviewData,
-      clearReviewData
+      clearReviewData,
+      updateFavoriteStatus
     }}>
       {children}
     </ReviewContext.Provider>

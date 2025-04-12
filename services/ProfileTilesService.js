@@ -8,6 +8,7 @@ export const fetchUserReviews = async (userId) => {
         .select(`
           id,
           text,
+          favour,
           created_at,
           userRating,
           cupOfTea,
@@ -31,7 +32,9 @@ export const fetchUserReviews = async (userId) => {
         releaseId: review.release?.id,
         releaseDate: review.release?.rDate,
         releaseBody: review.release?.body,
-        releasePoster: review.release?.file
+        releasePoster: review.release?.file,
+        favour: review.favour,
+        original_table: 'peoplesReview'
       }));
       
       return { success: true, data: formattedData };
@@ -48,6 +51,7 @@ export const fetchUserReviews = async (userId) => {
         .select(`
           id,
           text,
+          favour,
           created_at,
           userRating,
           topOfTea,
@@ -70,7 +74,8 @@ export const fetchUserReviews = async (userId) => {
         topOfTea: data.topOfTea,
         releaseId: data.release?.id,
         releaseBody: data.release?.body,
-        releasePoster: data.release?.file
+        releasePoster: data.release?.file,
+        favour: data.favour
       };
       
       return { success: true, data: formattedData };
@@ -90,6 +95,7 @@ export const fetchUserReviews = async (userId) => {
         .select(`
           id,
           text,
+          favour,
           created_at,
           userRating,
           cupOfTea,
@@ -113,7 +119,9 @@ export const fetchUserReviews = async (userId) => {
         releaseId: review.stream?.id,
         releaseDate: review.stream?.rDate,
         releaseBody: review.stream?.body,
-        releasePoster: review.stream?.file
+        releasePoster: review.stream?.file,
+        favour: review.favour,
+        original_table: 'dpeopreviews'
       }));
       
       return { success: true, data: formattedData };
@@ -133,6 +141,7 @@ export const fetchUserReviews = async (userId) => {
           created_at,
           userRating,
           topOfTea,
+          favour,
           stream: streams(id, body)
         `)
         .eq('userId', userId)
@@ -152,7 +161,8 @@ export const fetchUserReviews = async (userId) => {
         topOfTea: data.topOfTea,
         releaseId: data.stream?.id,
         releaseBody: data.stream?.body,
-        releasePoster: data.stream?.file
+        releasePoster: data.stream?.file,
+        favour: data.favour
       };
       
       return { success: true, data: formattedData };

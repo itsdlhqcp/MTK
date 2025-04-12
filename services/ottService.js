@@ -497,4 +497,38 @@ export const createPeopleReviewUpvote = async (upvote) => {
               }
             
             }
+
+
+            export const updatePeopleReview = async (reviewId, reviewData) => {
+              try {
+                const { data, error } = await supabase
+                  .from('dpeopreviews')
+                  .update({
+                    text: reviewData.text,
+                    favour: reviewData.favour
+                  })
+                  .eq('id', reviewId)
+            
+                if (error) {
+                  console.log('update people review error: ', error);
+                  return { 
+                    success: false, 
+                    msg: 'Could not update people review' 
+                  };
+                }
+                return { 
+                  success: true, 
+                  data, 
+                  action: 'people review updated'
+                };
+            
+              } catch (error) {
+                console.log('update people review error: ', error);
+                return { 
+                  success: false, 
+                  msg: 'Could not process people review update action' 
+                };
+              }
+            };
+        
         

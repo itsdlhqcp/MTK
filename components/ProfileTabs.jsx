@@ -49,7 +49,7 @@ const TabNavigator = ({
         );
       case 'plots':
         return (
-          <Text style={styles.library}>Library</Text>
+          <Text style={styles.library}>Post feature coming soon!!</Text>
           // <View style={styles.plotsContainer}>
           //   <FlatList
           //     data={posts}
@@ -137,7 +137,7 @@ const TabNavigator = ({
               },
             ]}
           >
-            Library
+            Posts
           </Text>
         </TouchableOpacity>
       </View>
