@@ -10,6 +10,10 @@ const theme = {
         bmw: '#0066B1',
         assent: '#FFD700',
 
+        /// 
+        red: '#E50914',
+        blue: '#0066B1',
+
         // other aestatic colors
         star: '#de571a',
         silver: '#C0C0C0',

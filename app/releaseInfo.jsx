@@ -12,12 +12,16 @@ import { LinearGradient } from 'expo-linear-gradient';
 import moment from 'moment/moment';
 import { getSupabaseFileUrl } from "../services/imageService";
 import ReleaseCardInfo from "../components/releaseCardInfo";
+import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
+// import { AdMobBanner } from 'expo-ads-admob';
 
 const ReleaseInfo = () => {
     const { releaseId } = useLocalSearchParams();
     const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [release, setRelease] = useState(null);
+
+    const adUnitId = __DEV__ ? TestIds.BANNER : 'ca-app-pub-7806969239829181/8002029935'; 
 
     // console.log("releaseId", release.filel);
 
@@ -101,6 +105,23 @@ const ReleaseInfo = () => {
                   item={release}
                   router={router}
                 />
+
+
+                <BannerAd
+                unitId={adUnitId}
+                size={BannerAdSize.BANNER}
+                requestOptions={{
+                    requestNonPersonalizedAdsOnly: true,
+                    keywords: ['clothing', 'fashion', 'apparel', 'shoes', 'style'], // 💡 Targeting clothing-related ads
+                }}
+                />
+              {/* <AdMobBanner
+                bannerSize="smartBannerPortrait"
+                adUnitID="ca-app-pub-3940256099942544/6300978111" // Test Banner ID
+                servePersonalizedAds
+                onDidFailToReceiveAdWithError={(err) => console.log(err)}
+             /> */}
+
         </View>
     );
 };

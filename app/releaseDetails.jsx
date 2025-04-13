@@ -451,7 +451,7 @@ const ReleaseDetails = () => {
         );
     };
     
-    export default ReleaseDetails;
+export default ReleaseDetails;
 
 const styles = StyleSheet.create({
     container: {

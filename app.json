@@ -17,9 +17,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.myapp"
+      "bundleIdentifier": "com.mediatalk.plotwist"
     },
     "android": {
+      "package": "com.mediatalk.plotwist",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#000000"
@@ -32,6 +33,13 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-7806969239829181~9318981034",
+          "iosAppId": "ca-app-pub-7806969239829181~9318981034"
+        }
+      ],
       [
         "expo-splash-screen",
         {

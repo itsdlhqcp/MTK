@@ -22,6 +22,7 @@
 import { View, StatusBar } from 'react-native';
 import React from 'react';
 import { DotIndicator } from 'react-native-indicators'; 
+import 'expo-dev-client';
 
 const Index = () => {
   return (

@@ -29,9 +29,11 @@ const PeoplesReviewItem = ({
   const [isLoading, setIsLoading] = useState(false)
   const rocketScale = useRef(new Animated.Value(1)).current
   const rocketOpacity = useRef(new Animated.Value(1)).current
+  // console.log("######### item", item);
+
+  const canEdit = moment().diff(moment(item?.created_at), 'hours') <= 12;
 
   const {user} = useAuth();
-
   useEffect(() => {
     if (!isReply) {
       fetchReplyCount()
@@ -289,12 +291,12 @@ const PeoplesReviewItem = ({
             {!isReply && (
               <>
                 <TouchableOpacity onPress={onUpvote}>
-                  <Icon name="upvo" size={hp(2.4)} fill={downvoted ? "#4CAF50" : 'transparent'} color={downvoted ? "#4CAF50" : theme.colors.textLight} />
+                  <Icon name="upvo" size={hp(2.4)} fill={downvoted ? "" : 'transparent'} color={downvoted ? "#4CAF50" : theme.colors.textLight} />
                 </TouchableOpacity>
                 <Text style={styles.count}>{downvotes?.length || 0}</Text>
 
                 <TouchableOpacity onPress={onDownvote}>
-                  <Icon name="downvo" size={hp(2.4)} fill={upvoted ? "#F44336" : 'transparent'} color={upvoted ? "#F44336" : theme.colors.textLight} />
+                  <Icon name="downvo" size={hp(2.4)} fill={upvoted ? "" : 'transparent'} color={upvoted ? "#F44336" : theme.colors.textLight} />
                 </TouchableOpacity>
                 <Text style={styles.count}>{upvotes?.length || 0}</Text>
 
@@ -304,20 +306,18 @@ const PeoplesReviewItem = ({
                 >
                   <Icon name="bubbleChatReply" size={hp(2.5)} color={theme.colors.primary} />
                 </TouchableOpacity>
-                {replyCount > 0 && (
                   <Text style={styles.replyCount}>{item?.replyPeopleReviews?.length || 0}</Text>
-                )}
               </>
             )}
           </View>
 
             <View style={styles.replySection}>
-            {canDelete && (
+            {canDelete && canEdit && (
                 <TouchableOpacity onPress={handleDelete}>
                   <Icon name="delete" size={15} color={theme.colors.rose} />
                 </TouchableOpacity>
               )}
-              {!isReply && canDelete && (
+              {!isReply && canDelete && canEdit && (
                  <TouchableOpacity onPress={handleEditButtonPress}>
                        <Icon name="edit" size={15} color={theme.colors.gray} />
                  </TouchableOpacity>
@@ -395,15 +395,6 @@ const PeoplesReviewItem = ({
                     {renderTextWithTags(item?.text)}
                   </Text>
             )}
-            
-            {/* Cup of Tea indicator */}
-            {/* Remove this and convert it into a new component */}
-            {/* {!isReply && item?.cupOfTea && (
-              <View style={styles.cupOfTeaContainer}>
-                <Icon name="cup" size={hp(1.8)} color={theme.colors.primary} />
-                <Text style={styles.cupOfTeaText}>Not Everyone's Cup</Text>
-              </View>
-            )} */}
 
               {!isReply && (
                             <ReviewIndicators item={item} />
@@ -440,13 +431,12 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: hp(1.5),
-    color: '#ffffff', // Text color for dark theme
+    color: '#ffffff',
     fontWeight: theme.fonts.textDark,
   },
   highlight: {
     borderWidth: 1,
-    borderColor: theme.colors.bmw, // Fallback color if gradient can't be applied
-    // Use a LinearGradient component for the border in your render method
+    borderColor: theme.colors.bmw, 
     shadowColor: '#4A00E0',
     shadowOffset: {
       width: 0.7,
@@ -467,7 +457,7 @@ const styles = StyleSheet.create({
   },
   replyCount: {
     fontSize: hp(1.4),
-    color: '#fff',
+    color: theme.colors.text,
     fontWeight: 'bold',
   },
   replyIcon: {

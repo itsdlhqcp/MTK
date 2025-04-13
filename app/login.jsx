@@ -42,7 +42,7 @@ const Login = () => {
       const isNew = await checkUserStatus(user.id);
       
       // Add 3000ms delay before navigation
-      await delay(600);
+      await delay(200);
       
       // Navigate based on user status
       if (isNew) {

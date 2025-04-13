@@ -125,7 +125,7 @@ const ReleaseCardInfo = ({
                                     <TouchableOpacity 
                                         onPress={handleReadReviews}
                                     >
-                                        <Icon name="plus" size={hp(3.5)} color={theme.colors.assent} />
+                                        <Icon name="plus" size={hp(3.5)} color={theme.colors.blue} />
                                     </TouchableOpacity>
                                 </View>
                             )}
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
         marginBottom: 5
     },
     releaseDate: {
-        color: theme.colors.assent || '#FF3B30', // Using primary color for date
+        color: "white" || '#FF3B30', // Using primary color for date
         fontSize: hp(2),
         marginBottom: 10,
         fontWeight: '400'
@@ -218,12 +218,12 @@ const styles = StyleSheet.create({
         borderRadius: 8
     },
     reviewButtonText: {
-        color: theme.colors.assent || '#FF3B30', // Using primary color for text
+        color: theme.colors.blue || '#FF3B30', // Using primary color for text
         fontWeight: 'bold',
         fontSize: hp(1.8)
     },
     reviewCountBadge: {
-        backgroundColor: theme.colors.bmw || '#0095F6', // Using secondary primary dark color
+        backgroundColor: theme.colors.blue || '#0095F6', // Using secondary primary dark color
         borderRadius: 12,
         minWidth: 21,
         height: 21,
@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
     detailsTitle: {
         fontSize: hp(2),
         fontWeight: 'bold',
-        color: theme.colors.assent || '#FF3B30', // Using primary color for title
+        color: theme.colors.blue || '#FF3B30', // Using primary color for title
         marginBottom: 8,
         marginLeft: 5
     },
@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
         borderColor: '#363636' // Slightly lighter border
     },
     detailLabel: {
-        color: theme.colors.assent || '#FF3B30', // Using primary color for label
+        color: theme.colors.blue || '#FF3B30', // Using primary color for label
         fontSize: hp(1.6),
         fontWeight: 'bold',
         marginBottom: 4

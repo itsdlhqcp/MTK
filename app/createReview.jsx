@@ -323,7 +323,7 @@ function CreateReviewFunctional() {
         // For new review case, use your existing logic
         console.log('Submitting new review:', reviewData);
       
-        showToast('success', 'Review Submitted Successfully');
+        // showToast('success', 'Review Submitted Successfully');
         // Simulate API call with timeout - replace with actual API call
         await new Promise(resolve => setTimeout(resolve, 1000));
       }

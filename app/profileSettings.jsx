@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Alert,
   ScrollView,
+  DevSettings,
 } from 'react-native';
 import ScreenWrapper from '../components/ScreenWrapper';
 import { useAuth } from '../contexts/AuthContext';
@@ -91,6 +92,8 @@ const ProfileSettings = () => {
               // No need to call setAuth(null) as it's handled in the logout function
               router.setParams({});
               // router.replace('/login');  // Navigate to login screen after logout
+              router.replace('/welcome');
+               DevSettings.reload();   // Reload the app - this is tempoaray fix for the logout issue
             }
           } catch (error) {
             console.error('Logout error:', error.message);
