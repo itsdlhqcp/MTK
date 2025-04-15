@@ -100,10 +100,10 @@ const ReviewItem = ({
 
   return (
     <View style={styles.container}>
-      <Avatar
+      {/* <Avatar
         uri={item?.user?.image}
         // onPress={handleUsernamePress}
-      />
+      /> */}
       <View style={[styles.content, highlight && styles.highlight]}>
         <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
           <View style={styles.nameContainer}>
@@ -137,11 +137,11 @@ const ReviewItem = ({
             )}
           </View>
 
-          {canDelete && (
+          {/* {canDelete && (
             <TouchableOpacity onPress={handleDelete}>
               <Icon name="delete" size={20} color={theme.colors.rose} />
             </TouchableOpacity>
-          )}
+          )} */}
         </View>
         <Text style={[styles.text, {fontWeight: 'normal'}]}>
           {renderTextWithTags(item?.text)}
@@ -157,7 +157,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     flexDirection: 'row',
-    gap: 7,
   },
   content: {
     backgroundColor: 'rgba(0,0,0,0.06)',
@@ -167,7 +166,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10, 
     borderRadius: theme.radius.md, 
     borderCurve: 'continuous', 
-    borderWidth: 0.5,
+    borderWidth: 0.1,
     borderColor: theme.colors.gray,
     shadowColor: '#000'
   },
@@ -178,7 +177,7 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: hp(1.5),
-    color: theme.colors.text,
+    color: theme.colors.textLight,
     fontWeight: theme.fonts.textDark,
   },
   highlight: {
@@ -201,6 +200,7 @@ const styles = StyleSheet.create({
   replySection: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginRight: 2,
     gap: 5,
   },
   replyCount: {
@@ -210,11 +210,6 @@ const styles = StyleSheet.create({
   },
   replyIcon: {
     padding: 2,
-  },
-  replySection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
   },
   replyCount: {
     fontSize: hp(1.4),

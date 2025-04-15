@@ -56,3 +56,111 @@ gmail for add mobs (Google) :-
 
 plotwistapk@gmail.com 
 password :- Dilu@1234
+
+twilio credentials :-
+
+TWILIO_VERIFY_SERVICE_SID=SKcb113635817057156572c820aa0265fc
+TWILIO_ACCOUNT_SID=ACdf2468d23a8b9683a52b13e23fcd2651
+TWILIO_AUTH_TOKEN=e404ecf4b353ce91a8b4a06b04924410
+
+Google Admobs (plotwist apk details)
+
+APP IDS :-  1:167018970793:android:22c148ad3df7249f1f33b8
+
+## Banner ads :-
+
+AdMob app ID :-
+
+ca-app-pub-7806969239829181~9318981034
+
+AdMob ad unit ID
+
+ca-app-pub-7806969239829181/8002029935
+
+## Customizable ads :-
+
+AdMob app ID :-
+
+ca-app-pub-7806969239829181~9318981034
+
+AdMob ad unit ID
+
+ca-app-pub-7806969239829181/7694546782
+
+which helps in building the apk with keystore :-
+
+npx expo install expo-dev-client
+
+eas build --platform android --profile development
+
+below is the command after git commit to deploy locally :-
+
+eas update
+
+below command to build the apk file with key- store
+
+eas build --platform android --clear-cache
+
+below is the command to build - .android file (for prebuild)
+
+npx expo prebuild --platform android
+
+## to check any incompatibility :-
+
+npm expo-doctor
+
+kotlin version :-  1.7.20 (compatible)
+
+eas build --platform android --no-cache
+
+
+to cleanup :-
+
+cd android
+
+.\gradlew clean
+
+
+
+
+
+npx expo prebuild --platform android
+npx expo run:android
+
+# for local build to start
+
+ npx expo run:android
+
+
+removed this module and testing
+
+ "expo-updates": "^0.27.4",
+
+  npm install expo-updates@0.27.4
+
+  /// to build it  install expo-dev-client
+
+  and import in entry file (index.js)
+
+
+  app.json :-
+
+
+    [
+      "expo-build-properties",
+      {
+      "android": {
+      "compileSdkVersion": 35,
+      "targetSdkVersion": 34,
+      "buildToolsVersion": "35.0.0",
+      "kotlinVersion": "1.7.20"
+      }
+      }
+      ],
+
+
+
+      expo-build-properties
+
+       "runtimeVersion": "1.0.0",
+      "package": "com.mediatalk.plotwist",

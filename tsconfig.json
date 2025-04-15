@@ -38,5 +38,5 @@
     "app/forgot.jsx", 
     "app/signup.jsx", 
     "app/welcome.jsx"
-, "app/releaseCard.tsx"  ]
+, "app/releaseCard.tsx", "app/releaseInfo.jsx"  ]
 }

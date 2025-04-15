@@ -12,8 +12,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import moment from 'moment/moment';
 import { getSupabaseFileUrl } from "../services/imageService";
 import ReleaseCardInfo from "../components/releaseCardInfo";
-import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
-// import { AdMobBanner } from 'expo-ads-admob';
+// import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
 
 const ReleaseInfo = () => {
     const { releaseId } = useLocalSearchParams();
@@ -21,7 +20,7 @@ const ReleaseInfo = () => {
     const [loading, setLoading] = useState(true);
     const [release, setRelease] = useState(null);
 
-    const adUnitId = __DEV__ ? TestIds.BANNER : 'ca-app-pub-7806969239829181/8002029935'; 
+    //  const adUnitId = __DEV__ ? TestIds.BANNER : 'ca-app-pub-7806969239829181/8002029935'; 
 
     // console.log("releaseId", release.filel);
 
@@ -88,41 +87,26 @@ const ReleaseInfo = () => {
     }
 
     return (
-        <View style={styles.container}>
-            {/* <View style={styles.header}>
-                <Text style={styles.pageTitle}>Release Information</Text>
-            </View> */}
-            
-            {/* <TouchableOpacity 
-                style={styles.detailsButton}
-                onPress={handleRedirectToDetails}
-              >
-                <Text style={styles.buttonText}>Read Reviews</Text>
-                <Icon name="chevronup" size={hp(2)} color={theme.colors.background} />
-            </TouchableOpacity> */}
-
+        <>
+          <View style={styles.container}>
               <ReleaseCardInfo
                   item={release}
                   router={router}
                 />
+                
+               
 
-
-                <BannerAd
+        </View>
+        {/* <BannerAd
                 unitId={adUnitId}
                 size={BannerAdSize.BANNER}
                 requestOptions={{
                     requestNonPersonalizedAdsOnly: true,
-                    keywords: ['clothing', 'fashion', 'apparel', 'shoes', 'style'], // 💡 Targeting clothing-related ads
+                    keywords: ['clothing', 'fashion', 'apparel', 'shoes', 'style'], 
                 }}
-                />
-              {/* <AdMobBanner
-                bannerSize="smartBannerPortrait"
-                adUnitID="ca-app-pub-3940256099942544/6300978111" // Test Banner ID
-                servePersonalizedAds
-                onDidFailToReceiveAdWithError={(err) => console.log(err)}
-             /> */}
-
-        </View>
+                />  */}
+        </>
+      
     );
 };
 

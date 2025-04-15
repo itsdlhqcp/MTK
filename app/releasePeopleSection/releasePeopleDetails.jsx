@@ -888,8 +888,9 @@ const styles = StyleSheet.create({
         opacity: 0.7
     },
     reviewsContainer: {
-        marginVertical: hp(2),
-        gap: hp(2)
+     //   marginVertical: hp(2),
+      //  gap: hp(2),
+        borderWidth: 0
     },
     noReviews: {
         padding: hp(2),
