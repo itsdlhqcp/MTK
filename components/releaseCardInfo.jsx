@@ -10,6 +10,9 @@ import moment from 'moment/moment'
 const ReleaseCardInfo = ({
     item,
     router,
+    handlePeopleReadReviews,
+    handleReadReviews,
+    peoplesReviewCount,
     hasShadow = true,
     showReviewButton = true,
 }) => {
@@ -23,15 +26,15 @@ const ReleaseCardInfo = ({
         elevation: 1
     }
 
-    const handleReadReviews = () => {
-        if (!item?.id) return null;
-        router.push({pathname: 'releaseDetails', params: {releaseId: item.id}});
-    }
+    // const handleReadReviews = () => {
+    //     if (!item?.id) return null;
+    //     router.push({pathname: 'releaseDetails', params: {releaseId: item.id}});
+    // }
 
-    const handlePeopleReadReviews = () => {
-        if (!item?.id) return null;
-        router.push({pathname: 'releasePeopleSection/releasePeopleDetails', params: {releaseId: item.id}});
-    }
+    // const handlePeopleReadReviews = () => {
+    //     if (!item?.id) return null;
+    //     router.push({pathname: 'releasePeopleSection/releasePeopleDetails', params: {releaseId: item.id}});
+    // }
 
     const createdAt = item?.rDate ? moment(item.rDate).format('MMM D') : '';
 
@@ -62,7 +65,7 @@ const ReleaseCardInfo = ({
         }
     }
 
-    const peoplesReviewCount = item?.peoplesReview?.length || 0;
+    // const peoplesReviewCount = item?.peoplesReview?.length || 0;
 
     // Film details to display
     const filmDetails = [

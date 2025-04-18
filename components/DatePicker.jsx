@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, Pressable, TextInput, Platform } from 'react-na
 import React, { useState, useEffect } from 'react';
 import DateTimePickerModal from "@react-native-community/datetimepicker";
 
-const DatePicker = ({ onDateSelect, initialDate }) => {
+const DatePicker = ({ onDateSelect, initialDate, label = "Select Release Date" }) => {
   const [date, setDate] = useState(initialDate || new Date());
   const [showPicker, setShowPicker] = useState(false);
   const [displayDate, setDisplayDate] = useState('');
@@ -42,7 +42,7 @@ const DatePicker = ({ onDateSelect, initialDate }) => {
 
   return (
     <View>
-      <Text style={styles.label}>Select Release Date</Text>
+      <Text style={styles.label}>{label}</Text>
       
       {showPicker && (
         <DateTimePickerModal

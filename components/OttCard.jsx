@@ -29,13 +29,7 @@ const OttCard = ({
     const handleCardPress = () => {
         // Navigate to reviews on card press
         if (!item?.id) return null;
-        router.push({ pathname: 'streamPeopleSection/streamPeopleDetails', params: { streamId: item.id } });
-        
-        // Also update rating as before
-        // const newClickCount = clickCount + 0.5;
-        // setClickCount(newClickCount);
-        // const newRating = newClickCount % 5 === 0 ? 5 : newClickCount % 5;
-        // setUserRating(newRating);
+        router.push({ pathname: 'streamInfo', params: { streamId: item.id } });
     }
 
     const rDate = item?.rDate ? moment(item.rDate).format('MMM DD') : '';
@@ -91,7 +85,7 @@ const OttCard = ({
             <View style={styles.imageContainer}>
                 {item?.file?.includes('postImage') && (
                     <Image
-                        source={getSupabaseFileUrl(item.file)}
+                        source={getSupabaseFileUrl(item?.file)}
                         style={styles.postMedia}
                         resizeMode="cover"
                     />
@@ -157,6 +151,8 @@ const OttCard = ({
     )
 }
 
+export default OttCard
+
 const styles = StyleSheet.create({
     container: {
         marginBottom: 8,
@@ -180,7 +176,7 @@ const styles = StyleSheet.create({
     },
     overlay: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0,0,0,0.2)', // Reduced opacity since we have vignette now
+        backgroundColor: 'rgba(0,0,0,0.2)', 
         justifyContent: 'space-between',
     },
     topContainer: {
@@ -230,15 +226,14 @@ const styles = StyleSheet.create({
         textAlign: 'left',
         fontWeight: '500'
     },
-    // New style for white horizontal line
     whiteLine: {
         position: 'absolute',
         bottom: 0,
         alignSelf: 'center',
         width: '97%',
-        height: 0.6, // Line thickness
+        height: 0.6, 
         backgroundColor: 'white',
     },
 });
 
-export default OttCard
+

@@ -5,16 +5,18 @@ import { hp, wp } from '../helpers/common';
 import theme from '../constants/theme';
 import { Text } from "react-native";
 import Loading from "../components/Loading";
-import { fetchPeoplesReleaseDetails } from "../services/releaseService";
+import { fetchPeoplesReleaseDetails } from "../services/ottService";
 import moment from 'moment/moment';
 import ReleaseCardInfo from "../components/releaseCardInfo";
 // import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
 
 const ReleaseInfo = () => {
-    const { releaseId } = useLocalSearchParams();
+    const { streamId } = useLocalSearchParams();
     const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [release, setRelease] = useState(null);
+
+   // router.push({ pathname: 'streamPeopleSection/streamPeopleDetails', params: { streamId: item.id } });
 
     //  const adUnitId = __DEV__ ? TestIds.BANNER : 'ca-app-pub-7806969239829181/8002029935'; 
 
@@ -27,7 +29,7 @@ const ReleaseInfo = () => {
     const getReleaseDetails = async () => {
         setLoading(true);
         try {
-            let res = await fetchPeoplesReleaseDetails(releaseId);
+            let res = await fetchPeoplesReleaseDetails(streamId);
             if (res.success) {
                 setRelease(res.data);
             } else {
@@ -84,15 +86,15 @@ const ReleaseInfo = () => {
 
     const handlePeopleReadReviews = () => {
         if (!release?.id) return null;
-        router.push({pathname: 'releasePeopleSection/releasePeopleDetails', params: {releaseId: release.id}});
+        router.push({pathname: 'streamPeopleSection/streamPeopleDetails', params: {streamId: release.id}});
     }
 
     const handleReadReviews = () => {
         if (!release?.id) return null;
-        router.push({pathname: 'releaseDetails', params: {releaseId: release.id}});
+        router.push({pathname: 'streamDetails', params: {streamId: release.id}});
     }
 
-    const peoplesReviewCount = release?.peoplesReview?.length || 0;
+     const peoplesReviewCount = release?.dpeopreviews?.length || 0;
 
     return (
         <>

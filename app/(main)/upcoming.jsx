@@ -9,7 +9,6 @@ import { fetchOtt } from '../../services/ottService';
 import ReleaseList from '../../components/ReleaseList';
 import OttList from '../../components/OttList';
 import { supabase } from '../../lib/supabase';
-import { useFocusEffect } from '@react-navigation/native';
 import theme from '../../constants/theme';
 
 const ITEMS_PER_PAGE = 4;
@@ -176,41 +175,10 @@ const getOtts = async () => {
 
     const handleTabPress = (tabName) => {
         if (tabName !== activeTab) {
-            // Vibrate for 20ms when switching tabs
             Vibration.vibrate(200);
             setActiveTab(tabName);
         }
     };
-
-    // const TabBar = () => (
-    //     <View style={styles.tabContainer}>
-    //         <TouchableOpacity 
-    //             style={[
-    //                 styles.tab, 
-    //                 activeTab === 'upcoming' && styles.activeTab
-    //             ]}
-    //             onPress={() => handleTabPress('upcoming')}
-    //         >
-    //             <Text style={[
-    //                 styles.tabText,
-    //                 activeTab === 'upcoming' && styles.activeTabText
-    //             ]}>THEATRE</Text>
-    //         </TouchableOpacity>
-    //         <TouchableOpacity 
-    //             style={[
-    //                 styles.tab, 
-    //                 activeTab === 'ott' && styles.activeTab
-    //             ]}
-    //             onPress={() => handleTabPress('ott')}
-    //         >
-    //             <Text style={[
-    //                 styles.tabText,
-    //                 activeTab === 'ott' && styles.activeTabText
-    //             ]}>DIGITAL</Text>
-    //         </TouchableOpacity>
-    //     </View>
-    // );
-
 
     const TabBar = () => (
         <View style={styles.tabContainer}>
@@ -279,41 +247,10 @@ const getOtts = async () => {
             <TabBar />
             {renderContent()}
         </ScreenWrapper>
-      
     );
 };
 
 const styles = StyleSheet.create({
-    // tabContainer: {
-    //     flexDirection: 'row',
-    //     backgroundColor: 'transparent',
-    //     padding: 6,
-    //     marginHorizontal: 14,
-    //     marginTop: 4,
-    //     borderRadius: 8,
-    // },
-    // tab: {
-    //     flex: 1,
-    //     paddingVertical: 12,
-    //     alignItems: 'center',
-    //     borderRadius: 44,
-    //   //  backgroundColor: '#2C2C2E #E50914'
-    // },
-    // activeTab: {
-    //     backgroundColor: '#FFCC00',
-    //     shadowColor: 'rgba(255, 255, 255, 0.1)',
-    //     shadowOffset: {
-    //         width: 0,
-    //         height: 2,
-    //     },
-    //     shadowOpacity: 0.1,
-    //     shadowRadius: 3,
-    //     elevation: 3,
-    // },
-    // tabText: {
-    //     fontSize: 16,
-    //     color: '#B3B3B3',
-    // },
     tabContainer: {
         flexDirection: 'row',
         backgroundColor: '#000000',

@@ -369,7 +369,7 @@ const ReleaseDetails = () => {
                                 disabled={charCount < MIN_CHARS}
                             >
                                 <Icon 
-                                    name="send" 
+                                    name="add" 
                                     size={hp(2)} 
                                     color={charCount < MIN_CHARS ? theme.colors.textLight : theme.colors.primaryDark} 
                                 />

@@ -14,7 +14,7 @@ export const createOrUpdateOtt = async (post) => {
         return fileResult;
       }
     }
-    
+
     // Handle second file upload (filel)
     if (post.filel && typeof post.filel === "object") {
       let isImage = post.filel.type === "image";
@@ -26,19 +26,27 @@ export const createOrUpdateOtt = async (post) => {
         return fileResult;
       }
     }
-    
-    const {data, error} = await supabase.from('streams').upsert(post).select().single();
 
-    if (error){
+    const { data, error } = await supabase.from('streams').upsert(post).select().single();
+
+    if (error) {
       console.error("Error in createOrUpdateOtt:", error);
+
+      // Check for unique constraint violation (duplicate key)
+      if (error.code === "23505") {
+        return { success: false, msg: "Already added this Film into Ott", error: error.message };
+      }
+
       return { success: false, msg: "Could not create or update your Ott", error: error.message };
     }
-    return {success: true, data};
+
+    return { success: true, data };
   } catch (error) {
     console.error("Error in createOrUpdateOtt:", error);
     return { success: false, msg: "Could not create or update your Ott", error: error.message };
   }
-}
+};
+
 
 // plese adjust the fetch releses based on rDate oder in ascending
 export const fetchOtt = async (limit2=10) => {

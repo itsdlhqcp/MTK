@@ -83,19 +83,7 @@ const Header = memo(({ username, router }) => (
 
     <View style={styles.icons}>
    
-       <Pressable onPress={() => {
-          setNotificationCount(0);
-          router.push('notifications');
-        }}>
-          <Icon name="heart" size={hp(3.2)} color='white' />
-          {/* {
-            notificationCount > 0 && (
-              <View style={styles.pill}>
-                <Text style={styles.pillText}>{notificationCount}</Text>
-              </View>
-            )
-          } */}
-        </Pressable>
+       
         <Pressable 
           onPress={() => router.push('library')}
         >

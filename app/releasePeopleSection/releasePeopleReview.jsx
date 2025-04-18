@@ -238,8 +238,9 @@ export default PeoplesReviewList;
 
 const styles = StyleSheet.create({
   reviewsContainer: {
-    marginVertical: hp(2),
-    gap: hp(2)
+    marginVertical: hp(1),
+    marginHorizontal: hp(2),
+    gap: hp(1)
   },
   noReviews: {
     padding: hp(2),

@@ -283,6 +283,92 @@ const MainLayout = () => {
           }),
         }}
       />
+       <Stack.Screen
+        name="streamDetails"
+        options={{
+          presentation: 'modal',
+          animation: 'slide_from_bottom',
+          headerShown: false,
+          gestureEnabled: true,
+          gestureDirection: 'vertical',
+          fullScreenGestureEnabled: true,
+          animationDuration: 200,
+          animationTypeForReplace: 'push',
+          customAnimationOnGesture: true,
+          gestureResponseDistance: {
+            vertical: 800
+          },
+          transitionSpec: {
+            open: {
+              animation: 'timing',
+              config: { duration: 200 },
+            },
+            close: {
+              animation: 'timing',
+              config: { duration: 800 },
+            },
+          },
+          cardStyleInterpolator: ({ current, layouts }) => ({
+            cardStyle: {
+              transform: [{
+                translateY: current.progress.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [layouts.screen.height, 0],
+                }),
+              }],
+            },
+            overlayStyle: {
+              opacity: current.progress.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, 0.5],
+              }),
+            },
+          }),
+        }}
+      />
+       <Stack.Screen
+        name="streamPeopleSection/streamPeopleDetails"
+        options={{
+          presentation: 'modal',
+          animation: 'slide_from_bottom',
+          headerShown: false,
+          gestureEnabled: true,
+          gestureDirection: 'vertical',
+          fullScreenGestureEnabled: true,
+          animationDuration: 200,
+          animationTypeForReplace: 'push',
+          customAnimationOnGesture: true,
+          gestureResponseDistance: {
+            vertical: 800
+          },
+          transitionSpec: {
+            open: {
+              animation: 'timing',
+              config: { duration: 200 },
+            },
+            close: {
+              animation: 'timing',
+              config: { duration: 800 },
+            },
+          },
+          cardStyleInterpolator: ({ current, layouts }) => ({
+            cardStyle: {
+              transform: [{
+                translateY: current.progress.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [layouts.screen.height, 0],
+                }),
+              }],
+            },
+            overlayStyle: {
+              opacity: current.progress.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, 0.5],
+              }),
+            },
+          }),
+        }}
+      />
     </Stack>
   )
 }

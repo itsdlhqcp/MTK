@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StyleSheet, TouchableOpacity, Alert, Animated, RefreshControl } from "react-native";
 import Input from '../../components/Input';
-import { fetchPeopleReviewReplies, removeReplyPeopleReview } from "../../services/releaseService";
+import { fetchPeopleReviewReplies, fetchPeoplesReleaseDetailsUsingTitle, removeReplyPeopleReview, fetchPeoplesReleaseDetailsx } from "../../services/releaseService";
 import { createReviewReply, removeReview, fetchReviewReplies, fetchReleaseDetails, createReleaseReview, fetchPeoplesReleaseDetails, createPeopleReleaseReview, removePeopleReview, createPeopleReviewReply } from "../../services/ottService"
 // import { fetchReviewReplies  } from '../services/ottService'
 import { View } from "react-native";
@@ -24,6 +24,7 @@ import PeoplesPreviewList from "./streamPeopleReview";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useFocusEffect } from "@react-navigation/native";
 import { useReview } from "../../contexts/ReviewContext";
+import PeoplesReviewList from "../releasePeopleSection/releasePeopleReview";
 
 const MIN_CHARS = 0;
 
@@ -56,6 +57,40 @@ const StreamPeopleDetails = () => {
     const [isProfilePopupVisible, setIsProfilePopupVisible] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const { updateReviewData} = useReview();
+    const [thReview, setThReview] = useState(null);  // TH RENDER VARIABLE
+
+    useEffect(() => {
+        if (release && release.connectedId) {
+            getThPeoplesReleaseDetails();
+        }
+    }, [release]);
+
+    useEffect(() => {
+       // getThPeoplesReleaseDetails();
+        getAreleaseDetails();
+        getReleaseDetails();
+        subscribeToChanges();
+        return () => {
+            cleanup();
+        };
+    }, []);
+
+    const getThPeoplesReleaseDetails = async () => {
+        if (!release || !release.connectedId) {
+            console.log("Release or connectedId not available yet");
+            return;
+        }
+        
+        setStartLoading(true);
+        try {
+            let res = await fetchPeoplesReleaseDetailsx(release.connectedId);
+            if (res.success) setThReview(res.data);
+        } catch (error) {
+            console.error("Error fetching people's release details:", error);
+        } finally {
+            setStartLoading(false);
+        }
+    };
 
     const handleRefresh = useCallback(() => {
         setRefreshing(true);
@@ -77,16 +112,6 @@ const StreamPeopleDetails = () => {
           }
         }, [router, reviewRef, ratingModalVisible])
       );
-
-
-    useEffect(() => {
-        getAreleaseDetails();
-        subscribeToChanges();
-        return () => {
-            cleanup();
-        };
-    }, []);
-
 
       const getAreleaseDetails = async () => {
             setStartLoading(true);
@@ -113,14 +138,6 @@ const StreamPeopleDetails = () => {
         setSelectedUser(userData);
         setIsProfilePopupVisible(true);
     };
-
-    useEffect(() => {
-        getReleaseDetails();
-        subscribeToChanges();
-        return () => {
-            cleanup();
-        };
-    }, []);
 
     const getReleaseDetails = async () => {
         setStartLoading(true);
@@ -510,15 +527,23 @@ const StreamPeopleDetails = () => {
             return "Share your thoughts...";
         };
     
-        if (startLoading) return <View style={styles.center}><Loading /></View>;
+        // if (startLoading) return <View style={styles.center}><Loading /></View>;
     
-        if (!release) {
-            return (
-                <View style={[styles.center, { justifyContent: 'flex-start', marginTop: 100 }]}>
-                    <Text style={styles.notFound}>Release not found</Text>
-                </View>
-            );
-        }
+        // if (!release) {
+        //     return (
+        //         <View style={[styles.center, { justifyContent: 'flex-start', marginTop: 100 }]}>
+        //             <Text style={styles.notFound}>Release not found</Text>
+        //         </View>
+        //     );
+        // }
+
+        if (startLoading || !release) return (
+            <View style={[styles.center, { backgroundColor: "black" }]}>
+               <View style={styles.loading}>
+                  <FeedLoader size="medium" color={theme.colors.assent} />
+               </View>
+            </View>
+          );
       // ######################################################################################################################################
         const isCurrentUserReview = release?.peoplesReview?.some(review => review?.user?.id === user?.id);
 
@@ -545,7 +570,11 @@ const StreamPeopleDetails = () => {
             adminReviewRef.current = text;
         };
 
-        const hasUserPostedReview = release?.dpeopreviews?.some(
+    // to check user review from digital
+        const hasUserPostedReview = thReview?.peoplesReview?.some(
+            (review) => review.user?.id === user?.id);
+    // to check user review from theatre
+        const hasUserPosterTheatreReview = release?.theatreReviews?.some(
             (review) => review.user?.id === user?.id);
 
             // trigger to get data 
@@ -604,6 +633,8 @@ const StreamPeopleDetails = () => {
                           }
 
            const isadmin =  user?.id === "a4424502-53de-4814-8882-7a4b5c09a76c"
+
+          // console.log('th release ##@@', thReview);
     
         return (
             
@@ -738,6 +769,19 @@ const StreamPeopleDetails = () => {
                             onhandleEdit={handleEditReview} 
                             />
 
+                     {thReview?.peoplesReview && (
+                            <PeoplesReviewList
+                                reviews={thReview?.peoplesReview || []}
+                                releaseId={thReview.id}
+                                releaseUserId={thReview.userId}
+                                currentUser={user}
+                                onDeleteReview={onDeleteReview} // upgrade
+                                openProfilePopup={openProfilePopup}
+                                reviewId={reviewId} // need  a change 
+                                onhandleEdit={handleEditReview} // upgrade
+                            />
+                     )}
+                
                     <ProfilePopup
                         user={selectedUser}
                         visible={isProfilePopupVisible}
@@ -748,10 +792,10 @@ const StreamPeopleDetails = () => {
 
                     {/* Adding the floating button */}
 
-                  {!hasUserPostedReview  && (
+                  {!hasUserPostedReview && !hasUserPosterTheatreReview  && (
                         <TouchableOpacity 
-                        style={styles.floatingButton}
-                        onPress={onNewReview}
+                           style={styles.floatingButton}
+                           onPress={onNewReview}
                         >
                         <Icon 
                             name="pencil" 
@@ -781,10 +825,10 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#121212',
-        paddingVertical: Math.round(wp(7))
+       // paddingVertical: Math.round(wp(7))
     },
     list: {
-        paddingHorizontal: Math.round(wp(4))
+       // paddingHorizontal: Math.round(wp(4))
     },
     inputContainer: {
         flexDirection: 'row',
@@ -859,7 +903,7 @@ const styles = StyleSheet.create({
         opacity: 0.7
     },
     reviewsContainer: {
-        marginVertical: hp(2),
+        marginHorizontal: hp(1),
         gap: hp(2)
     },
     noReviews: {

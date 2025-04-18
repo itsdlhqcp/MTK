@@ -88,7 +88,7 @@ const Header = memo(({ title, notificationCount, setNotificationCount, router })
       <Text style={styles.title}>{title}</Text>
       
       <View style={styles.icons}>
-        {/* <Pressable onPress={() => {
+        <Pressable onPress={() => {
           setNotificationCount(0);
           router.push('notifications');
         }}>
@@ -100,7 +100,7 @@ const Header = memo(({ title, notificationCount, setNotificationCount, router })
               </View>
             )
           }
-        </Pressable> */}
+        </Pressable>
         {/* <Pressable onPress={() => router.push('createFeed')}>
           <Icon name="plus" size={hp(3.2)} color="white" />
         </Pressable>

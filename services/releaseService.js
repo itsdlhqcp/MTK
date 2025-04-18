@@ -642,4 +642,54 @@ export const removePeopleReviewUpvote = async (peoplesReviewId, userId) => {
           };
         }
       };
+
+      // creating a funcyion to get people review details using title
+
+      export const fetchPeoplesReleaseDetailsUsingTitle = async (title) => {
+        try {
+          const { data, error } = await supabase
+            .from('releases')
+            .select(`*,
+              user: users (id, name, image),
+              peoplesReview(*, user: users(id, name, image),
+               threviewupvote(*),threviewdownvote(*),replyPeopleReviews(*))
+              `
+             )
+            .eq('body', title)
+            .order("created_at", { ascending: false, foreignTable: "peoplesReview", foreignColumn: "created_at" })
+            .single();
+          if (error) {
+            console.log('Fetch peoples releases details error: ', error);
+            return { success: false, msg: 'Could not peoplw fetch releases' };
+          }
+          return { success: true, data };
+        } catch (error) {
+          return { success: false, msg: 'Could not fetch the peoples reviews releases'};
+        }
+      };
+
+
+
+      export const fetchPeoplesReleaseDetailsx = async (postId) => {
+        try {
+          const { data, error } = await supabase
+            .from('releases')
+            .select(`*,
+              user: users (id, name, image),
+              peoplesReview(*, user: users(id, name, image),
+               threviewupvote(*),threviewdownvote(*),replyPeopleReviews(*))
+              `
+             )
+            .eq('id', postId)
+            .order("created_at", { ascending: false, foreignTable: "peoplesReview", foreignColumn: "created_at" })
+            .single();
+          if (error) {
+            console.log('Fetch peoples releases details error: ', error);
+            return { success: false, msg: 'Could not peoplw fetch releases' };
+          }
+          return { success: true, data };
+        } catch (error) {
+          return { success: false, msg: 'Could not fetch the peoples reviews releases'};
+        }
+      };
   

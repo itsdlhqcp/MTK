@@ -27,7 +27,10 @@ const Notifications = () => {
   return (
    <ScreenWrapper>
       <View style={styles.container}>
-         <Header title="Notifications" />
+         <Header
+          title="Notifications"
+          showBackButton={true}
+          />
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.listStyle}>
            {
              notifications.map(item=>{

@@ -536,16 +536,16 @@ useEffect(() => {
             }
             return "Share your thoughts...";
         };
-    
-        // if (startLoading || !release) return (
-        //     <View style={styles.center}>
-        //         <View style={styles.loading}>
-        //             <FeedLoader size="medium" color={theme.colors.assent} />
-        //         </View>
-        //     </View>
-        // );
 
-        if (startLoading || !release) return (
+        if (!release) return (
+            <View style={[styles.center, { backgroundColor: "black" }]}>
+               <View style={styles.loading}>
+                  <FeedLoader size="medium" color={theme.colors.assent} />
+               </View>
+            </View>
+          );
+
+          if (startLoading) return (
             <View style={[styles.center, { backgroundColor: "black" }]}>
                <View style={styles.loading}>
                   <FeedLoader size="medium" color={theme.colors.assent} />
@@ -553,13 +553,6 @@ useEffect(() => {
             </View>
           );
     
-        // if () {
-        //     return (
-        //         <View style={[styles.center, { justifyContent: 'flex-start', marginTop: 100 }]}>
-        //             <Text style={styles.notFound}>Release not found</Text>
-        //         </View>
-        //     );
-        // }
 
         // console.log('Below are the set of peoples reviews', release?.peoplesReview);
         //  const isCurrentUserReview = release?.peoplesReview?.user?.id === user?.id;  // this code not working
@@ -808,10 +801,10 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#121212',
-        paddingVertical: Math.round(wp(7))
+       // paddingVertical: Math.round(wp(7))
     },
     list: {
-        paddingHorizontal: Math.round(wp(4))
+      //  paddingHorizontal: Math.round(wp(4))
     },
     inputContainer: {
         flexDirection: 'row',
@@ -890,7 +883,8 @@ const styles = StyleSheet.create({
     reviewsContainer: {
      //   marginVertical: hp(2),
       //  gap: hp(2),
-        borderWidth: 0
+        borderWidth: 0,
+        marginHorizontal: hp(1)
     },
     noReviews: {
         padding: hp(2),
