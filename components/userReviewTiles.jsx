@@ -590,7 +590,7 @@ const styles = StyleSheet.create({
   ratingtext: {
     fontSize: hp(1.6),
     fontWeight: '500',
-    color: theme.colors.primary,
+    color: theme.colors.ourgn,
   },
   gridRatingContainer: {
     position: 'absolute',
@@ -606,7 +606,7 @@ const styles = StyleSheet.create({
   gridRatingText: {
     fontSize: hp(1.4),
     fontWeight: '500',
-    color: theme.colors.primary,
+    color: theme.colors.ourgn,
     marginLeft: wp(1),
   },
   dayContainer: {

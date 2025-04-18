@@ -37,7 +37,7 @@ const darkTheme = {
 
 const ITEMS_PER_PAGE = 4;
 // Set cache timeout (in milliseconds)
-const CACHE_TIMEOUT = 12 * 60 * 60 * 1000; // 12 hrs
+const CACHE_TIMEOUT = 44 * 60 * 60 * 1000; // 12 hrs
 
 const Profile = () => {
   const { user, navigationGuard } = useAuth();

@@ -12,6 +12,7 @@ import { usePost } from '../contexts/PostContext';
 import YoutubeIframe from 'react-native-youtube-iframe';
 import Avatar from './Avatar';
 import { useFocusEffect } from '@react-navigation/native';
+import AspectRatioImage from './AspectRatioImage';
 
 const textStyle = {
   color: theme.colors.light || '#E0E0E0', 
@@ -27,39 +28,39 @@ const tagsStyles = {
 };
 
 // Modified AspectRatioImage component to ensure full width
-const AspectRatioImage = ({ source, maxHeight = hp(64), style = {} }) => {
-  const [imageHeight, setImageHeight] = useState(hp(35)); // Default height
+// const AspectRatioImage = ({ source, maxHeight = hp(64), style = {} }) => {
+//   const [imageHeight, setImageHeight] = useState(hp(35)); // Default height
   
-  const onImageLoad = (event) => {
-    const { width, height } = event.nativeEvent.source;
-    if (width && height) {
-      // Calculate the height needed to maintain aspect ratio at full screen width
-      const screenWidth = wp(100);
-      const scaledHeight = (height / width) * screenWidth;
+//   const onImageLoad = (event) => {
+//     const { width, height } = event.nativeEvent.source;
+//     if (width && height) {
+//       // Calculate the height needed to maintain aspect ratio at full screen width
+//       const screenWidth = wp(100);
+//       const scaledHeight = (height / width) * screenWidth;
       
-      // Limit the height to maxHeight if needed
-      setImageHeight(Math.min(scaledHeight, maxHeight));
-    }
-  };
+//       // Limit the height to maxHeight if needed
+//       setImageHeight(Math.min(scaledHeight, maxHeight));
+//     }
+//   };
 
-  return (
-    <View style={[styles.imageContainer, style]}>
-      <Image
-        source={source} 
-        transition={100}
-        style={[
-          styles.image,
-          {
-            width: '100%',
-            height: imageHeight
-          }
-        ]}
-        onLoad={onImageLoad}
-        resizeMode="cover"
-      />
-    </View>
-  );
-};
+//   return (
+//     <View style={[styles.imageContainer, style]}>
+//       <Image
+//         source={source} 
+//         transition={100}
+//         style={[
+//           styles.image,
+//           {
+//             width: '100%',
+//             height: imageHeight
+//           }
+//         ]}
+//         onLoad={onImageLoad}
+//         resizeMode="cover"
+//       />
+//     </View>
+//   );
+// };
 
 // Function to extract YouTube ID from a URL
 const extractYouTubeID = (url) => {
@@ -275,6 +276,7 @@ const TwistCard = ({
       {item?.file?.includes('postImage') && (
           <AspectRatioImage
               source={getSupabaseFileUrl(item.file)}
+              priority={isVisible}
           />
       )}
 

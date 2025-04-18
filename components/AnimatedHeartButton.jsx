@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
     gap: 5,
   },
   count: {
-    color: theme.colors.primaryDark,
+    color: theme.colors.text,
     fontSize: hp(1.8),
     fontWeight: theme.fonts.medium
   }

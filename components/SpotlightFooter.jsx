@@ -33,7 +33,7 @@ const SpotlightFooter = ({
           />
           
           <TouchableOpacity style={styles.actionButton} onPress={openPostDetails}>
-            <Icon name='comment' size={hp(2.8)} strokeWidth={2} color={theme.colors.primaryDark} />
+            <Icon name='comment' size={hp(2.8)} strokeWidth={2} color={theme.colors.primary} />
           </TouchableOpacity>
           
           <TouchableOpacity style={styles.actionButton}>

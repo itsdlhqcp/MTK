@@ -1,10 +1,11 @@
 const theme = {
     colors: {
-        primary: '#00C26F',  
+        primary: '#00C26F',   // #0066B1    #00C26F  
         primaryDark: '#00ac62',
         dark: '#3E3E3E',
         darkLight: '#E1E1E1',
         gray: '#e3e3e3',
+        ourgn: '#00C26F',
 
         // aestatics
         bmw: '#0066B1',
