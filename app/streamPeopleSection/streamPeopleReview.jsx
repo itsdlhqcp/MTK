@@ -169,15 +169,15 @@ const toggleReplyBox = (reviewId, username = null) => {
     }
   };
 
-  if (reviews.length === 0) {
-    return (
-      <View style={styles.noReviews}>
-        <Text style={styles.noReviewsText}>
-          Be the first to write a review!
-        </Text>
-      </View>
-    );
-  }
+  // if (reviews.length === 0) {
+  //   return (
+  //     <View style={styles.noReviews}>
+  //       <Text style={styles.noReviewsText}>
+  //         Be the first to write a review!
+  //       </Text>
+  //     </View>
+  //   );
+  // }
 // console.log("reviewId", reviewId);
 // console.log("dpeoples reviews id", reviews.id);
   return (

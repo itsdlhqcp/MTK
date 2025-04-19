@@ -9,7 +9,9 @@ import { fetchOtt } from '../../services/ottService';
 import ReleaseList from '../../components/ReleaseList';
 import OttList from '../../components/OttList';
 import { supabase } from '../../lib/supabase';
+import { NetworkUtils } from '../../utils/network';
 import theme from '../../constants/theme';
+import Icon from '../../assets/icons';
 
 const ITEMS_PER_PAGE = 4;
 
@@ -28,6 +30,30 @@ const upcoming = () => {
        const [ottsLoading, setOttsLoading] = useState(false);
        const [hasMoreOtts, setHasMoreOtts] = useState(true);
        const [ottsPage, setOttsPage] = useState(1);
+       const [isConnected, setIsConnected] = useState(true);
+       const [initialCheckDone, setInitialCheckDone] = useState(false);
+       const [offlineMode, setOfflineMode] = useState(false);
+
+       // Check network status on mount
+        useEffect(() => {
+            const checkNetworkStatus = async () => {
+                const connected = await NetworkUtils.isConnected();
+                setIsConnected(connected);
+                setOfflineMode(!connected);
+                setInitialCheckDone(true);
+            };
+            
+            checkNetworkStatus();
+            
+            // Set up network listener
+            const unsubscribe = NetworkUtils.initNetworkListener((connected) => {
+                setIsConnected(connected);
+                setOfflineMode(!connected);
+                setInitialCheckDone(true);
+            });
+            
+            return () => unsubscribe();
+        }, []);
 
     // Handle real-time release updates
     const handleReleaseEvent = (payload) => {
@@ -78,7 +104,10 @@ const upcoming = () => {
     };
 
     // Set up Supabase real-time subscriptions
-    useEffect(() => {
+    // Set up Supabase real-time subscriptions
+useEffect(() => {
+    // Only subscribe when online
+    if (isConnected) {
         const releaseChannel = supabase
             .channel('releases')
             .on('postgres_changes',
@@ -103,11 +132,21 @@ const upcoming = () => {
             supabase.removeChannel(releaseChannel);
             supabase.removeChannel(ottChannel);
         };
-    }, []);
+    } else if (initialCheckDone) {
+        // When offline but initial check is done, try to use cached data
+        console.log('Device is offline - using cached data if available');
+    }
+}, [isConnected, initialCheckDone]);
 
 // Fetch releases with pagination
 const getReleases = async () => {
     if (releasesLoading || !hasMoreReleases) return;
+
+      // Skip fetch if offline
+      if (!isConnected) {
+        console.log('Skipping fetch - device is offline');
+        return;
+    }
     
     try {
         setReleasesLoading(true);
@@ -142,6 +181,12 @@ const getReleases = async () => {
 // Fetch OTT platforms with pagination
 const getOtts = async () => {
     if (ottsLoading || !hasMoreOtts) return;
+
+      // Skip fetch if offline
+      if (!isConnected) {
+        console.log('Skipping fetch - device is offline');
+        return;
+    }
     
     try {
         setOttsLoading(true);
@@ -212,31 +257,73 @@ const getOtts = async () => {
     // console.log('here are the Otts which are rendered', otts);
     const renderContent = () => {
         if (activeTab === 'ott') {
+            if (!isConnected && otts.length === 0) {
+                return (
+                    <View style={styles.contentContainer}>
+                        {/* <Text style={{ color: '#FFFFFF' }}>
+                            You're offline. Connect to the internet to see digital releases.
+                        </Text> */}
+                           <Icon
+                                name="noicon"
+                                size={hp(10.5)} 
+                                color="white" 
+                            />
+                            <Text style={styles.offlineTextx}>You're offline</Text>
+                        <Text style={styles.offlineSubText}>
+                            Connect to the internet to see the digital's
+                        </Text>
+          {/* <FastImage
+            style={styles.image}
+            source={require('../assets/images/iconsSvg/Shadow_Reavers.webp')}
+            resizeMode={FastImage.resizeMode.contain}
+          /> */}
+          {/* <Text style={styles.offlineText}>You're offline</Text>
+          <Text style={styles.offlineSubText}>
+            Connect to the internet to see the library
+          </Text> */}
+                    </View>
+                );
+            }
             return (
                 <View>
-                {/* streams */}
-                <OttList
-                  streams={otts}
-                  currentUser={user}
-                  router={router}
-                  loading={ottsLoading}
-                  hasMore={hasMoreOtts}
-                  onLoadMore={getOtts}
-               />
-            </View>
+                    <OttList
+                        streams={otts}
+                        currentUser={user}
+                        router={router}
+                        loading={ottsLoading}
+                        hasMore={hasMoreOtts && isConnected}
+                        onLoadMore={getOtts}
+                    />
+                </View>
             );
         }
+        
+        if (!isConnected && releases.length === 0) {
+            return (
+                <View style={styles.contentContainer}>
+                      <Icon
+                                name="noicon"
+                                size={hp(10.5)} 
+                                color="white" 
+                            />
+                            <Text style={styles.offlineTextx}>You're offline</Text>
+                        <Text style={styles.offlineSubText}>
+                            Connect to the internet to see film releases
+                        </Text>
+                </View>
+            );
+        }
+        
         return (
             <View>
-                {/* releases rendering */}
-               <ReleaseList
-                  releases={releases}
-                  currentUser={user}
-                  router={router}
-                  loading={releasesLoading}
-                  hasMore={hasMoreReleases}
-                  onLoadMore={getReleases}
-               />
+                <ReleaseList
+                    releases={releases}
+                    currentUser={user}
+                    router={router}
+                    loading={releasesLoading}
+                    hasMore={hasMoreReleases && isConnected}
+                    onLoadMore={getReleases}
+                />
             </View>
         );
     };
@@ -244,6 +331,12 @@ const getOtts = async () => {
     // bg={"#121212"}
     return (
         <ScreenWrapper bg="black">
+             {/* Offline Mode Indicator */}
+             {offlineMode && (
+                    <View style={styles.offlineBar}>
+                        <Text style={styles.offlineText}>Offline Mode - Network Unavailable</Text>
+                    </View>
+              )}
             <TabBar />
             {renderContent()}
         </ScreenWrapper>
@@ -289,8 +382,41 @@ const styles = StyleSheet.create({
     listStyle: {
         padding: 18, 
         paddingHorizontal: wp(4)
-      
-    }
+    },
+    offlineBar: {
+        padding: hp(1),
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: theme.colors.text, // Using your theme color from example
+    },
+    offlineText: {
+        color: '#FFFFFF',
+        fontWeight: 'bold',
+        fontSize: hp(1.4),
+    },
+    offlineContainer: {
+        flex: 1,
+       justifyContent: 'center',
+       alignItems: 'center',
+       minHeight: 300,
+     },
+     offlineImage: {
+       width: wp(50),
+       height: wp(50),
+       marginBottom: hp(2),
+     },
+     offlineTextx: {
+       fontSize: 20,
+       fontWeight: 'bold',
+       color: 'white',
+       marginBottom: hp(1),
+     },
+     offlineSubText: {
+       fontSize: 14,
+       color: '#666',
+       textAlign: 'center',
+       paddingHorizontal: wp(10),
+     },
 });
 
 export default upcoming;

@@ -80,6 +80,7 @@ import Chevrondown from "./Chevrondown";
 import Tv from "./Tv";
 import Plot from "./Plot";
 import Repeat from "./Repeat";
+import Noint from "./Noint";
 
 const icons = {
     home: Home,
@@ -161,7 +162,8 @@ const icons = {
     chevronup: Chevronup,
     tv: Tv,
     plot: Plot,
-    repeat: Repeat
+    repeat: Repeat,
+    noicon: Noint
 }
 
 const Icon = ({name, ...props}) => {

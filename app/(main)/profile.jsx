@@ -99,62 +99,6 @@ const Profile = () => {
     }
   };
 
-  // Preload and cache user avatar and post images
-  // const precacheImages = useCallback((userData, postsData) => {
-  //   // Create an array of image URIs to precache
-  //   const imagesToCache = [];
-    
-  //   // Add profile image
-  //   if (userData?.image) {
-  //     imagesToCache.push(userData.image);
-  //   }
-    
-  //   // Add post images
-  //   if (postsData && postsData.length > 0) {
-  //     postsData.forEach(post => {
-  //       if (post.image) {
-  //         imagesToCache.push(post.image);
-  //       }
-  //     });
-  //   }
-    
-  //   // Precache images using FastImage
-  //   FastImage?.preload(
-  //     imagesToCache.map(uri => ({ uri, cache: FastImage.cacheControl.immutable }))
-  //   );
-  // }, []);
-
-  // In your Profile component, modify the precacheImages function:
-
-// const precacheImages = useCallback((userData, postsData) => {
-//   // Create an array of image URIs to precache
-//   const imagesToCache = [];
-  
-//   // Add profile image
-//   if (userData?.image) {
-//     imagesToCache.push(userData.image);
-//   }
-  
-//   // Add post images
-//   if (postsData && postsData.length > 0) {
-//     postsData.forEach(post => {
-//       if (post.image) {
-//         imagesToCache.push(post.image);
-//       }
-//     });
-//   }
-  
-//   // Make sure FastImage is imported and available
-//   if (FastImage && FastImage.preload && imagesToCache.length > 0) {
-//     // Precache images using FastImage
-//     FastImage.preload(
-//       imagesToCache.map(uri => ({ uri, cache: FastImage.cacheControl.immutable }))
-//     );
-//   } else {
-//     console.log('FastImage preload not available or no images to precache');
-//   }
-// }, []);
-
 // Replace the precacheImages function with this:
 const precacheImages = useCallback(async (userData, postsData) => {
   // Create an array of image URIs to precache
@@ -351,7 +295,7 @@ const precacheImages = useCallback(async (userData, postsData) => {
     <ScreenWrapper bg={activeTheme.colors.background}>
       {/* Offline Mode Indicator */}
       {offlineMode && (
-        <View style={[styles.offlineBar, { backgroundColor: activeTheme.colors.rose }]}>
+        <View style={[styles.offlineBar, { backgroundColor: theme.colors.text }]}>
           <Text style={styles.offlineText}>Offline Mode - Network Unavailable</Text>
         </View>
       )}

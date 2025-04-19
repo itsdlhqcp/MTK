@@ -14,7 +14,8 @@ import { getUserData } from '../../services/userServices'
 import MLoading from '../../components/MaterialLoader'
 import FeedLoader from '../../components/FeedLoader'
 import { useFocusEffect } from '@react-navigation/native';
-import SpotlightCard from '../../components/SpotlightCard'
+import SpotlightCard from '../../components/SpotlightCard';
+import { NetworkUtils } from '../../utils/network';
 
 // Convert PostCard to a memoized component for optimized rendering
 const MemoizedPostCard = memo(({ item, currentUser, router, isVisible }) => {
@@ -75,7 +76,7 @@ const EmptyListComponent = memo(({ loading }) => {
   return (
     <View style={styles.loadingContainer}>
       <Text style={styles.noPosts}>
-        {loading ? <MLoading /> : "No feeds found!!"}
+        {loading ? <MLoading /> : "No Network found!!"}
       </Text>
     </View>
   );
@@ -101,27 +102,10 @@ const Header = memo(({ title, notificationCount, setNotificationCount, router })
             )
           }
         </Pressable>
-        {/* <Pressable onPress={() => router.push('createFeed')}>
-          <Icon name="plus" size={hp(3.2)} color="white" />
-        </Pressable>
-        <Pressable onPress={() => router.push('newRelease')}>
-          <Icon name="plus" size={hp(3.2)} color="green" />
-        </Pressable>
-        <Pressable onPress={() => router.push('newOtt')}>
-          <Icon name="plus" size={hp(3.2)} color="red" />
-        </Pressable> */}
 
         <Pressable onPress={() => router.push('newOtt')}>
                   <Icon name="save" size={hp(3)} color="white" />
                 </Pressable>
-
-        {/* <Pressable 
-          style={styles.libraryButton}
-          onPress={() => router.push('library')}  
-          >
-          <Text style={styles.buttonTextTop}>PloTwist</Text>
-          <Text style={styles.buttonTextBottom}>Library</Text>
-      </Pressable> */}
         
       </View>
     </View>
@@ -158,7 +142,28 @@ const Home = () => {
     const [hasMore, setHasMore] = useState(true);
     const [page, setPage] = useState(1);
     const [notificationCount, setNotificationCount] = useState(0);
+    const [isConnected, setIsConnected] = useState(true);
+    const [initialCheckDone, setInitialCheckDone] = useState(false);
     const ITEMS_PER_PAGE = 12;
+
+    // Check network status on mount
+    useEffect(() => {
+      const checkNetworkStatus = async () => {
+        const connected = await NetworkUtils.isConnected();
+        setIsConnected(connected);
+        setInitialCheckDone(true);
+      };
+      
+      checkNetworkStatus();
+      
+      // Set up network listener
+      const unsubscribe = NetworkUtils.initNetworkListener((connected) => {
+        setIsConnected(connected);
+        setInitialCheckDone(true);
+      });
+      
+      return () => unsubscribe();
+    }, []);
 
     // Handle real-time post updates - memoize handler functions
     const handlePostEvent = useCallback(async (payload) => {
@@ -199,7 +204,7 @@ const Home = () => {
 
     // Set up Supabase real-time subscription
     useEffect(() => {
-        if (!user?.id) return;
+        if (!user?.id || !isConnected) return;
         
         const postChannel = supabase
             .channel('posts')
@@ -224,11 +229,11 @@ const Home = () => {
             supabase.removeChannel(postChannel);
             supabase.removeChannel(notificationChannel);
         };
-    }, [user?.id, handlePostEvent, handleNewNotification]);
+    }, [user?.id, handlePostEvent, handleNewNotification, isConnected]);
 
     // Fetch posts with pagination
     const getPosts = useCallback(async () => {
-        if (loading || !hasMore) return;
+        if (loading || !hasMore || !isConnected) return;
         
         try {
             setLoading(true);
@@ -258,7 +263,7 @@ const Home = () => {
         } finally {
             setLoading(false);
         }
-    }, [loading, hasMore, page, posts.length]);
+    }, [loading, hasMore, page, posts.length, isConnected]);
 
     // Memoize list optimization functions
     const renderItem = useCallback(({ item }) => (
@@ -273,10 +278,10 @@ const Home = () => {
     const keyExtractor = useCallback((item) => item.id.toString(), []);
     
     const handleEndReached = useCallback(() => {
-      if (hasMore && !loading) {
+      if (hasMore && !loading && isConnected) {
         getPosts();
       }
-    }, [hasMore, loading, getPosts]);
+    }, [hasMore, loading, getPosts, isConnected]);
     
     // Memoize ListFooterComponent and ListEmptyComponent
     const memoizedFooter = useMemo(() => (
@@ -306,6 +311,12 @@ const Home = () => {
 
     return (
       <ScreenWrapper bg={"#121212"}>   
+          {/* Offline Mode Indicator */}
+            {!isConnected && (
+              <View style={styles.offlineBar}>
+                <Text style={styles.offlineText}>Offline Mode - Network Unavailable</Text>
+              </View>
+            )}
         <View style={styles.container}>
           {/* Memoized Header */}
           <Header 
@@ -390,7 +401,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     minHeight: hp(78)
   },
-    // New styles for the library button
     libraryButton: {
       backgroundColor: "#990000", // Or any color you prefer #990000 #1C3E76
       paddingVertical: hp(0.3),
@@ -406,9 +416,20 @@ const styles = StyleSheet.create({
       lineHeight: hp(2.4)
     },
     buttonTextBottom: {
-      color: 'rgba(255, 255, 255, 0.9)', // Slightly transparent for hierarchy
+      color: 'rgba(255, 255, 255, 0.9)', 
       fontSize: hp(1.6),
       fontWeight: '500',
       marginTop: -hp(0.5)
     },
+    offlineBar: {
+      padding: hp(1),
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.colors.text // or use a consistent color from your theme
+    },
+    offlineText: {
+      color: '#FFFFFF',
+      fontWeight: 'bold',
+      fontSize: hp(1.4),
+    }
 })
