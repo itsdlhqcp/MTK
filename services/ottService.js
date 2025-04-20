@@ -538,5 +538,89 @@ export const createPeopleReviewUpvote = async (upvote) => {
                 };
               }
             };
+
+          // First, let's create a function to get the latest stream ID
+          const getLatestStreamId = async () => {
+            try {
+              const { data, error } = await supabase
+                .from('streams')
+                .select('id')
+                .order('created_at', { ascending: false })
+                .limit(1);
+                
+              if (error) {
+                console.error("Error fetching latest stream:", error);
+                return { success: false, error: error.message };
+              }
+              
+              return { 
+                success: true, 
+                latestId: data && data.length > 0 ? data[0].id : 0 
+              };
+            } catch (error) {
+              console.error("Error in getLatestStreamId:", error);
+              return { success: false, error: error.message };
+            }
+          };
+
+          // Now let's create a function to update the release's sconnectedId
+          export const updateReleaseSconnectedId = async (releaseId) => {
+            try {
+              // Get the latest stream ID
+              const streamResult = await getLatestStreamId();
+              
+              if (!streamResult.success) {
+                return streamResult;
+              }
+              
+              // Calculate the new sconnectedId (latest ID + 1)
+              const newSconnectedId = streamResult.latestId + 1;
+              
+              // Update the release record
+              const { data, error } = await supabase
+                .from('releases')
+                .update({ sconnectedId: newSconnectedId })
+                .eq('id', releaseId)
+                .select()
+                .single();
+                
+              if (error) {
+                console.error("Error updating release sconnectedId:", error);
+                return { success: false, error: error.message };
+              }
+              
+              return { success: true, data };
+            } catch (error) {
+              console.error("Error in updateReleaseSconnectedId:", error);
+              return { success: false, error: error.message };
+            }
+          };
+
+          export const fetchPeoplesStreamDetailsx = async (postId) => {
+            try {
+              const { data, error } = await supabase
+                .from('streams')
+                .select(`*,
+                  user: users(id, name, image),
+                  dpeopreviews(*, user: users(id, name, image),
+                  dupvote(*),ddownvotes(*),replydpeopreviews(*))
+                  `
+                 )
+                .eq('id', postId)
+                .order("created_at", { ascending: false, foreignTable: "dpeopreviews", foreignColumn: "created_at" })
+                .single();
+              if (error) {
+                console.log('Fetch peoples stream details error: ', error);
+                return { success: false, msg: 'Could not people fetch streams' };
+              }
+              return { success: true, data };
+            } catch (error) {
+              return { success: false, msg: 'Could not fetch the peoples streams releases'};
+            }
+          };
+
+
+
+            
         
         

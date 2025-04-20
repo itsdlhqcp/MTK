@@ -15,7 +15,7 @@ import * as ImagePicker from 'expo-image-picker';
 import DatePicker from '../components/DatePicker'
 import RatingInput from '../components/RatingInput'
 import UserRatingImpact from '../components/userRatingImpact'
-import { createOrUpdateOtt, fetchOtt } from '../services/ottService'
+import { createOrUpdateOtt, fetchOtt, updateReleaseSconnectedId } from '../services/ottService'
 import TagInput from '../components/OttTagInput'
 import { fetchReleases } from '../services/releaseService'
 import moment from 'moment'
@@ -384,6 +384,21 @@ const NewOtt = () => {
       Alert.alert('Error', 'Enter Title, post img and release date, platforms');
       return;
     }
+
+      // If connectedId exists, update the sconnectedId before creating/updating the OTT
+      if (connectedId) {
+        try {
+          const result = await updateReleaseSconnectedId(connectedId);
+          if (result.success) {
+            console.log('Updated sconnectedId successfully:', result.data.sconnectedId);
+          } else {
+            console.error('Failed to update sconnectedId:', result.error);
+            // You might want to alert the user or handle this error
+          }
+        } catch (error) {
+          console.error('Error updating sconnectedId:', error);
+        }
+      }
     // if (!rating) {
     //   Alert.alert('Error', 'Please enter Rating of release');
     //   return;
@@ -804,7 +819,6 @@ const NewOtt = () => {
           </>
          )}
          
-
         </ScrollView>
         <Button
           buttonStyle={{ height: hp(6.2) }}
@@ -864,7 +878,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between', // Space between user info and switch
+    justifyContent: 'space-between', 
   },
   userSection: {
     flexDirection: 'row',
@@ -884,8 +898,7 @@ const styles = StyleSheet.create({
   },
   directReleaseMessage: {
     padding: 10,
-    backgroundColor: theme.colors.primary + '20', // light version of primary color
-   // borderRadius: theme.radius.md,
+    backgroundColor: theme.colors.primary + '20', 
     alignItems: 'center',
   },
   directReleaseText: {
@@ -1089,7 +1102,6 @@ const styles = StyleSheet.create({
     fontWeight: theme.fonts.medium,
     color: 'red',
   },
-  // Styles for Film Information Section
   sectionDivider: {
     marginVertical: 10,
     paddingVertical: 6,

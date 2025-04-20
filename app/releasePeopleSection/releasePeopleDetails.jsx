@@ -20,10 +20,13 @@ import RatingModal from "../../components/RatingModel";
 import PeoplesReviewItem from "../../components/PeopleReviewItem";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import PeoplesReviewList from "./releasePeopleReview";
+import PeoplesPreviewList from "../streamPeopleSection/streamPeopleReview";
 import ProfilePopup from '../../components/profilePopup';
 import RatingBottomSheet from "../../components/RatingBottomSheet";
 import { useReview } from '../../contexts/ReviewContext';
 import { useRoute } from "@react-navigation/native";
+import { fetchPeoplesStreamDetailsx } from "../../services/ottService";
+
 const MIN_CHARS = 0;
 
 const ReleasePeopleDetails = () => {
@@ -55,6 +58,7 @@ const ReleasePeopleDetails = () => {
     const [isProfilePopupVisible, setIsProfilePopupVisible] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const { updateReviewData} = useReview();
+    const [thReview, setThReview] = useState(null);
     const route = useRoute();
 
     const handleRefresh = useCallback(() => {
@@ -114,13 +118,50 @@ useEffect(() => {
     }
   }, [route.params?.updatedReview]);
 
+        // useEffect(() => {
+        //     subscribeToChanges();
+        //     return () => {
+        //         cleanup();
+        //     };
+        // }, []);
+
+        useEffect(() => {
+                if (release && release.sconnectedId) {
+                    getThPeoplesReleaseDetails();
+                }
+            }, [release]);
+
+        // useEffect(() => {
+        //         if (release && release.connectedId) {
+        //             getThPeoplesReleaseDetails();
+        //         }
+        //     }, [release]);
+
         useEffect(() => {
             getAreleaseDetails();
+            getReleaseDetails();
             subscribeToChanges();
             return () => {
                 cleanup();
             };
         }, []);
+
+          const getThPeoplesReleaseDetails = async () => {
+                if (!release || !release.sconnectedId) {
+                    console.log("Release or connectedId not available yet");
+                    return;
+                }
+                
+                setStartLoading(true);
+                try {
+                    let res = await fetchPeoplesStreamDetailsx(release.sconnectedId);
+                    if (res.success) setThReview(res.data);
+                } catch (error) {
+                    console.error("Error fetching people's release details:", error);
+                } finally {
+                    setStartLoading(false);
+                }
+            };
     
     
           const getAreleaseDetails = async () => {
@@ -136,14 +177,6 @@ useEffect(() => {
         setSelectedUser(userData);
         setIsProfilePopupVisible(true);
     };
-
-    useEffect(() => {
-        getReleaseDetails();
-        subscribeToChanges();
-        return () => {
-            cleanup();
-        };
-    }, []);
 
     const getReleaseDetails = async () => {
         setStartLoading(true);
@@ -556,10 +589,14 @@ useEffect(() => {
 
         // console.log('Below are the set of peoples reviews', release?.peoplesReview);
         //  const isCurrentUserReview = release?.peoplesReview?.user?.id === user?.id;  // this code not working
-        const isCurrentUserReview = release?.peoplesReview?.some(review => review?.user?.id === user?.id);
+        // const isCurrentUserReview = release?.peoplesReview?.some(review => review?.user?.id === user?.id);
         
 
         const hasUserPostedReview = release?.peoplesReview?.some(
+            (review) => review.user?.id === user?.id);
+
+             // to check user review from theatre
+        const hasUserPosterTheatreReview = thReview?.dpeopreviews.some(
             (review) => review.user?.id === user?.id);
 
 
@@ -759,6 +796,19 @@ useEffect(() => {
                             onhandleEdit={handleEditReview} 
                             />
 
+                {thReview?.dpeopreviews && (
+                           <PeoplesPreviewList
+                                 reviews={thReview?.dpeopreviews || []}  
+                                 releaseId={thReview.id}
+                                 releaseUserId={thReview.userId}
+                                 currentUser={user}
+                                 onDeleteReview={onDeleteReview} // upgrade
+                                 openProfilePopup={openProfilePopup}
+                                 reviewId={reviewId} // need a change
+                                 onhandleEdit={handleEditReview}  // upgrade
+                                 />
+                                    )}
+
                     <ProfilePopup
                         user={selectedUser}
                         visible={isProfilePopupVisible}
@@ -769,7 +819,7 @@ useEffect(() => {
                    </ScrollView>
                  {/* Adding the floating button */}
 
-                 {!hasUserPostedReview && (
+                 {!hasUserPostedReview && !hasUserPosterTheatreReview && ( 
                         <TouchableOpacity 
                         style={styles.floatingButton}
                         onPress={onNewReview}
