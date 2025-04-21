@@ -81,6 +81,11 @@ import Tv from "./Tv";
 import Plot from "./Plot";
 import Repeat from "./Repeat";
 import Noint from "./Noint";
+import Report from "./Report";
+import Admin from "./Admin";
+import AddFriend from "./AddFriend";
+import Activity from "./Activity";
+import Resolve from "./Resolve";
 
 const icons = {
     home: Home,
@@ -163,7 +168,12 @@ const icons = {
     tv: Tv,
     plot: Plot,
     repeat: Repeat,
-    noicon: Noint
+    noicon: Noint,
+    report: Report,
+    admin: Admin,
+    addfriend: AddFriend,
+    activity: Activity,
+    resolve: Resolve
 }
 
 const Icon = ({name, ...props}) => {

@@ -368,7 +368,7 @@ const InstagramProfile = React.memo(({ user, router, handleLogout, theme, postCo
       <View style={styles.header}>
         <Text style={[styles.username, { color: theme.colors.textDark }]}>{user?.name}</Text>
 
-        {!offlineMode && (
+        {/* {!offlineMode && (
           <>
             <Pressable onPress={() => router.push('createFeed')}>
               <Icon name="plus" size={hp(3.2)} color="white" />
@@ -377,16 +377,34 @@ const InstagramProfile = React.memo(({ user, router, handleLogout, theme, postCo
               <Icon name="plus" size={hp(3.2)} color="green" />
             </Pressable>
             <Pressable onPress={() => router.push('newOtt')}>
-              <Icon name="plus" size={hp(3.2)} color="red" />
+              <Icon name="plus" size={hp(3.2)} color="red" />   addfriend
             </Pressable>
           </>
-        )}
+        )} */}
+        <View style={styles.toppanel}>
+
+        <TouchableOpacity 
+          style={[styles.logoutButton]} 
+          onPress={() => router.push('find')}
+        >
+          <Icon name="addfriend" color={theme.colors.textDark} />
+        </TouchableOpacity>
+          {/* admin icon menu */}
+        <TouchableOpacity 
+          style={[styles.logoutButton]} 
+          onPress={() => router.push('AdminPanel')}
+        >
+          <Icon name="admin" color={theme.colors.textDark} />
+        </TouchableOpacity>
+         {/* menu icon here */}
         <TouchableOpacity 
           style={[styles.logoutButton]} 
           onPress={handleLogout}
         >
           <Icon name="menu" color={theme.colors.textDark} />
         </TouchableOpacity>
+        </View>
+       
       </View>
 
       {/* Profile Info Section */}
@@ -621,6 +639,9 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flexGrow: 1,
+  },
+  toppanel: {
+    flexDirection: 'row',
   }
 });
 

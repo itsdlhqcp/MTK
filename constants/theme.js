@@ -10,6 +10,7 @@ const theme = {
         // aestatics
         bmw: '#0066B1',
         assent: '#FFD700',
+        red: '#E50914',
 
         /// 
         red: '#E50914',
@@ -17,6 +18,7 @@ const theme = {
 
         // other aestatic colors
         star: '#de571a',
+        ystar: '#FFD700',
         silver: '#C0C0C0',
 
         text: '#494949',

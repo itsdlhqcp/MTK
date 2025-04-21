@@ -123,7 +123,7 @@ const SearchBar = memo(({ searchQuery, setSearchQuery }) => {
     <View style={styles.searchContainer}>
       <TextInput
         style={styles.searchInput}
-        placeholder="Search for a video topic"
+        placeholder="Search twists..."
         placeholderTextColor="#888"
         value={localSearch}
         onChangeText={setLocalSearch}
@@ -552,10 +552,10 @@ const styles = StyleSheet.create({
   },
   searchContainer: {
     flexDirection: 'row',
-    marginHorizontal: wp(4),
-    marginVertical: hp(1.5),
+    marginHorizontal: wp(0.4),
+    marginVertical: hp(0.7),
     backgroundColor: '#222',
-    borderRadius: theme.radius.sm,
+    borderRadius: 4,
     alignItems: 'center',
   },
   searchInput: {
@@ -622,7 +622,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    minHeight: hp(30),
+    minHeight: hp(78),
   },
   trendingOverlay: {
     position: 'absolute',

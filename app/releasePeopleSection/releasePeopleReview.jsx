@@ -163,7 +163,6 @@ const toggleReplyBox = (reviewId, username = null) => {
     );
   }
 
-  console.log("reviewId", reviewId);
 
   return (
     <View style={styles.reviewsContainer}>

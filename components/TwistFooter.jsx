@@ -98,7 +98,29 @@ const TwistFooter = ({
     setTwistlikes(item?.twistLikes || []);
   }, [])
 
+  // const onLike = async () => {
+  //   if(twistliked) {
+  //     let updatedUpvotes = twistlikes.filter(upvote => upvote.userId !== currentUser?.id);
+  //     setTwistlikes([...updatedUpvotes]);
+  //     const res = await removeTwistLikes(item?.id, currentUser?.id);
+  //     if(!res.success){
+  //       Alert.alert('Error', res.msg || 'Something went wrong');
+  //     }
+  //   } else {
+  //     let data = {
+  //       userId: currentUser?.id,
+  //       twistId: item?.id
+  //     }
+  //     setTwistlikes([...twistlikes, data]);
+  //     const res = await createTwistLikes(data);
+  //     if(!res.success){
+  //       Alert.alert('Error', res.msg || 'Something went wrong');
+  //     }
+  //   }
+  // }
+
   const onLike = async () => {
+    // If already liked, remove the like
     if(twistliked) {
       let updatedUpvotes = twistlikes.filter(upvote => upvote.userId !== currentUser?.id);
       setTwistlikes([...updatedUpvotes]);
@@ -107,6 +129,7 @@ const TwistFooter = ({
         Alert.alert('Error', res.msg || 'Something went wrong');
       }
     } else {
+      // If not liked yet, add the like
       let data = {
         userId: currentUser?.id,
         twistId: item?.id
@@ -115,6 +138,16 @@ const TwistFooter = ({
       const res = await createTwistLikes(data);
       if(!res.success){
         Alert.alert('Error', res.msg || 'Something went wrong');
+      }
+      
+      // If the post is currently disliked, remove the dislike
+      if(twistunliked) {
+        let updatedDownvotes = twistunlikes.filter(downvote => downvote.userId !== currentUser?.id);
+        setTwistunlikes([...updatedDownvotes]);
+        const removeRes = await removeTwistUnlikes(item?.id, currentUser?.id);
+        if(!removeRes.success){
+          Alert.alert('Error', removeRes.msg || 'Something went wrong');
+        }
       }
     }
   }
@@ -129,15 +162,38 @@ const TwistFooter = ({
       setTwistunlikes(item?.twistUnlikes || []);
     }, [])
   
+    // const onunLike = async () => {
+    //   if(twistunliked) {
+    //     let updatedUpvotes = twistunlikes.filter(upvote => upvote.userId !== currentUser?.id);
+    //     setTwistunlikes([...updatedUpvotes]);
+    //     const res = await removeTwistUnlikes(item?.id, currentUser?.id);
+    //     if(!res.success){
+    //       Alert.alert('Error', res.msg || 'Something went wrong');
+    //     }
+    //   } else {
+    //     let data = {
+    //       userId: currentUser?.id,
+    //       twistId: item?.id
+    //     }
+    //     setTwistunlikes([...twistunlikes, data]);
+    //     const res = await createTwistUnlikes(data);
+    //     if(!res.success){
+    //       Alert.alert('Error', res.msg || 'Something went wrong');
+    //     }
+    //   }
+    // }
+
     const onunLike = async () => {
+      // If already disliked, remove the dislike
       if(twistunliked) {
-        let updatedUpvotes = twistunlikes.filter(upvote => upvote.userId !== currentUser?.id);
-        setTwistunlikes([...updatedUpvotes]);
+        let updatedDownvotes = twistunlikes.filter(downvote => downvote.userId !== currentUser?.id);
+        setTwistunlikes([...updatedDownvotes]);
         const res = await removeTwistUnlikes(item?.id, currentUser?.id);
         if(!res.success){
           Alert.alert('Error', res.msg || 'Something went wrong');
         }
       } else {
+        // If not disliked yet, add the dislike
         let data = {
           userId: currentUser?.id,
           twistId: item?.id
@@ -146,6 +202,16 @@ const TwistFooter = ({
         const res = await createTwistUnlikes(data);
         if(!res.success){
           Alert.alert('Error', res.msg || 'Something went wrong');
+        }
+        
+        // If the post is currently liked, remove the like
+        if(twistliked) {
+          let updatedUpvotes = twistlikes.filter(upvote => upvote.userId !== currentUser?.id);
+          setTwistlikes([...updatedUpvotes]);
+          const removeRes = await removeTwistLikes(item?.id, currentUser?.id);
+          if(!removeRes.success){
+            Alert.alert('Error', removeRes.msg || 'Something went wrong');
+          }
         }
       }
     }
@@ -208,7 +274,7 @@ const TwistFooter = ({
                 size={24} 
                 fill={twistliked ? "" : 'transparent'} 
                 strokeWidth={1.4} 
-                color={twistliked ? '#00BCD4' : theme.colors.light || '#E0E0E0'}
+                color={twistliked ? theme.colors.bmw : theme.colors.light || '#E0E0E0'}
               />  
 
             </Animated.View>
@@ -236,7 +302,7 @@ const TwistFooter = ({
                 size={24} 
                 fill={twistunliked ? '' : 'transparent'} 
                 strokeWidth={1.4} 
-                color={twistunliked ? '#F44336' : theme.colors.light || '#E0E0E0'}
+                color={twistunliked ? theme.colors.red : theme.colors.light || '#E0E0E0'}
               />
             </Animated.View>
           </TouchableOpacity>
@@ -272,9 +338,9 @@ const TwistFooter = ({
       </View>
       
       {/* Right side save button */}
-          <TouchableOpacity>
+          {/* <TouchableOpacity>
             <Icon name='bookmark' size={24} strokeWidth={1.4} color={theme.colors.light || '#E0E0E0'} />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
     </View>
   );
 };

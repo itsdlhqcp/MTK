@@ -7,6 +7,8 @@ import { hp, wp } from '../helpers/common';
 import Icon from '../assets/icons';
 import { getSupabaseFileUrl } from '../services/imageService';
 import PratingStars from './pRatingStars';
+import DotLoader from './DotLoader';
+import MLoading from './MaterialLoader';
 
 // Modified header with toggle button that only shows for the first header
 const ReleaseDateHeader = ({ date, viewMode, onToggleView, isFirstHeader }) => (
@@ -87,7 +89,7 @@ const ReleaseList = ({ releases, currentUser, router, loading, hasMore, onLoadMo
     
     // Future dates
     if (diffDays === 1) return 'TOMORROW';
-    if (diffDays === 2) return 'DAY AFTER TOMORROW';
+    if (diffDays === 2) return 'AFTER TOMORROW';
     if (diffDays > 2 && diffDays <= 7) return 'THIS WEEK';
     if (diffDays > 7 && diffDays <= 14) return 'NEXT WEEK';
     if (diffDays > 14) return 'COMING WEEKS';
@@ -97,6 +99,7 @@ const ReleaseList = ({ releases, currentUser, router, loading, hasMore, onLoadMo
     // if (diffDays === -1) return 'YESTERDAY';
     if (diffDays >= -7) return releaseDate.format('dddd').toUpperCase();
     if (diffDays < -7) return 'COMING STREAMS';
+    return releaseDate.format('MMMM YYYY').toUpperCase(); // RENOVE THIS LINE IF NOT WORKS
   };
 
   const groupedReleases = useMemo(() => {
@@ -250,7 +253,7 @@ const ReleaseList = ({ releases, currentUser, router, loading, hasMore, onLoadMo
   const renderEmptyComponent = () => (
     <View style={styles.emptyContainer}>
       <Text style={styles.noMoreText}>
-        {loading ? "Loading..." : "No releases found!"}
+        {loading ? <MLoading /> : "No releases found!"}
       </Text>
     </View>
   );
@@ -343,7 +346,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    minHeight: 300,
+    minHeight: hp(78),
   },
   // Grid view styles
   gridSection: {

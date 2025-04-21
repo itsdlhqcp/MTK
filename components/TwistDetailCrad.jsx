@@ -4,6 +4,7 @@ import theme from '../constants/theme'
 import { wp, hp } from '../helpers/common'
 import Icon from '../assets/icons'
 import moment from 'moment/moment'
+import BackButton from './BackButton'
 import { Video } from 'expo-av';
 import RenderHtml from 'react-native-render-html';
 import { getSupabaseFileUrl } from '../services/userProfileImage'
@@ -11,9 +12,10 @@ import PostFooter from './PostFooter'
 import { usePost } from '../contexts/PostContext';
 import { useFocusEffect } from '@react-navigation/native';
 import YoutubeIframe from 'react-native-youtube-iframe';
+import AspectRatioImage from '../components/AspectRatioImage';
 
 const textStyle = {
-  color: theme.colors.dark, 
+  color: theme.colors.textLight, 
   fontSize: hp(1.75)
 }
 
@@ -22,10 +24,10 @@ const tagsStyles = {
   p: textStyle,
   ol: textStyle,
   h1: {
-    color: theme.colors.dark,
+    color: theme.colors.textLight,
   },
   h4: {
-    color: theme.colors.dark
+    color: theme.colors.textLight
   }
 }
 
@@ -219,7 +221,10 @@ const renderYouTubeContent = () => {
     <View style={[styles.container, hasShadow && shadowStyle]}>
       <View style={styles.header}>
         {/* Tags section on the left */}
-        <View style={styles.tagsContainer}>
+         <View style={styles.backButton}>
+                    <BackButton router={router} color= {theme.colors.gray}/>
+           </View>
+        {/* <View style={styles.tagsContainer}>
           {Array.isArray(parsedTags) && parsedTags.length > 0 ? (
             parsedTags.slice(0, 3).map((tag, index) => (
               <View 
@@ -235,11 +240,11 @@ const renderYouTubeContent = () => {
           {parsedTags.length > 3 && (
             <Text style={styles.moreTagsText}>+{parsedTags.length - 3}</Text>
           )}
-        </View>
+        </View> */}
 
         {/* Date on the right */}
         <View style={styles.dateContainer}>
-          <Text style={styles.created}>{createdat}</Text>
+          <Text style={styles.created}>Twisted on: {createdat}</Text>
         </View>
 
         {/* post edit components */}
@@ -249,15 +254,16 @@ const renderYouTubeContent = () => {
               <TouchableOpacity onPress={()=> onEdit(item)}>
                 <Icon 
                   name='edit'
-                  size={hp(2.5)}
-                  color={theme.colors.text}
+                  size={hp(2.2)}
+                  color={theme.colors.textLight}
                 />
               </TouchableOpacity>
               <TouchableOpacity onPress={handlePostDelete}>
                 <Icon 
                   name='delete'
-                  size={hp(2.5)}
+                  size={hp(2.2)}
                   color={theme.colors.rose}
+                  strokeWidth={1.4}
                 />
               </TouchableOpacity>
             </View>
@@ -267,7 +273,7 @@ const renderYouTubeContent = () => {
 
       {/* YouTube Content */}
       {youtubeVideoId && renderYouTubeContent()}
-
+{/* 
       {item?.file?.includes('postImage') && (
         <Image
           source={getSupabaseFileUrl(item.file)} 
@@ -275,9 +281,16 @@ const renderYouTubeContent = () => {
           style={styles.postMedia}
           contentFit='cover'
         />
+      )} */}
+
+       {/* Media Content */}
+       {item?.file?.includes('postImage') && (
+          <AspectRatioImage
+              source={getSupabaseFileUrl(item.file)}
+              priority={isVisible}
+          />
       )}
    
-
       {item?.file?.includes('postVideo') && (
         <View style={styles.videoContainer}>
           <Video
@@ -338,12 +351,12 @@ const renderYouTubeContent = () => {
       </View>
 
       {/* Using the new PostFooter component */}
-      <PostFooter 
+      {/* <PostFooter 
         item={item}
         currentUser={currentUser}
         router={router}
         showMoreIcon={showMoreIcon}
-      />
+      /> */}
     </View>
   )
 }
@@ -353,14 +366,10 @@ export default TwistDetailCard
 const styles = StyleSheet.create({
   container:{
     gap: 10, 
-    marginBottom: 15, 
-    borderRadius: theme.radius.xxl*1.1,
-    borderCurve: 'continuous', 
-    padding: 10,
+   // marginBottom: 15,  
+   // padding: 10,
     paddingVertical: 12,
-    backgroundColor: 'white',
-    borderWidth: 0.5,
-    borderColor: theme.colors.gray,
+    backgroundColor:  '#1A1A1A',
     shadowColor: '#000'
   },
   header: {
@@ -412,10 +421,10 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   dateContainer: {
-    marginLeft: 8,
+    marginLeft: 154,
   },
   created: {
-    color: theme.colors.textDark || 'black',  
+    color: theme.colors.textLight || 'black',  
     fontSize: hp(1.5),
     fontWeight: theme.fonts.small,
     marginRight: 8,
@@ -438,8 +447,8 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 18,
-    marginLeft: 12
+    gap: 14,
+    marginRight: 7
   },
   videoContainer: {
     position: 'relative',
@@ -461,6 +470,10 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.xl,
     borderCurve: 'continuous',
     overflow: 'hidden',
-    backgroundColor: '#F0F0F0', // or any background color that matches your theme
+    backgroundColor: '#F0F0F0', 
   },
+  backButton: {
+    position: 'absolute',
+    left: 0
+}
 })

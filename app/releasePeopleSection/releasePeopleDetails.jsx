@@ -163,7 +163,6 @@ useEffect(() => {
                 }
             };
     
-    
           const getAreleaseDetails = async () => {
                 setStartLoading(true);
                 let res = await fetchReleaseDetails(releaseId);
@@ -172,7 +171,6 @@ useEffect(() => {
             };
 
     // function to open profile popup
-
     const openProfilePopup = (userData) => {
         setSelectedUser(userData);
         setIsProfilePopupVisible(true);

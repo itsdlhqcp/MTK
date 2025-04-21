@@ -229,6 +229,7 @@ const PostCard = ({
                   name='delete'
                   size={hp(2.5)}
                   color={theme.colors.rose}
+                  strokeWidth={1.4}
                 />
               </TouchableOpacity>
             </View>

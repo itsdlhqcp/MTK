@@ -130,7 +130,10 @@ const SpotlightCard = ({
   }
 
   return (
-    <View style={styles.container}>
+    <TouchableOpacity
+      style={styles.container}
+      onPress={openPostDetails}
+      activeOpacity={0.9}>
       {/* Use AspectRatioImage for images */}
       {item?.file?.includes('postImage') && (
         <AspectRatioImage
@@ -296,6 +299,7 @@ const SpotlightCard = ({
               name='delete'
               size={hp(2.2)}
               color={theme.colors.rose}
+              strokeWidth={1.4}
             />
             <Text style={[styles.editOptionText, {color: theme.colors.rose}]}>Delete</Text>
           </TouchableOpacity>
@@ -303,7 +307,7 @@ const SpotlightCard = ({
       )}
 
       <View style={styles.greenBorderTop} />
-    </View>
+    </TouchableOpacity>
   );
 };
 

@@ -15,8 +15,6 @@ import { supabase } from '../lib/supabase'
 import { createNotifications } from '../services/notificationService'
 import ProfilePopup from '../components/profilePopup'
 
-
-
 const twistDetails = () => {
     const [selectedUser, setSelectedUser] = useState(null);
     const [isProfilePopupVisible, setIsProfilePopupVisible] = useState(false);
@@ -328,10 +326,10 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#121212',  
-        paddingVertical: Math.round(wp(7))
+        // paddingVertical: Math.round(wp(7))
     },
     list: {
-        paddingHorizontal: Math.round(wp(4))
+      //  paddingHorizontal: Math.round(wp(4))
     },
     center: {
         flex: 1,

@@ -1,4 +1,4 @@
-import { Text, View, StyleSheet, TouchableOpacity, Image, AppState, Dimensions } from 'react-native';
+import { Text, View, StyleSheet, TouchableOpacity, Image, AppState, Dimensions, Modal } from 'react-native';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import theme from '../constants/theme';
 import { wp, hp } from '../helpers/common';
@@ -13,6 +13,7 @@ import YoutubeIframe from 'react-native-youtube-iframe';
 import Avatar from './Avatar';
 import { useFocusEffect } from '@react-navigation/native';
 import AspectRatioImage from './AspectRatioImage';
+import ReportModal from './ReportModel';
 
 const textStyle = {
   color: theme.colors.light || '#E0E0E0', 
@@ -26,41 +27,6 @@ const tagsStyles = {
   h1: { color: theme.colors.light || '#E0E0E0' },
   h4: { color: theme.colors.light || '#E0E0E0' }
 };
-
-// Modified AspectRatioImage component to ensure full width
-// const AspectRatioImage = ({ source, maxHeight = hp(64), style = {} }) => {
-//   const [imageHeight, setImageHeight] = useState(hp(35)); // Default height
-  
-//   const onImageLoad = (event) => {
-//     const { width, height } = event.nativeEvent.source;
-//     if (width && height) {
-//       // Calculate the height needed to maintain aspect ratio at full screen width
-//       const screenWidth = wp(100);
-//       const scaledHeight = (height / width) * screenWidth;
-      
-//       // Limit the height to maxHeight if needed
-//       setImageHeight(Math.min(scaledHeight, maxHeight));
-//     }
-//   };
-
-//   return (
-//     <View style={[styles.imageContainer, style]}>
-//       <Image
-//         source={source} 
-//         transition={100}
-//         style={[
-//           styles.image,
-//           {
-//             width: '100%',
-//             height: imageHeight
-//           }
-//         ]}
-//         onLoad={onImageLoad}
-//         resizeMode="cover"
-//       />
-//     </View>
-//   );
-// };
 
 // Function to extract YouTube ID from a URL
 const extractYouTubeID = (url) => {
@@ -104,7 +70,45 @@ const TwistCard = ({
   const [appStateVisible, setAppStateVisible] = useState(appState.current);
   const [showReplayButton, setShowReplayButton] = useState(false);
   const [isVideoReady, setIsVideoReady] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
   const { width } = Dimensions.get("window");
+  
+  // New state to track if the dropdown menu is open
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const handleUsernamePress = () => {
+    console.log("user name", item?.user?.name);
+    if (router) {
+      const isCurrentUser = currentUser && item?.user?.id === currentUser.id;
+      router.push({ 
+        pathname: isCurrentUser ? '/profile' : '/xprofile', 
+        params: { userId: item?.user?.id } 
+      });
+    }
+  };
+
+  const handleMorePress = () => {
+    setShowDropdown(!showDropdown);
+    
+    if (!showDropdown) {
+      setTimeout(() => {
+        setShowDropdown(false);
+      }, 5000); 
+    }
+  };
+
+  const handleFlagPress = () => {
+    // Handle flag functionality
+    console.log("Flag pressed for post:", item?.id);
+    setShowReportModal(true);
+    setShowDropdown(false);
+  };
+
+  const handleEditPress = () => {
+    // Use the onEdit prop function
+    onEdit(item);
+    setShowDropdown(false);
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -128,7 +132,6 @@ const TwistCard = ({
    const onStateChange = useCallback((state)=>{
       if (state === 'ended'){
         setPlaying(false);
-        Alert.alert('Video Ended', 'Video has finished playing!');
       }
     }, []);
   
@@ -228,8 +231,6 @@ const TwistCard = ({
           <Image
             source={require('../assets/images/loader/homeldr.jpeg')}
             alt="loading ##########"
-           // style={styles.youtubePlaceholder}
-          //  style={{ width: 400, height: 200 }} 
            style={{ width: '100%', height: 200 }} 
           />
         )}
@@ -244,7 +245,6 @@ const TwistCard = ({
             onLoadStart: () => setIsVideoReady(false),
           }}
         />
-         {/* <Button title={playing ? 'Pause' : 'Play'} onPress={tooglePlaying} /> */}
       </View>
     );
   };
@@ -254,20 +254,45 @@ const TwistCard = ({
       {/* Header: User Info + Menu */}
       <View style={styles.header}>
         <View style={styles.userInfo}>
-           <Avatar
-              uri={item?.user?.image}
-              size={hp(3.5)}
-              rounded={theme.radius.xl}
-            />
-          <Text style={styles.username}>{item?.user?.name || 'Username'}</Text>
+        <TouchableOpacity onPress={handleUsernamePress}>
+          <Avatar
+            uri={item?.user?.image}
+            size={hp(3.5)}
+            rounded={theme.radius.xl}
+          />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleUsernamePress}>
+            <Text style={styles.username}>{item?.user?.name || 'Username'}</Text>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.headerRight}>
           <Text style={styles.created}>{createdat}</Text>
           {showMoreIcon && (
-            <TouchableOpacity>
+            <TouchableOpacity onPress={handleMorePress}>
               <Icon name="more" size={hp(2.2)} color={theme.colors.light || '#E0E0E0'} />
             </TouchableOpacity>
+          )}
+          
+          {/* Dropdown Menu */}
+          {showDropdown && (
+            <View style={styles.dropdown}>
+              <TouchableOpacity 
+                style={styles.dropdownItem} 
+                onPress={handleFlagPress}
+              >
+                <Icon name="report" size={hp(2)} color={theme.colors.light || '#E0E0E0'} />
+                <Text style={styles.dropdownText}>Report</Text>
+              </TouchableOpacity>
+              <View style={styles.divider} />
+              <TouchableOpacity 
+                style={styles.dropdownItem} 
+                onPress={handleEditPress}
+              >
+                <Icon name="edit" size={hp(2)} color={theme.colors.light || '#E0E0E0'} />
+                <Text style={styles.dropdownText}>Edit</Text>
+              </TouchableOpacity>
+            </View>
           )}
         </View>
       </View>
@@ -318,7 +343,7 @@ const TwistCard = ({
                         }}
                       >
                         <Icon 
-                          name='reload'  // Adjust based on your icon library
+                          name='reload'
                           size={hp(1.7)}
                           color="white"
                         />
@@ -348,6 +373,24 @@ const TwistCard = ({
         router={router}
         showMoreIcon={showMoreIcon}
       />
+      
+      {/* Background touchable to close dropdown when clicking outside */}
+      {showDropdown && (
+        <TouchableOpacity 
+          style={styles.dropdownBackdrop} 
+          onPress={() => setShowDropdown(false)}
+          activeOpacity={0}
+        />
+      )}
+
+      {/* Report Modal */}
+      <ReportModal
+        isVisible={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        postId={item?.id}
+        flaggedUserId={item?.user?.id}
+        currentUserId={currentUser?.id}
+      />
     </View>
   );
 };
@@ -357,10 +400,9 @@ export default TwistCard;
 const styles = StyleSheet.create({
   container: {
     gap: 10, 
-    marginBottom: 5.2, 
+    marginBottom: 3.2, 
     borderRadius: theme.radius.xxl * 0.2,
     borderCurve: 'continuous', 
-    padding: 8,
     paddingVertical: 12,
     backgroundColor: '#1A1A1A',
     borderWidth: 1,
@@ -373,6 +415,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: wp(1),
     marginBottom: hp(1),
+    zIndex: 10, // Ensure header is above other elements for dropdown visibility
   },
   userInfo: {
     flexDirection: 'row',
@@ -383,6 +426,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
+    position: 'relative', // For positioning the dropdown
   },
   username: {
     fontSize: hp(1.7),
@@ -415,7 +459,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   videoContainer: {
-  position: 'relative',
+    position: 'relative',
   },
   replayButton: {
     position: 'absolute',
@@ -427,5 +471,45 @@ const styles = StyleSheet.create({
     borderRadius: hp(3.5),
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  // New styles for dropdown menu
+  dropdown: {
+    position: 'absolute',
+    top: hp(3),
+    right: 0,
+    width: wp(28),
+    backgroundColor: '#2A2A2A',
+    borderRadius: 12,
+    overflow: 'hidden',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    zIndex: 100,
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: hp(1.2),
+    gap: 10,
+  },
+  dropdownText: {
+    color: theme.colors.light || '#E0E0E0',
+    fontSize: hp(1.6),
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#333333',
+    width: '100%',
+  },
+  dropdownBackdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'transparent',
+    zIndex: 5,
   },
 });

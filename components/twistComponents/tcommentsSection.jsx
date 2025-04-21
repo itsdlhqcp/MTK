@@ -201,12 +201,14 @@ const styles = StyleSheet.create({
   },
   commentsContainer: {
     marginVertical: 15,
-    gap: 17
+    gap: 17,
+    paddingHorizontal: wp(4),
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10
+    gap: 10,
+    paddingHorizontal: hp(1.5),
   },
   loading: {
     height: hp(5.8),

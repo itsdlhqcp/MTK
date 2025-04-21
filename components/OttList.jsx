@@ -84,7 +84,7 @@ const OttList = ({ streams, currentUser, router, loading, hasMore, onLoadMore })
     
     // Future dates
     if (diffDays === 1) return 'TOMORROW';
-    if (diffDays === 2) return 'DAY AFTER TOMORROW';
+    if (diffDays === 2) return 'AFTER TOMORROW';
     if (diffDays > 2 && diffDays <= 7) return 'THIS WEEK';
     if (diffDays > 7 && diffDays <= 14) return 'NEXT WEEK';
     if (diffDays > 14) return 'COMING WEEKS';
@@ -94,6 +94,7 @@ const OttList = ({ streams, currentUser, router, loading, hasMore, onLoadMore })
     // if (diffDays === -1) return 'YESTERDAY';
     if (diffDays >= -7) return releaseDate.format('dddd').toUpperCase();
     if (diffDays < -7) return 'COMING STREAMS';
+    return releaseDate.format('MMMM YYYY').toUpperCase(); // RENOVE THIS LINE IF NOT WORKS
   };
 
   const groupedReleases = useMemo(() => {

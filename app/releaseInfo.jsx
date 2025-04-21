@@ -5,7 +5,7 @@ import { hp, wp } from '../helpers/common';
 import theme from '../constants/theme';
 import { Text } from "react-native";
 import Loading from "../components/Loading";
-import { fetchPeoplesReleaseDetails } from "../services/releaseService";
+import { fetchAverageRating, fetchPeoplesReleaseDetails } from "../services/releaseService";
 import moment from 'moment/moment';
 import ReleaseCardInfo from "../components/releaseCardInfo";
 // import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
@@ -27,19 +27,33 @@ const ReleaseInfo = () => {
     const getReleaseDetails = async () => {
         setLoading(true);
         try {
-            let res = await fetchPeoplesReleaseDetails(releaseId);
-            if (res.success) {
-                setRelease(res.data);
-            } else {
-                Alert.alert('Error', res.msg || 'Failed to fetch release details');
-            }
+          // Fetch the release and its reviews
+          const res = await fetchPeoplesReleaseDetails(releaseId);
+      
+          // Fetch the average rating separately
+          const avgRes = await fetchAverageRating(releaseId);
+      
+          if (res.success) {
+            const releaseData = res.data;
+      
+            // Add the averageRating to the release object
+            const releaseWithRating = {
+              ...releaseData,
+              averageRating: avgRes.success ? avgRes.average : null,
+            };
+      
+            setRelease(releaseWithRating);
+          } else {
+            Alert.alert('Error', res.msg || 'Failed to fetch release details');
+          }
         } catch (error) {
-            console.error('Error fetching release details:', error);
-            Alert.alert('Error', 'Something went wrong while fetching release details');
+          console.error('Error fetching release details:', error);
+          Alert.alert('Error', 'Something went wrong while fetching release details');
         } finally {
-            setLoading(false);
+          setLoading(false);
         }
-    };
+      };
+      
 
     const handleRedirectToDetails = () => {
         if (!release?.id) return null;
@@ -124,7 +138,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#121212',
-        padding: wp(4),
+       // padding: wp(4),
     },
     center: {
         justifyContent: 'center',
@@ -154,7 +168,6 @@ const styles = StyleSheet.create({
     image: {
         width: '100%',
         height: '100%',
-       
     },
     placeholderImage: {
         justifyContent: 'center',

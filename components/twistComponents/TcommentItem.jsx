@@ -208,7 +208,7 @@ const TcommentItem = ({
 
           {canDelete && (
             <TouchableOpacity onPress={handleDelete}>
-              <Icon name="delete" size={18} color={theme.colors.rose} />
+              <Icon name="delete" size={18} color={theme.colors.rose} strokeWidth={1.4}/>
             </TouchableOpacity>
           )}
         </View>

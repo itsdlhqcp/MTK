@@ -20,6 +20,10 @@ const SpotlightFooter = ({
     if (!showMoreIcon || !item?.id) return null;
     router.push({pathname: 'postDetails', params: {postId: item.id}});
   }
+
+  // const openPostDetails = () => {
+  //   console.log("comment icon has been clicked");
+  // }
   
   return (
     <View style={styles.container}>

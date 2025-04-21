@@ -692,4 +692,31 @@ export const removePeopleReviewUpvote = async (peoplesReviewId, userId) => {
           return { success: false, msg: 'Could not fetch the peoples reviews releases'};
         }
       };
+
+      export const fetchAverageRating = async (releaseId) => {
+        try {
+          const { data, error } = await supabase
+            .from('peoplesReview')
+            .select('userRating')
+            .eq('releaseId', releaseId);
+      
+          if (error) {
+            console.error('Error fetching avg user ratings:', error);
+            return { success: false, msg: 'Could not fetch avg user ratings' };
+          }
+      
+          const ratings = data.map((item) => item.userRating).filter(Boolean);
+      
+          const average =
+            ratings.length > 0
+              ? ratings.reduce((a, b) => a + b, 0) / ratings.length
+              : null;
+      
+          return { success: true, average };
+        } catch (error) {
+          console.error('Server error during average rating fetch:', error);
+          return { success: false, msg: 'Server error' };
+        }
+      };
+      
   

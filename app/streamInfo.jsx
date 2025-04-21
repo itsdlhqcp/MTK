@@ -5,7 +5,7 @@ import { hp, wp } from '../helpers/common';
 import theme from '../constants/theme';
 import { Text } from "react-native";
 import Loading from "../components/Loading";
-import { fetchPeoplesReleaseDetails } from "../services/ottService";
+import { fetchAverageRating, fetchPeoplesReleaseDetails } from "../services/ottService";
 import moment from 'moment/moment';
 import ReleaseCardInfo from "../components/releaseCardInfo";
 // import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
@@ -26,22 +26,53 @@ const ReleaseInfo = () => {
         getReleaseDetails();
     }, []);
 
+    // const getReleaseDetails = async () => {
+    //     setLoading(true);
+    //     try {
+    //         let res = await fetchPeoplesReleaseDetails(streamId);
+    //         if (res.success) {
+    //             setRelease(res.data);
+    //         } else {
+    //             Alert.alert('Error', res.msg || 'Failed to fetch release details');
+    //         }
+    //     } catch (error) {
+    //         console.error('Error fetching release details:', error);
+    //         Alert.alert('Error', 'Something went wrong while fetching release details');
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
+
     const getReleaseDetails = async () => {
         setLoading(true);
         try {
-            let res = await fetchPeoplesReleaseDetails(streamId);
-            if (res.success) {
-                setRelease(res.data);
-            } else {
-                Alert.alert('Error', res.msg || 'Failed to fetch release details');
-            }
+          // Fetch the release and its reviews
+          const res = await fetchPeoplesReleaseDetails(streamId);
+      
+          // Fetch the average rating separately
+          const avgRes = await fetchAverageRating(streamId);
+      
+          if (res.success) {
+            const releaseData = res.data;
+      
+            // Add the averageRating to the release object
+            const releaseWithRating = {
+              ...releaseData,
+              averageRating: avgRes.success ? avgRes.average : null,
+            };
+      
+            setRelease(releaseWithRating);
+          } else {
+            Alert.alert('Error', res.msg || 'Failed to fetch release details');
+          }
         } catch (error) {
-            console.error('Error fetching release details:', error);
-            Alert.alert('Error', 'Something went wrong while fetching release details');
+          console.error('Error fetching release details:', error);
+          Alert.alert('Error', 'Something went wrong while fetching release details');
         } finally {
-            setLoading(false);
+          setLoading(false);
         }
-    };
+      };
+      
 
     const handleRedirectToDetails = () => {
         if (!release?.id) return null;

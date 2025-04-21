@@ -5,11 +5,12 @@ import { createComment, createReply, fetchCommentReplies, fetchPostDetails, remo
 import { hp, wp } from '../helpers/common'
 import theme from '../constants/theme'
 import { useAuth } from '../contexts/AuthContext'
+import Header from '../components/Header';
 import PostCard from '../components/PostCard'
 import Icon from '../assets/icons'
 import FeedLoader from '../components/FeedLoader'
 import Input from '../components/Input'
-import CommentsSection from '../components/postComponents/commentsSection' // Import the new component
+import CommentsSection from '../components/postComponents/commentsSection' 
 import { supabase } from '../lib/supabase'
 import { createNotifications } from '../services/notificationService'
 import ProfilePopup from '../components/profilePopup'
@@ -218,10 +219,17 @@ const PostDetails = () => {
         }
 
         return (
+            <>
+            <Header
+            title={"Spotlight Details"}
+            showBackButton={true}
+            style={styles.header}
+        />
             <ScrollView 
                 showsVerticalScrollIndicator={false} 
                 contentContainerStyle={styles.list}
             >
+              
                 <PostCard
                     item={{...post, comments: [{count: post?.comments?.length}]}}
                     currentUser={user}
@@ -249,6 +257,7 @@ const PostDetails = () => {
                     router={router}
                 />
             </ScrollView>
+            </>
         )
     }
 
@@ -325,7 +334,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#121212',  
-        paddingVertical: Math.round(wp(7))
     },
     list: {
         paddingHorizontal: Math.round(wp(4))
@@ -348,6 +356,9 @@ const styles = StyleSheet.create({
     closeButton: {
         padding: Math.round(wp(2)),
         marginRight: Math.round(wp(2))
-    }
+    },
+    // header: {
+    //     backgroundColor: 'green', 
+    //   }
 });
 

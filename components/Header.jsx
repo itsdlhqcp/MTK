@@ -30,7 +30,7 @@ export default Header
 
 const styles = StyleSheet.create({
     container: {
-        marginTop: 28,
+        marginTop: 9,
         position: 'relative'
     },
     titleContainer: {
@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
         width: '100%'
     },
     title: {
-        fontSize: hp(2.7),
+        fontSize: hp(2.4),
         fontWeight: theme.fonts.semibold,
         color: theme.colors.bmw,
         textAlign: 'center'
