@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { StyleSheet, TouchableOpacity, Alert, Animated, RefreshControl } from "react-native";
+import { StyleSheet, TouchableOpacity, Alert, Animated, RefreshControl, Easing } from "react-native";
 import Input from '../../components/Input';
 import { fetchPeopleReviewReplies, fetchPeoplesReleaseDetailsUsingTitle, removeReplyPeopleReview, fetchPeoplesReleaseDetailsx } from "../../services/releaseService";
 import { createReviewReply, removeReview, fetchReviewReplies, fetchReleaseDetails, createReleaseReview, fetchPeoplesReleaseDetails, createPeopleReleaseReview, removePeopleReview, createPeopleReviewReply } from "../../services/ottService"
@@ -25,6 +25,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useFocusEffect } from "@react-navigation/native";
 import { useReview } from "../../contexts/ReviewContext";
 import PeoplesReviewList from "../releasePeopleSection/releasePeopleReview";
+import TheatreReviewTabs from "../../components/TheatreReviewTabs";
 
 const MIN_CHARS = 0;
 
@@ -57,8 +58,26 @@ const StreamPeopleDetails = () => {
     const [isProfilePopupVisible, setIsProfilePopupVisible] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const { updateReviewData} = useReview();
-    const [thReview, setThReview] = useState(null);  // TH RENDER VARIABLE
+    const [thReview, setThReview] = useState(null);  // THeatre RENDER VARIABLE
 
+    const buttonSlideAnim = useRef(new Animated.Value(100)).current;
+
+
+    useEffect(() => {
+        // Set a timeout to animate the button after 5 seconds
+        const timer = setTimeout(() => {
+          Animated.timing(buttonSlideAnim, {
+            toValue: 0,
+            duration: 500,
+            easing: Easing.out(Easing.back(1.5)),
+            useNativeDriver: true,
+          }).start();
+        }, 5000); // 5 seconds
+      
+        return () => clearTimeout(timer); // Clean up on component unmount
+      }, []);
+
+    // use effect which fetch the reviews from theatre
     useEffect(() => {
         if (release && release.connectedId) {
             getThPeoplesReleaseDetails();
@@ -75,20 +94,21 @@ const StreamPeopleDetails = () => {
         };
     }, []);
 
+    // function to fetch the reviews from theatre
     const getThPeoplesReleaseDetails = async () => {
         if (!release || !release.connectedId) {
             console.log("Release or connectedId not available yet");
             return;
         }
         
-        setStartLoading(true);
+      //  setStartLoading(true);
         try {
             let res = await fetchPeoplesReleaseDetailsx(release.connectedId);
             if (res.success) setThReview(res.data);
         } catch (error) {
             console.error("Error fetching people's release details:", error);
         } finally {
-            setStartLoading(false);
+           // setStartLoading(false);
         }
     };
 
@@ -634,7 +654,7 @@ const StreamPeopleDetails = () => {
 
            const isadmin =  user?.id === "a4424502-53de-4814-8882-7a4b5c09a76c"
 
-          // console.log('th release ##@@', thReview);
+          // below start the rendering part
     
         return (
             
@@ -758,29 +778,41 @@ const StreamPeopleDetails = () => {
                             </View>
                         )}      
                        
-                    <PeoplesPreviewList
-                            reviews={release?.dpeopreviews || []}  
-                            releaseId={release.id}
-                            releaseUserId={release.userId}
-                            currentUser={user}
-                            onDeleteReview={onDeleteReview}
-                            openProfilePopup={openProfilePopup}
-                            reviewId={reviewId}
-                            onhandleEdit={handleEditReview} 
-                            />
-
-                     {thReview?.peoplesReview && (
-                            <PeoplesReviewList
-                                reviews={thReview?.peoplesReview || []}
-                                releaseId={thReview.id}
-                                releaseUserId={thReview.userId}
-                                currentUser={user}
-                                onDeleteReview={onDeleteReview} // upgrade
-                                openProfilePopup={openProfilePopup}
-                                reviewId={reviewId} // need  a change 
-                                onhandleEdit={handleEditReview} // upgrade
-                            />
-                     )}
+                       <TheatreReviewTabs>
+  {/* Tab 1: Digital Reviews */}
+  <View>
+    <PeoplesPreviewList
+      reviews={release?.dpeopreviews || []}  
+      releaseId={release.id}
+      releaseUserId={release.userId}
+      currentUser={user}
+      onDeleteReview={onDeleteReview}
+      openProfilePopup={openProfilePopup}
+      reviewId={reviewId}
+      onhandleEdit={handleEditReview} 
+    />
+  </View>
+  
+  {/* Tab 2: Theatre Reviews */}
+  <View>
+    {thReview?.peoplesReview ? (
+      <PeoplesReviewList
+        reviews={thReview?.peoplesReview || []}
+        releaseId={thReview.id}
+        releaseUserId={thReview.userId}
+        currentUser={user}
+        onDeleteReview={onDeleteReview}
+        openProfilePopup={openProfilePopup}
+        reviewId={reviewId}
+        onhandleEdit={handleEditReview}
+      />
+    ) : (
+      <View style={styles.emptyState}>
+        <Text style={styles.emptyStateText}>No theatre reviews available</Text>
+      </View>
+    )}
+  </View>
+</TheatreReviewTabs>
                 
                     <ProfilePopup
                         user={selectedUser}
@@ -790,20 +822,27 @@ const StreamPeopleDetails = () => {
                     />
                 </ScrollView>
 
-                    {/* Adding the floating button */}
-
-                  {!hasUserPostedReview && !hasUserPosterTheatreReview  && (
-                        <TouchableOpacity 
-                           style={styles.floatingButton}
-                           onPress={onNewReview}
-                        >
-                        <Icon 
-                            name="pencil" 
-                            size={hp(3.2)} 
-                            color={theme.colors.primary}
-                        />
-                        </TouchableOpacity>
-                  )}
+{!hasUserPostedReview && !hasUserPosterTheatreReview && (
+  <Animated.View
+    style={{
+      position: 'absolute',
+      bottom: hp(2.5),
+      right: wp(5),
+      transform: [{ translateX: buttonSlideAnim }]
+    }}
+  >
+    <TouchableOpacity 
+      style={styles.floatingButton}
+      onPress={onNewReview}
+    >
+      <Icon 
+        name="pencil" 
+        size={hp(3.2)} 
+        color={theme.colors.primary}
+      />
+    </TouchableOpacity>
+  </Animated.View>
+)}
 
                  {/* place outside of scrollview to work properly */}
                     <RatingBottomSheet 
@@ -967,4 +1006,14 @@ const styles = StyleSheet.create({
         elevation: 5,
         shadowColor: '#000',
     },
+    emptyState: {
+        padding: hp(3),
+        alignItems: 'center',
+        justifyContent: 'center',
+      },
+      emptyStateText: {
+        color: theme.colors.textLight,
+        fontSize: hp(1.6),
+        textAlign: 'center',
+      }
 });

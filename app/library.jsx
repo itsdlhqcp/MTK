@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { Text, View, StyleSheet, Pressable, TextInput, Animated } from 'react-native';
 import AllReleasesList from '../components/LibraryReleaseList';
 import Icon from '../assets/icons';
-import { hp, wp } from '../helpers/common';
+import { hp} from '../helpers/common';
 
 export class Library extends Component {
   constructor(props) {
@@ -59,7 +59,7 @@ export class Library extends Component {
       <View style={styles.container}>
         <View style={styles.top}>
           {!isSearchVisible && (
-            <Text style={styles.header}>Library</Text>
+            <Text style={styles.header}>PlotTwist Library</Text>
           )}
           
           <View style={styles.searchContainer}>
@@ -103,7 +103,7 @@ export class Library extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'black',
+     backgroundColor: 'rgb(21, 23, 24)'
   },
   header: {
     fontSize: 24,

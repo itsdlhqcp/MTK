@@ -7,7 +7,6 @@ import { hp, wp } from '../helpers/common';
 import Icon from '../assets/icons';
 import { getSupabaseFileUrl } from '../services/imageService';
 import PratingStars from './pRatingStars';
-import DotLoader from './DotLoader';
 import MLoading from './MaterialLoader';
 
 // Modified header with toggle button that only shows for the first header
@@ -327,7 +326,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   headerText: {
-    fontSize: 14,
+    fontSize: 11,
     fontWeight: '600',
     color: '#fff',
     textAlign: 'center',

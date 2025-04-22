@@ -68,7 +68,6 @@ const OttGridCard = ({ item, router }) => {
   );
 };
 
-
 const OttList = ({ streams, currentUser, router, loading, hasMore, onLoadMore }) => {
   // Add view mode state
   const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
@@ -324,7 +323,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   headerText: {
-    fontSize: 14,
+    fontSize: 11,
     fontWeight: '600',
     color: '#fff',
     textAlign: 'center',
