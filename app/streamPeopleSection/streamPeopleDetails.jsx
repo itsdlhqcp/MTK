@@ -676,6 +676,7 @@ const StreamPeopleDetails = () => {
                         router={router}
                         hasShadow={false}
                         showReviewButton={false}
+                        onClick={false}
                     />
          {/* below is input peoples reviews component for ADMIN */}
         {isadmin && (

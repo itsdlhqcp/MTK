@@ -10,7 +10,7 @@ const imageDimensionsCache = new Map();
 
 const AspectRatioImage = ({ 
   source, 
-  maxHeight = hp(64), 
+  maxHeight = hp(76), 
   style = {},
   isVisible = true // Add visibility prop to control loading behavior
 }) => {

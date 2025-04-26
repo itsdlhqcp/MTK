@@ -695,6 +695,7 @@ useEffect(() => {
                         router={router}
                         hasShadow={false}
                         showReviewButton={false}
+                        onClick={false}
                     />
                     {isadmin && (
                             <Animated.View style={[

@@ -11,6 +11,7 @@ const ReleaseCard = ({
     item,
     router,
     hasShadow = true,
+    onClick= true
 }) => {
     const shadowStyle = {
         shadowOffset: {
@@ -25,6 +26,7 @@ const ReleaseCard = ({
     const createdAt = item?.rDate ? moment(item.rDate).format('MMM D') : '';
 
         const handleCardPress = () => {
+            if (!onClick) return;
            if (!item?.id) return null;
             router.push({ pathname: 'releaseInfo', params: { releaseId: item.id } });
     }
@@ -76,6 +78,7 @@ const ReleaseCard = ({
           style={[styles.container, hasShadow && shadowStyle]}
            onPress={handleCardPress}
            activeOpacity={0.9}
+           disabled={!onClick}
          >
             <View style={styles.imageContainer}>
                 {item?.file?.includes('postImage') && (

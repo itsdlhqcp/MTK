@@ -307,12 +307,12 @@ const PostCard = ({
       </View>
 
       {/* Using the new PostFooter component */}
-      <PostFooter 
+      {/* <PostFooter 
         item={item}
         currentUser={currentUser}
         router={router}
         showMoreIcon={showMoreIcon}
-      />
+      /> */}
     </View>
   )
 }

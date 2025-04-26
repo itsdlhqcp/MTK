@@ -235,7 +235,7 @@ const PostDetails = () => {
                     currentUser={user}
                     router={router}
                     hasShadow={true}
-                    showMoreIcon={false}
+                    showMoreIcon={true}
                     showDelete={onDeletePost}
                     onEdit={onEditPost}
                 />
