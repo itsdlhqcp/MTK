@@ -158,9 +158,129 @@ removed this module and testing
       }
       ],
 
+/// to build ./android file
 
+npx expo prebuild
 
       expo-build-properties
 
        "runtimeVersion": "1.0.0",
       "package": "com.mediatalk.plotwist",
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      *******************************************************
+      *******************************************************
+
+
+      # Install the admob module and config plugin
+npx expo install react-native-google-mobile-ads@14.11.0
+npm uninstall react-native-google-mobile-ads
+
+android_app_id
+
+add at top
+
+  "react-native-google-mobile-ads": {
+    android_app_id: "ca-app-pub-7806969239829181~9318981034",
+    ios_app_id: "ca-app-pub-7806969239829181~9318981034"
+  },
+
+
+{
+  "expo": {
+    "name": "PlotTwist",
+    "slug": "PlotTwist",
+    "description": "PloTwist for cinimophiles",
+    "version": "1.0.0",
+    "react-native-google-mobile-ads": {
+    "android_app_id": "ca-app-pub-7806969239829181~9318981034",
+    "ios_app_id": "ca-app-pub-7806969239829181~9318981034"
+    },
+    "backgroundColor": "#000000",
+    "orientation": "portrait",
+    "icon": "./assets/images/splash-icon.png",
+    "scheme": "myapp",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.mediatalk.plotwist"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#000000"
+      },
+      "package": "com.mediatalk.plotwist"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff"
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/booking.png",
+          "imageWidth": 500,
+          "resizeMode": "contain",
+          "backgroundColor": "#000000"
+        }
+      ],
+      [
+        "react-native-google-mobile-ads",  
+        {
+          "androidAppId": "ca-app-pub-7806969239829181~9318981034",
+          "iosAppId": "ca-app-pub-7806969239829181~9318981034"
+        }
+     ],
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "914fa909-af2f-4ae4-951d-30b3a259f8d3"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/914fa909-af2f-4ae4-951d-30b3a259f8d3"
+    }
+  }
+}

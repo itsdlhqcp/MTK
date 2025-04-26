@@ -6,7 +6,6 @@
 // }
 
 import { View, StyleSheet } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 export default function TabBarBackground() {
   return (
     <View
