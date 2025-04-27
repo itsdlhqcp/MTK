@@ -3,10 +3,10 @@ import React, { useState, useEffect, useRef } from 'react'
 import Icon from '../assets/icons'
 import theme from '../constants/theme'
 import { hp, stripHtmlTags } from '../helpers/common'
-import { createPostLike, removePostLike } from '../services/postService'
 import { usePost } from '../contexts/PostContext';
 import { createTwistLikes, createTwistUnlikes, removeTwistLikes, removeTwistUnlikes } from '../services/homeService'
 import { getSupabaseFileUrl, homeContentDownload } from '../services/imageService'
+import { useFocusEffect } from 'expo-router'
 
 const TwistFooter = ({
   item,
@@ -18,6 +18,13 @@ const TwistFooter = ({
  // console.log('item', item);
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
+ const [isNavigating, setIsNavigating] = useState(false);
+
+   useFocusEffect(
+     React.useCallback(() => {
+       setIsNavigating(false);
+     }, [])
+   );
 
   // const [likes, setLikes] = useState([]);
   
@@ -312,14 +319,28 @@ const TwistFooter = ({
         </View>
         
         {/* Comment button */}
-          <View style={styles.footerButton}>
-            <TouchableOpacity onPress={openPostDetails}>
-              <Icon name='comment' size={24} strokeWidth={1.4} color={theme.colors.light || '#E0E0E0'} />
-            </TouchableOpacity>
-            <Text style={styles.count}>
-              {item?.tcomments?.[0]?.count || 0}
-            </Text>
-          </View>
+        <View style={styles.footerButton}>
+          <TouchableOpacity 
+            disabled={isNavigating}
+            onPress={() => {
+              if (!isNavigating) {
+                setIsNavigating(true);
+                openPostDetails();
+              }
+            }}
+          >
+            <Icon 
+              name="comment" 
+              size={24} 
+              strokeWidth={1.4} 
+              color={theme.colors.light || '#E0E0E0'} 
+            />
+          </TouchableOpacity>
+          <Text style={styles.count}>
+            {item?.tcomments?.[0]?.count || 0}
+          </Text>
+        </View>
+
 
           {/* Share button */}
           {/* <View style={styles.footerButton}>

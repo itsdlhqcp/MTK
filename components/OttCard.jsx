@@ -7,6 +7,7 @@ import RenderHtml from 'react-native-render-html'
 import { getSupabaseFileUrl } from '../services/userProfileImage'
 import TagsList from './TagList'
 import { LinearGradient } from 'expo-linear-gradient'
+import { useFocusEffect } from 'expo-router'
 
 const OttCard = ({
     item,
@@ -15,6 +16,14 @@ const OttCard = ({
 }) => {
     const [userRating, setUserRating] = useState(0);
     const [clickCount, setClickCount] = useState(0);
+    const [isNavigating, setIsNavigating] = useState(false);
+
+    // which reset on coming the page 
+      useFocusEffect(
+        React.useCallback(() => {
+          setIsNavigating(false);
+        }, [])
+      );
 
     const shadowStyle = {
         shadowOffset: {
@@ -27,8 +36,9 @@ const OttCard = ({
     }
 
     const handleCardPress = () => {
-        // Navigate to reviews on card press
+        if (isNavigating) return;
         if (!item?.id) return null;
+        setIsNavigating(true);
         router.push({ pathname: 'streamInfo', params: { streamId: item.id } });
     }
 
@@ -145,7 +155,7 @@ const OttCard = ({
                 </View>
                 
                 {/* White horizontal line at the bottom of the image */}
-                <View style={styles.whiteLine} />
+                {/* <View style={styles.whiteLine} /> */}
             </View>
         </TouchableOpacity>
     )
@@ -232,7 +242,7 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
         width: '97%',
         height: 0.6, 
-        backgroundColor: 'white',
+        backgroundColor: theme.colors.textLight,
     },
 });
 

@@ -72,14 +72,21 @@ const TwistCard = ({
   const [isVideoReady, setIsVideoReady] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const { width } = Dimensions.get("window");
+  const [isNavigating, setIsNavigating] = useState(false);
+
+   useFocusEffect(
+     React.useCallback(() => {
+       setIsNavigating(false);
+     }, [])
+   );
   
   // New state to track if the dropdown menu is open
   const [showDropdown, setShowDropdown] = useState(false);
 
   const handleUsernamePress = () => {
-    console.log("user name", item?.user?.name);
-    if (router) {
+    if (!isNavigating && router) {
       const isCurrentUser = currentUser && item?.user?.id === currentUser.id;
+      setIsNavigating(true); 
       router.push({ 
         pathname: isCurrentUser ? '/profile' : '/xprofile', 
         params: { userId: item?.user?.id } 

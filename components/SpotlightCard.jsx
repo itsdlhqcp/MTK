@@ -42,7 +42,13 @@ const SpotlightCard = ({
   const [appStateVisible, setAppStateVisible] = useState(appState.current);
   const [showReplayButton, setShowReplayButton] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  
+  const [isNavigating, setIsNavigating] = useState(false);
+
+   useFocusEffect(
+     React.useCallback(() => {
+       setIsNavigating(false);
+     }, [])
+   );
 
   useEffect(() => {
     if (videoRef.current) {
@@ -125,9 +131,17 @@ const SpotlightCard = ({
   if (!item) return null;
 
   const openPostDetails = () => {
+    if (isNavigating) return; 
+  
     if (!item?.id) return null;
-    router.push({pathname: 'postDetails', params: {postId: item.id}});
-  }
+  
+    setIsNavigating(true); 
+  
+    router.push({
+      pathname: 'postDetails',
+      params: { postId: item.id },
+    });
+  };
 
   return (
     <TouchableOpacity
@@ -257,10 +271,10 @@ const SpotlightCard = ({
           <>
             <RenderHtml
               contentWidth={wp(100)}
-              source={{ html: isExpanded ? item.body : item.body.slice(0, 200) + "..." }}
+              source={{ html: isExpanded ? item.body : item.body.slice(0, 700) + "..." }}
               tagsStyles={tagsStyles}
             />
-            {!isExpanded && item.body.length > 200 && (
+            {!isExpanded && item.body.length > 700 && (
               <TouchableOpacity onPress={openPostDetails}>
                 <Text style={{ color: theme.colors.primary, marginTop: 5 }}>Read More</Text>
               </TouchableOpacity>

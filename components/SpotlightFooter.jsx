@@ -1,11 +1,11 @@
-
 import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
-import React from 'react';
+import React, { useState } from 'react';
 import Icon from '../assets/icons';
 import theme from '../constants/theme';
 import { hp, wp } from '../helpers/common';
 import LikeButton from './AnimatedHeartButton';
 import { usePost } from '../contexts/PostContext';
+import { useFocusEffect } from 'expo-router';
 
 const SpotlightFooter = ({
   item = {},
@@ -15,10 +15,23 @@ const SpotlightFooter = ({
 }) => {
   // Add default values to protect against undefined context
   const { updatePost = () => {} } = usePost() || {};
+  const [isNavigating, setIsNavigating] = useState(false);
+
+ // which reset on coming the page 
+   useFocusEffect(
+     React.useCallback(() => {
+       setIsNavigating(false);
+     }, [])
+   );
   
   const openPostDetails = () => {
+    if (isNavigating) return;
     if (!showMoreIcon || !item?.id) return null;
-    router.push({pathname: 'postDetails', params: {postId: item.id}});
+    setIsNavigating(true);
+    router.push({
+      pathname: 'postDetails',
+      params: { postId: item.id },
+    });
   }
 
   // const openPostDetails = () => {

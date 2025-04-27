@@ -10,8 +10,6 @@ import Icon from '@/assets/icons';
 import { supabase } from '../../lib/supabase';
 import Avatar from '../../components/Avatar';
 import { fetchPosts } from '../../services/postService';
-import PostCard from '../../components/PostCard';
-import MLoading from '../../components/MaterialLoader';
 import { useFocusEffect } from '@react-navigation/native';
 import { friendRequestService } from '../../services/requestService';
 import TabNavigator from '../../components/ProfileTabs';
@@ -58,6 +56,7 @@ const Profile = () => {
   const [cachedProfileStats, setCachedProfileStats] = useState(null);
   const [isConnected, setIsConnected] = useState(true); // New state for network connection
   const [offlineMode, setOfflineMode] = useState(false); // Track if we're in offline mode
+
 
   // Set up network listener
   useEffect(() => {
@@ -346,6 +345,15 @@ const StatsItem = ({ label, value, theme, isLoading }) => (
 );
 
 const InstagramProfile = React.memo(({ user, router, handleLogout, theme, postCount, friendsCount, isLoading, lastUpdated, offlineMode }) => {
+  // below is useeffect which record the naviagtion
+ const [isNavigating, setIsNavigating] = useState(false);
+
+ // which reset on coming the page 
+   useFocusEffect(
+     React.useCallback(() => {
+       setIsNavigating(false);
+     }, [])
+   );
   const formattedDate = new Date(user?.created_at || Date.now()).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
@@ -360,6 +368,15 @@ const InstagramProfile = React.memo(({ user, router, handleLogout, theme, postCo
       parsedTags = [];
     }
   }
+
+  const verifyProfile = () => {
+    if (isNavigating) return;
+    setIsNavigating(true);
+    router.push({
+      pathname: 'editProfile',
+      params: { returnToRefresh: true },
+    });
+  };
 
   return (
     <View style={[styles.profileContainer, { backgroundColor: theme.colors.background }]}>
@@ -384,21 +401,38 @@ const InstagramProfile = React.memo(({ user, router, handleLogout, theme, postCo
 
         <TouchableOpacity 
           style={[styles.logoutButton]} 
-          onPress={() => router.push('find')}
+          disabled={isNavigating}
+          onPress={() => {
+            if (!isNavigating) {
+              setIsNavigating(true);
+              router.push('find');
+            }
+          }}
         >
           <Icon name="addfriend" color={theme.colors.textDark} />
         </TouchableOpacity>
           {/* admin icon menu */}
         <TouchableOpacity 
           style={[styles.logoutButton]} 
-          onPress={() => router.push('AdminPanel')}
+          disabled={isNavigating}
+          onPress={() => {
+            if (!isNavigating) {
+              setIsNavigating(true);
+              router.push('AdminPanel');
+            }
+          }}
         >
           <Icon name="admin" color={theme.colors.textDark} />
         </TouchableOpacity>
          {/* menu icon here */}
         <TouchableOpacity 
           style={[styles.logoutButton]} 
-          onPress={handleLogout}
+          onPress={() => {
+            if (!isNavigating) {
+              setIsNavigating(true);
+              handleLogout();
+            }
+          }}
         >
           <Icon name="menu" color={theme.colors.textDark} />
         </TouchableOpacity>
@@ -454,16 +488,16 @@ const InstagramProfile = React.memo(({ user, router, handleLogout, theme, postCo
         {user?.bio && <Text style={[styles.bio, { color: theme.colors.text }]}>{user.bio}</Text>}
         <Text style={[styles.joinedDate, { color: theme.colors.textLight }]}>Joined {formattedDate}</Text>
         {user?.address && <Text style={[styles.joinedDate, { color: theme.colors.textLight }]}>{user.address}</Text>}
-        {lastUpdated && !offlineMode && (
+        {/* {lastUpdated && !offlineMode && (
           <Text style={[styles.joinedDate, { color: theme.colors.textLight, fontSize: hp(1.2) }]}>
             Stats updated: {lastUpdated}
           </Text>
-        )}
-        {offlineMode && (
+        )} */}
+        {/* {offlineMode && (
           <Text style={[styles.joinedDate, { color: theme.colors.rose, fontSize: hp(1.2) }]}>
             Using cached data
           </Text>
-        )}
+        )} */}
       </View>
 
       {/* Tags */}
@@ -485,10 +519,7 @@ const InstagramProfile = React.memo(({ user, router, handleLogout, theme, postCo
       {!user?.verified && !offlineMode && (
          <TouchableOpacity 
            style={[styles.editProfileButton, { backgroundColor: theme.colors.secondary }]}
-           onPress={() => router.push({
-             pathname: 'editProfile',
-             params: { returnToRefresh: true }
-           })}
+           onPress={verifyProfile}
          >
            <Text style={[styles.editProfileText, { color: theme.colors.textDark }]}>Verify Profile</Text>
          </TouchableOpacity>

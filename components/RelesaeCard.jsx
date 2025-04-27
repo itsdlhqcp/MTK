@@ -1,11 +1,12 @@
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import React from 'react'
+import React, { useState } from 'react'
 import { wp, hp } from '@/helpers/common'
 import theme from '../constants/theme'
 import { getSupabaseFileUrl } from '../services/userProfileImage'
 import RenderHtml from 'react-native-render-html'
 import moment from 'moment/moment'
 import { LinearGradient } from 'expo-linear-gradient'
+import { useFocusEffect } from 'expo-router'
 
 const ReleaseCard = ({
     item,
@@ -13,6 +14,8 @@ const ReleaseCard = ({
     hasShadow = true,
     onClick= true
 }) => {
+    // below is useeffect which record the naviagtion
+ const [isNavigating, setIsNavigating] = useState(false);
     const shadowStyle = {
         shadowOffset: {
             width: 0,
@@ -23,10 +26,18 @@ const ReleaseCard = ({
         elevation: 1
     }
 
+    useFocusEffect(
+        React.useCallback(() => {
+          setIsNavigating(false);
+        }, [])
+      );
+
     const createdAt = item?.rDate ? moment(item.rDate).format('MMM D') : '';
 
         const handleCardPress = () => {
+            if (isNavigating) return;
             if (!onClick) return;
+            setIsNavigating(true);
            if (!item?.id) return null;
             router.push({ pathname: 'releaseInfo', params: { releaseId: item.id } });
     }
@@ -140,7 +151,7 @@ const ReleaseCard = ({
                 </View>
                 
                 {/* White horizontal line at the bottom */}
-                <View style={styles.whiteLine} />
+                {/* <View style={styles.whiteLine} /> */}
             </View>
         </TouchableOpacity>
     )
@@ -224,6 +235,6 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
         width: '97%',
         height: 0.6,
-        backgroundColor: 'white',
+        backgroundColor: theme.colors.textLight,
     }
 })
