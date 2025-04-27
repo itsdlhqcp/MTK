@@ -547,7 +547,7 @@ const styles = StyleSheet.create({
     marginVertical: hp(1),
   },
   headerText: {
-    fontSize: hp(1.6),
+    fontSize: hp(1.25),
     fontWeight: '600',
     color: '#fff',
     textAlign: 'center',

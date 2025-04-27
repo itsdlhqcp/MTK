@@ -168,24 +168,11 @@ npx expo prebuild
       "package": "com.mediatalk.plotwist",
 
 
+  *******************************************************
+  // google admob remove  && fast image (one image libray) before building
+   *******************************************************
 
-
-
-
-
-
-
-
-
-
-
-
-
-      *******************************************************
-      *******************************************************
-
-
-      # Install the admob module and config plugin
+ # Install the admob module and config plugin
 npx expo install react-native-google-mobile-ads@14.11.0
 npm uninstall react-native-google-mobile-ads
 

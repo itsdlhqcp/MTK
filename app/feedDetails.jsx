@@ -433,7 +433,7 @@ const PostDetails = () => {
             },
             close: {
                 animation: 'timing',
-                config: { duration: 200 },  // Changed for faster closing
+                config: { duration: 200 },  
             },
         },
         cardStyleInterpolator: ({ current, layouts }) => ({

@@ -76,7 +76,7 @@ onPress={() => router.push('library')}
 
 
 // Lightweight Header component
-const Header = memo(({ username, router }) => (
+const Header = memo(({ username, router, setIsNavigating, isNavigating }) => (
   <View style={styles.header}>
     <View style={styles.welcomeContainer}>
       <Text style={styles.username}>{username}</Text>
@@ -85,10 +85,17 @@ const Header = memo(({ username, router }) => (
     <View style={styles.icons}>
    
        
-        <Pressable 
-          onPress={() => router.push('library')}
-        >
-          <Icon name="library" size={hp(3.2)} color='white' />
+      <Pressable 
+          disabled={isNavigating}
+           onPress={() => {
+          if (!isNavigating) {
+            setIsNavigating(true);
+            router.push('library');
+          }
+           }}
+          >
+            <Icon name="library" size={hp(3.2)} color='white' />
+      </Pressable>
           {/* {
             notificationCount > 0 && (
               <View style={styles.pill}>
@@ -96,12 +103,30 @@ const Header = memo(({ username, router }) => (
               </View>
             )
           } */}
-        </Pressable>
-      <Pressable onPress={() => router.push('addTwist')}>
-        <Icon name="plus" size={hp(3.5)} color="white" />
+
+      <Pressable 
+          disabled={isNavigating}
+           onPress={() => {
+          if (!isNavigating) {
+            setIsNavigating(true);
+            router.push('addTwist');
+          }
+        }}
+      >
+        <Icon name="plus" size={hp(3.2)} color='white' />
       </Pressable>
-      <Pressable onPress={() => router.push('/messenger')}>
-        <Icon name="dm" size={hp(3.5)} color="white" />
+
+
+      <Pressable 
+          disabled={isNavigating}
+           onPress={() => {
+          if (!isNavigating) {
+            setIsNavigating(true);
+            router.push('/messenger');
+          }
+        }}
+      >
+        <Icon name="dm" size={hp(3.5)} color='white' />
       </Pressable>
      
     </View>
@@ -242,6 +267,13 @@ const Feeds = () => {
   const [isConnected, setIsConnected] = useState(true);
   const [initialCheckDone, setInitialCheckDone] = useState(false);
   const ITEMS_PER_PAGE = 6; // Increased from 4 to reduce the number of pagination events
+  const [isNavigating, setIsNavigating] = useState(false);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      setIsNavigating(false);
+    }, [])
+  );
 
   // Use refs for post handlers to avoid recreating functions
   const postsRef = useRef(posts);
@@ -497,7 +529,11 @@ useEffect(() => {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <View style={styles.container}>
           {/* Memoized Header */}
-          <Header username="PlotTwist" router={router} />
+          <Header
+           username="PlotTwist"
+           router={router}
+           setIsNavigating={setIsNavigating} // Add this line
+           isNavigating={isNavigating} />
 
           {/* Highly optimized FlatList */}
           <FlatList

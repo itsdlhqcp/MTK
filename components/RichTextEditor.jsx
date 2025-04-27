@@ -11,56 +11,37 @@ const RichTextEditor = ({
   containerStyle,
   editorStyle 
 }) => {
-  // Handler for paste events and text changes
-//   const isHtml = (text) => /<\/?[a-z][\s\S]*>/i.test(text);
 
-// const handlePaste = (pastedText) => {
-//   if (isHtml(pastedText)) {
-//     editorRef.current?.insertHTML(pastedText);
-//   } else {
-//     let styledText = processText(pastedText);
-//     editorRef.current?.insertHTML(styledText);
-//   }
-// };
-
-// const handlePaste = (pastedText) => {
-//   if (pastedText.trim().startsWith('<')) {
-//     // Assume already HTML, insert directly
-//     editorRef.current?.insertHTML(pastedText);
-//   } else {
-//     // Only process normal text (not HTML)
-//     let styledText = processText(pastedText);
-//     editorRef.current?.insertHTML(styledText);
-//   }
-// };
+const ensureDivWrapped = (text) => {
+  const trimmedText = text.trim();
+  if (!trimmedText.startsWith('<div')) {
+    return `<div>${trimmedText}</div>`;
+  }
+  return trimmedText;
+};
 
 const isHtml = (text) => /<\/?[a-z][\s\S]*>/i.test(text);
 
 const handlePaste = (pastedText) => {
   if (isHtml(pastedText.trim())) {
-    // It's HTML, insert as is
-    editorRef.current?.insertHTML(pastedText);
+    const wrappedText = ensureDivWrapped(pastedText);
+    editorRef.current?.insertHTML(wrappedText);
   } else {
-    // Plain text, process it (for *bold* etc.)
     let styledText = processText(pastedText);
-    editorRef.current?.insertHTML(styledText);
+    const wrappedText = ensureDivWrapped(styledText);
+    editorRef.current?.insertHTML(wrappedText);
   }
 };
 
-
-
-
-  // Process text as it's being typed or changed
   const handleChange = (text) => {
-    // Process the text for star formatting
     const processedText = processText(text);
-    
-    // Only update if there's a difference to avoid infinite loops
-    if (processedText !== text) {
-      editorRef.current?.setContentHTML(processedText);
+    const wrappedText = ensureDivWrapped(processedText);
+  
+    if (wrappedText !== text) {
+      editorRef.current?.setContentHTML(wrappedText);
     }
-    
-    onChange && onChange(processedText);
+  
+    onChange && onChange(wrappedText);
   };
 
   // Text processing function

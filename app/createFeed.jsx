@@ -24,7 +24,7 @@ const CreateFeed = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState(null);
-  const [tags, setTags] = useState([]);
+  const [tags, setTags] = useState(['official']);  
   const [currentTag, setCurrentTag] = useState('');
   
   // Predefined tags for the bubble selector
@@ -56,8 +56,8 @@ const CreateFeed = () => {
     try {
       let mediaConfig = {
         mediaTypes: isImage 
-          ? ImagePicker.MediaTypeOptions.Images 
-          : ImagePicker.MediaTypeOptions.Videos,
+          ? ['images']
+          : ['videos'],
         allowsEditing: false,
         quality: 1,
         base64: false,

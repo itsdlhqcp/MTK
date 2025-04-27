@@ -16,7 +16,6 @@ import { useFocusEffect } from '@react-navigation/native';
 import { friendRequestService } from '../../services/requestService';
 import TabNavigator from '../../components/ProfileTabs';
 import { NetworkUtils } from '../../utils/network';
-import FastImage from 'react-native-fast-image'; // Import FastImage
 
 // Dark mode colors remain unchanged
 const darkTheme = {

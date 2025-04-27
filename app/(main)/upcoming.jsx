@@ -272,15 +272,6 @@ const getOtts = async () => {
                         <Text style={styles.offlineSubText}>
                             Connect to the internet to see the digital's
                         </Text>
-          {/* <FastImage
-            style={styles.image}
-            source={require('../assets/images/iconsSvg/Shadow_Reavers.webp')}
-            resizeMode={FastImage.resizeMode.contain}
-          /> */}
-          {/* <Text style={styles.offlineText}>You're offline</Text>
-          <Text style={styles.offlineSubText}>
-            Connect to the internet to see the library
-          </Text> */}
                     </View>
                 );
             }

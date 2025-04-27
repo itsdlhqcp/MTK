@@ -89,8 +89,8 @@ const NewRelease = () => {
     try {
       let mediaConfig = {
         mediaTypes: isImage 
-          ? ImagePicker.MediaTypeOptions.Images 
-          : ImagePicker.MediaTypeOptions.Videos,
+          ? ['images']
+          : ['videos'],
         allowsEditing: allowEditing,
         editable: 'true',
         aspect: [4, 3],
@@ -125,8 +125,8 @@ const NewRelease = () => {
     try {
       let mediaConfig = {
         mediaTypes: isImage 
-          ? ImagePicker.MediaTypeOptions.Images 
-          : ImagePicker.MediaTypeOptions.Videos,
+          ? ['images']
+          : ['videos'],
         allowsEditing: false,
         quality: 1,
         base64: false,
