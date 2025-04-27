@@ -52,6 +52,7 @@
           "backgroundColor": "#000000"
         }
       ],
+
       "expo-font"
     ],
     "react-native-google-mobile-ads": {

@@ -625,5 +625,4 @@ const styles = StyleSheet.create({
         fontSize: hp(1.8),
         fontWeight: 'bold',
       }
-     
 })

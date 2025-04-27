@@ -1,3 +1,133 @@
+1.5.15   // by don't forcing other getting 88% exec  (1.5.15	1.9.25)
+
+1.5.10	1.9.22  $error
+
+1.5.6	1.9.21   $error
+
+1.5.3	1.9.10   $error
+
+1.5.2	1.9.0   $error
+
+Try with Kotlin 1.8.21 + Compose Compiler 1.4.7
+
+1.5.1   1.9.0
+
+1.5.0	1.9.0
+
+1.4.7   1.8.21
+
+1.5.12	1.9.23
+
+1.5.7	1.9.21
+
+> Task :expo-image:kaptDebugKotlin FAILED
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:                                                                                                                                                     
+Execution failed for task ':expo-image:kaptDebugKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.gradle.internal.KaptWithoutKotlincTask$KaptExecutionWorkAction
+   > wrong number of arguments
+
+below is my build gradle app :-
+
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+    ext {
+        buildToolsVersion = findProperty('android.buildToolsVersion') ?: '35.0.0'
+        minSdkVersion = Integer.parseInt(findProperty('android.minSdkVersion') ?: '24')
+        compileSdkVersion = Integer.parseInt(findProperty('android.compileSdkVersion') ?: '35')
+        targetSdkVersion = Integer.parseInt(findProperty('android.targetSdkVersion') ?: '34')
+        kotlinVersion = '1.9.0'
+        composeCompilerVersion = '1.5.2'
+        ndkVersion = "26.1.10909125"
+    }
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath('com.android.tools.build:gradle')
+        classpath('com.facebook.react:react-native-gradle-plugin:0.76.9')
+        classpath('org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.0')
+    }
+}
+
+apply plugin: "com.facebook.react.rootproject"
+
+allprojects {
+    repositories {
+        maven {
+            // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
+            url(new File(['node', '--print', "require.resolve('react-native/package.json')"].execute(null, rootDir).text.trim(), '../android'))
+        }
+        maven {
+            // Android JSC is installed from npm
+            url(new File(['node', '--print', "require.resolve('jsc-android/package.json', { paths: [require.resolve('react-native/package.json')] })"].execute(null, rootDir).text.trim(), '../dist'))
+        }
+
+        google()
+        mavenCentral()
+        maven { url 'https://www.jitpack.io' }
+    }
+
+    configurations.all {
+        resolutionStrategy.eachDependency { details ->
+            if (details.requested.group == 'org.jetbrains.kotlin') {
+                details.useVersion "1.9.0"
+                details.because("Force Kotlin version to 1.7.20 to fix Compose Compiler compatibility")
+            }
+            if (details.requested.group == 'androidx.compose.compiler') {
+                details.useVersion '1.5.2'
+            }
+        }
+    }
+}
+
+
+
+solution 1 :-
+
+if still any one facing the same issue then add the following line in build.gradle(App), this one is solved my issue
+
+kapt "org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.4.2"
+
+solution 2 :-
+
+Replacing kapt with annotationProcessor in build.gradle resolved this error for me
+
+annotationProcessor ("com.google.dagger:dagger-compiler:2.40.5")
+annotationProcessor ("com.google.dagger:dagger-android-processor:2.40.5")
+
+
+
+
+C/C++: C:/Users/91859/Desktop/textxxxxx/node_modules/react-native-safe-area-context/android/build/generated/source/codegen/jni/react/renderer/components/safeareacontext/EventEmitters.cpp:35:12: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:     return $payload;
+C/C++:            ^
+C/C++: 15 warnings generated.
+<===========--> 89% EXECUTING [2m]
+
+Task :app:compileDebugKotlin FAILED
+
+> Task :app:buildCMakeDebug[arm64-v8a]                                                                                                                                 
+C/C++: ninja: Entering directory `C:\Users\91859\Desktop\textxxxxx\android\app\.cxx\Debug\5q194c1w\arm64-v8a'
+C/C++: C:/Users/91859/Desktop/tex
+
+C/C++: C:/Users/91859/Desktop/textxxxxx/node_modules/react-native-safe-area-context/android/build/generated/source/codegen/jni/react/renderer/components/safeareacontext/EventEmitters.cpp:35:12: warning: '$' in identifier [-Wdollar-in-identifier-extension]
+C/C++:     return $payload;
+C/C++:            ^
+C/C++: 15 warnings generated.
+<===========--> 89% EXECUTING [2m]
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileDebugKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Internal compiler error. See log for more details
+
 Common_square_pattern.svg 
 
 UnCommon_square_pattern.svg

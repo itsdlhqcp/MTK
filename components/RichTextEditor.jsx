@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import theme from '../constants/theme';
 import { RichEditor, RichToolbar, actions } from 'react-native-pell-rich-editor';

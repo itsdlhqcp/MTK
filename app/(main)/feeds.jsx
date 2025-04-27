@@ -348,6 +348,9 @@ const getPosts = useCallback(async () => {
             onEndReachedThreshold={0.5}
             ListFooterComponent={memoizedFooter}
             ListEmptyComponent={memoizedEmptyComponent}
+            initialNumToRender={10}  // first batch
+            maxToRenderPerBatch={5}  // scroll chunk
+            windowSize={5}  // active items
             {...listProps}
           />
         </View>

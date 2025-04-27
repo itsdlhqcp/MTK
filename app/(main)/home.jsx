@@ -546,12 +546,15 @@ useEffect(() => {
             onViewableItemsChanged={onViewableItemsChanged}
             viewabilityConfig={viewabilityConfig}
             onEndReached={handleEndReached}
-            onEndReachedThreshold={0.3} // Reduced from 0.5
+            onEndReachedThreshold={0.7} 
             ListHeaderComponent={ListHeaderComponent}
             ListFooterComponent={memoizedFooter}
             ListEmptyComponent={memoizedEmptyComponent}
             refreshing={refreshing}
             onRefresh={handleRefresh}
+            initialNumToRender={10}  // first batch
+            maxToRenderPerBatch={5}  // scroll chunk
+            windowSize={5}  // active items
             {...listProps}
           />
         </View>
