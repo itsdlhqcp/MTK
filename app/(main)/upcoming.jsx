@@ -13,7 +13,7 @@ import { NetworkUtils } from '../../utils/network';
 import theme from '../../constants/theme';
 import Icon from '../../assets/icons';
 
-const ITEMS_PER_PAGE = 4;
+const ITEMS_PER_PAGE = 22;
 
 const upcoming = () => {
     const { user, setAuth } = useAuth();

@@ -3,9 +3,9 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import theme from '../constants/theme';
 import { hp } from '../helpers/common';
 
-const TheatreReviewTabs = ({ children }) => {
+const DigitalReviewTabs = ({ children }) => {
   const [activeTab, setActiveTab] = useState(0);
-  const tabs = ['TH Reviews', 'DG Reviews'];
+  const tabs = ['Reviews', 'TH Reviews'];
 
   return (
     <View style={styles.tabContainer}>
@@ -37,7 +37,7 @@ const TheatreReviewTabs = ({ children }) => {
   );
 };
 
-export default TheatreReviewTabs;
+export default DigitalReviewTabs;
 
 const styles = StyleSheet.create({
   tabContainer: {

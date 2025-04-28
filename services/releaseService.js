@@ -90,7 +90,7 @@ export const fetchReleases = async (limit=10) => {
   }
 }
 
-export const fetchReleaseDetails = async (postId) => {
+export const fetchReleaseDetailsx = async (postId) => {
   try {
     const { data, error } = await supabase
       .from('releases')
@@ -718,5 +718,68 @@ export const removePeopleReviewUpvote = async (peoplesReviewId, userId) => {
           return { success: false, msg: 'Server error' };
         }
       };
+
+
+      // user checking if a user has posted a review on a theatre or digital stream
+      export const hasUserPostedAnyReview = async (userId, releaseId, streamId) => {
+        console.log("Trying the process to get user review");
+        
+        try {
+          if (!userId || !releaseId) {
+            return { 
+              success: false, 
+              msg: 'User ID and Release ID are required' 
+            };
+          }
       
-  
+          const { data: peopleReviewData, error: peopleReviewError } = await supabase
+            .from('peoplesReview')
+            .select('id')
+            .eq('userId', userId)
+            .eq('releaseId', releaseId)
+            .limit(1)
+            .maybeSingle();
+      
+          if (peopleReviewError) {
+            return { 
+              success: false, 
+              msg: 'Error checking for people review' 
+            };
+          }
+      
+          if (peopleReviewData) {
+            return { 
+              success: true, 
+              hasPostedReview: true 
+            };
+          }
+      
+          const { data: dPeopleReviewData, error: dPeopleReviewError } = await supabase
+            .from('dpeopreviews')
+            .select('id')
+            .eq('userId', userId)
+            .eq('releaseId', streamId)
+            .limit(1)
+            .maybeSingle();
+      
+          if (dPeopleReviewError) {
+            return { 
+              success: false, 
+              msg: 'Error checking for dpeople review' 
+            };
+          }
+      
+          return { 
+            success: true, 
+            hasPostedReview: !!dPeopleReviewData 
+          };
+      
+        } catch (error) {
+          console.error(error);
+          return { 
+            success: false, 
+            msg: 'Could not process review check' 
+          };
+        }
+      };
+      

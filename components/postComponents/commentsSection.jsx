@@ -29,8 +29,6 @@ const CommentSection = ({
   const [rloading, setRloading] = useState(false);
   const [mentionedUser, setMentionedUser] = useState('');
 
-  // console.log('set of all comments', comments);
-
   const toggleReplyBox = (commentId, username) => {
     // Always set openReplyBox to commentId when username is provided
     if (username) {

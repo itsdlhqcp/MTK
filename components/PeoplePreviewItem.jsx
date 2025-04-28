@@ -1,20 +1,18 @@
 import { Alert, StyleSheet, Text, TouchableOpacity, View, Animated } from 'react-native'
 import React, { useEffect, useState, useRef } from 'react'
 import theme from '../constants/theme'
-import { wp, hp, stripHtmlTags } from '../helpers/common'
+import { hp } from '../helpers/common'
 import Avatar from './Avatar'
 import Icon from '@/assets/icons'
 import moment from 'moment'
-import { createPeopleReviewUpvote, removePeopleReviewUpvote, createPeopleReviewDownvote , removePeopleReviewDownvote, fetchPeopleReviewReplies,  createPeopleReviewReplyLike, removePeopleReviewReplyLike} from "../services/ottService"
-import RatingStars from './RatingStars'
-import LikeButton from './AnimatedUpVoteButton'
+import { createPeopleReviewUpvote, removePeopleReviewUpvote, createPeopleReviewDownvote, removePeopleReviewDownvote, fetchPeopleReviewReplies, createPeopleReviewReplyLike, removePeopleReviewReplyLike } from "../services/ottService"
 import { useAuth } from '../contexts/AuthContext'
 import PratingStars from './pRatingStars'
 import { userService } from '../services/helperService'
 import ReviewIndicators from './ReviewIndicator'
 
-const  PeoplesPreviewItem = ({
-  item, 
+const PeoplesPreviewItem = ({
+  item,
   canDelete = false,
   onDelete = () => {},
   handleEdit = () => {},
@@ -26,12 +24,12 @@ const  PeoplesPreviewItem = ({
 }) => {
   const [replyCount, setReplyCount] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
-  const rocketScale = useRef(new Animated.Value(1)).current
-  const rocketOpacity = useRef(new Animated.Value(1)).current
+  const likeAnimationScale = useRef(new Animated.Value(1)).current
+  const likeAnimationOpacity = useRef(new Animated.Value(1)).current
 
   const canEdit = moment().diff(moment(item?.created_at), 'hours') <= 12;
 
-  const {user} = useAuth();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (!isReply) {
@@ -85,11 +83,6 @@ const  PeoplesPreviewItem = ({
     ])
   }
 
-  // const handleEditButtonPress = () => {
-  //   console.log("pressed the btn edit")
-  //   handleEdit(item);
-  // }
-
   const handleUsernamePress = () => {
     if (onShowProfile) {
       onShowProfile(item?.user)
@@ -116,20 +109,12 @@ const  PeoplesPreviewItem = ({
               <Text 
                 key={index} 
                 style={styles.usernameTag}
-                // onPress={() => {
-                //   onShowProfile({ name: username })
-                // }}
-
                 onPress={async () => {
-                  // Try to get the full user data for the tagged username
                   const userData = await userService.getUserByName(username);
                   
-                  // Open profile popup for the tagged username with complete data if found
                   if (userData) {
                     onShowProfile && onShowProfile(userData);
                   } else {
-                    // Fallback to just the name if user data not found
-                    // onShowProfile && onShowProfile({ name: username });
                     Alert.alert('Error', 'User under this username not exists');
                   }
                 }}
@@ -144,78 +129,97 @@ const  PeoplesPreviewItem = ({
     )
   }
 
+  // Upvotes management
   const [upvotes, setUpvotes] = useState([]);
 
   useEffect(() => {
     setUpvotes(item?.dupvote || []);
   }, [])
 
-  const onDownvote = async () => {
-    if(upvoted){
+  const handleUpvote = async () => {
+    if (isUpvoted) {
+      // Remove upvote
       let updatedUpvotes = upvotes.filter(upvote => upvote.userId !== user?.id);
-      setUpvotes([...updatedUpvotes]);
+      setUpvotes(updatedUpvotes);
       const res = await removePeopleReviewUpvote(item?.id, user?.id);
-      if(!res.success){
+      if (!res.success) {
         Alert.alert('Error', res.msg || 'Something went wrong');
       }
     } else {
+      // If user had downvoted, remove downvote first
+      if (isDownvoted) {
+        let updatedDownvotes = downvotes.filter(downvote => downvote.userId !== user?.id);
+        setDownvotes(updatedDownvotes);
+        await removePeopleReviewDownvote(item?.id, user?.id);
+      }
+      // Then add upvote
       let data = {
         userId: user?.id,
         dpeopleReviewId: item?.id
       }
       setUpvotes([...upvotes, data]);
       const res = await createPeopleReviewUpvote(data);
-      if(!res.success){
+      if (!res.success) {
         Alert.alert('Error', res.msg || 'Something went wrong');
       }
     }
   }
+  
 
-  const upvoted = upvotes?.filter(upvote => upvote?.userId === user?.id)[0] ? true : false;
+  const isUpvoted = upvotes?.filter(upvote => upvote?.userId === user?.id)[0] ? true : false;
 
+  // Downvotes management
   const [downvotes, setDownvotes] = useState([]);
 
   useEffect(() => {
     setDownvotes(item?.ddownvotes || []);
   }, [])
 
-  const onUpvote = async () => {
-    if(downvoted) {
-      let updatedUpvotes = downvotes.filter(upvote => upvote.userId !== user?.id);
-      setDownvotes([...updatedUpvotes]);
+  const handleDownvote = async () => {
+    if (isDownvoted) {
+      // Remove downvote
+      let updatedDownvotes = downvotes.filter(downvote => downvote.userId !== user?.id);
+      setDownvotes(updatedDownvotes);
       const res = await removePeopleReviewDownvote(item?.id, user?.id);
-      if(!res.success){
+      if (!res.success) {
         Alert.alert('Error', res.msg || 'Something went wrong');
       }
     } else {
+      // If user had upvoted, remove upvote first
+      if (isUpvoted) {
+        let updatedUpvotes = upvotes.filter(upvote => upvote.userId !== user?.id);
+        setUpvotes(updatedUpvotes);
+        await removePeopleReviewUpvote(item?.id, user?.id);
+      }
+      // Then add downvote
       let data = {
         userId: user?.id,
         dpeopleReviewId: item?.id
       }
       setDownvotes([...downvotes, data]);
       const res = await createPeopleReviewDownvote(data);
-      if(!res.success){
+      if (!res.success) {
         Alert.alert('Error', res.msg || 'Something went wrong');
       }
     }
   }
+  
 
-  const downvoted = downvotes?.filter(upvote => upvote?.userId === user?.id)[0] ? true : false;
+  const isDownvoted = downvotes?.filter(downvote => downvote?.userId === user?.id)[0] ? true : false;
 
-  // below is the set of code which control the rocket animation 
-
-  const [likes, setLikes] = useState([]);
+  // Reply likes management
+  const [replyLikes, setReplyLikes] = useState([]);
 
   useEffect(() => {
-    setLikes(item?.dplikes || []);
+    setReplyLikes(item?.dplikes || []);
   }, [])
 
-  const handleRocketPress = async () => {
-    if(liked) {
-      let updatedUpvotes = likes.filter(upvote => upvote.userId !== user?.id);
-      setLikes([...updatedUpvotes]);
+  const handleReplyLike = async () => {
+    if (isReplyLiked) {
+      let updatedLikes = replyLikes.filter(like => like.userId !== user?.id);
+      setReplyLikes([...updatedLikes]);
       const res = await removePeopleReviewReplyLike(item?.id, user?.id);
-      if(!res.success){
+      if (!res.success) {
         Alert.alert('Error', res.msg || 'Something went wrong');
       }
     } else {
@@ -223,33 +227,34 @@ const  PeoplesPreviewItem = ({
         userId: user?.id,
         replydpeoplereviewId: item?.id  
       }
-      setLikes([...likes, data]);
+      setReplyLikes([...replyLikes, data]);
       const res = await createPeopleReviewReplyLike(data);
-      if(!res.success){
+      if (!res.success) {
         Alert.alert('Error', res.msg || 'Something went wrong');
       }
     }
 
+    // Animation for like button
     Animated.sequence([
       Animated.parallel([
-        Animated.timing(rocketScale, {
+        Animated.timing(likeAnimationScale, {
           toValue: 1.5,
           duration: 150,
           useNativeDriver: true
         }),
-        Animated.timing(rocketOpacity, {
+        Animated.timing(likeAnimationOpacity, {
           toValue: 0.7,
           duration: 150,
           useNativeDriver: true
         })
       ]),
       Animated.parallel([
-        Animated.timing(rocketScale, {
+        Animated.timing(likeAnimationScale, {
           toValue: 1,
           duration: 150,
           useNativeDriver: true
         }),
-        Animated.timing(rocketOpacity, {
+        Animated.timing(likeAnimationOpacity, {
           toValue: 1,
           duration: 150,
           useNativeDriver: true
@@ -258,18 +263,19 @@ const  PeoplesPreviewItem = ({
     ]).start();
   }
 
-  const liked = likes?.filter(upvote => upvote?.userId === user?.id)[0] ? true : false;
+  const isReplyLiked = replyLikes?.filter(like => like?.userId === user?.id)[0] ? true : false;
 
   const handleReplyPress = () => {
     // Call the parent's onReplyReviewPress function with both the ID and username
     onReplyReviewPress && onReplyReviewPress(item.id, item?.user?.name);
   }
+
   return (
     <View style={styles.container}>
       <Avatar
-          uri={item?.user?.image}
-          onPress={handleUsernamePress}
-          addings={item?.addings} // Pass the emoji here
+        uri={item?.user?.image}
+        onPress={handleUsernamePress}
+        addings={item?.addings} // Pass the emoji here
       />
       <View style={[styles.content, highlight && styles.highlight]}>
         <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
@@ -288,15 +294,16 @@ const  PeoplesPreviewItem = ({
           <View style={styles.replySection}>
             {!isReply && (
               <>
-                <TouchableOpacity onPress={onUpvote}>
-                  <Icon name="upvo" size={hp(2.4)} fill={downvoted ? "" : 'transparent'} color={downvoted ? "#4CAF50" : theme.colors.textLight} />
-                </TouchableOpacity>
-                <Text style={styles.count}>{downvotes?.length || 0}</Text>
 
-                <TouchableOpacity onPress={onDownvote}>
-                  <Icon name="downvo" size={hp(2.4)} fill={upvoted ? "" : 'transparent'} color={upvoted ? "#F44336" : theme.colors.textLight} />
+               <TouchableOpacity onPress={handleUpvote}>
+                  <Icon name="upvo" size={hp(2.4)} fill={isUpvoted ? "" : 'transparent'} color={isUpvoted ? "#4CAF50" : theme.colors.textLight} />
                 </TouchableOpacity>
                 <Text style={styles.count}>{upvotes?.length || 0}</Text>
+                <TouchableOpacity onPress={handleDownvote}>
+
+                  <Icon name="downvo" size={hp(2.4)} fill={isDownvoted ? "" : 'transparent'} color={isDownvoted ? "#F44336" : theme.colors.textLight} />
+                </TouchableOpacity>
+                <Text style={styles.count}>{downvotes?.length || 0}</Text>
 
                 <TouchableOpacity 
                   onPress={() => onReplyReviewPress(item.id)} 
@@ -305,107 +312,100 @@ const  PeoplesPreviewItem = ({
                   <Icon name="bubbleChatReply" size={hp(2.5)} color={theme.colors.primary} />
                 </TouchableOpacity>
                 
-                  <Text style={styles.replyCount}>{item?.replydpeopreviews?.length || 0}</Text>
+                <Text style={styles.replyCount}>{item?.replydpeopreviews?.length || 0}</Text>
               </>
             )}
           </View>
 
-        <View style={styles.replySection}>
-        {canDelete && canEdit && (
-            <TouchableOpacity onPress={handleDelete}>
-              <Icon name="delete" size={15} color={theme.colors.rose} />
-            </TouchableOpacity>
-          )}
+          <View style={styles.replySection}>
+            {canDelete && canEdit && (
+              <TouchableOpacity onPress={handleDelete}>
+                <Icon name="delete" size={15} color={theme.colors.rose} />
+              </TouchableOpacity>
+            )}
 
-          {canDelete && canEdit && (
-                    // <TouchableOpacity onPress={() => {
-                    //   console.log('handleEdit called');
-                    //   handleEdit(item);
-                    // }}>
-                    <TouchableOpacity onPress={handleEditButtonPress}>
-                      <Icon name="edit" size={15} color={theme.colors.gray} />
-                    </TouchableOpacity>
-                  )}
+            {canDelete && canEdit && (
+              <TouchableOpacity onPress={handleEditButtonPress}>
+                <Icon name="edit" size={15} color={theme.colors.gray} />
+              </TouchableOpacity>
+            )}
 
-                {isReply && (
-                  <TouchableOpacity 
-                    onPress={handleRocketPress}
-                    style={styles.rocketButtonContainer}
-                    activeOpacity={0.7}
+            {isReply && (
+              <TouchableOpacity 
+                onPress={handleReplyLike}
+                style={styles.rocketButtonContainer}
+                activeOpacity={0.7}
+              >
+                <View style={styles.rocketWrapper}>
+                  <Animated.View
+                    style={[
+                      styles.rocketIconContainer,
+                      { 
+                        transform: [{ scale: likeAnimationScale }],
+                        opacity: likeAnimationOpacity,
+                      }
+                    ]}
                   >
-                    <View style={styles.rocketWrapper}>
-                      <Animated.View
-                        style={[
-                          styles.rocketIconContainer,
-                          { 
-                            transform: [{ scale: rocketScale }],
-                            opacity: rocketOpacity,
-                          }
-                        ]}
-                      >
-                        <Icon 
-                          name="thumbsup" 
-                          size={hp(1.7)} 
-                          color={liked ? "#0066ff" : "#CCCCCC"} 
-                        />
-                      </Animated.View>
-                      <Text style={[
-                        styles.rocketCount, 
-                        liked && styles.activeRocketCount
-                      ]}>
-                        {likes?.length}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                )}
-             
-
-            {/* below is the code for comment reply button */}
-
-               {isReply && (
-                  <TouchableOpacity 
-                    onPress={handleReplyPress}
-                    activeOpacity={0.7}
-                  >
-                    <View style={styles.rocketWrapper}>
                     <Icon 
-                          name="replycmt" 
-                          size={hp(2.4)} 
-                        />
-                    </View>
-                  </TouchableOpacity>
-                )}
-              </View>
-            </View>
-            
-            {/* Rating and Popcorn section */}
-            {!isReply && item?.userRating > 0 && (
-              <View style={styles.ratingContainer}>
-                <PratingStars 
-                  rating={item.userRating} 
-                  showRatingText={true} 
-                  starSize={hp(1.8)}
-                  textStyle={{color: "#BDBDBD"}}
-                />
-                {item?.popCorn && (
-                  <View style={styles.popcornContainer}>
-                    <Icon name="popcorn" size={hp(2)} color="#FFD700" />
-                  </View>
-                )}
-              </View>
-            )}
-            
-            {item?.text && (
-                <Text style={[styles.text, {fontWeight: 'normal'}]}>
-                     {renderTextWithTags(item?.text)}
-                 </Text>
+                      name="thumbsup" 
+                      size={hp(1.7)} 
+                      color={isReplyLiked ? "#0066ff" : "#CCCCCC"} 
+                    />
+                  </Animated.View>
+                  <Text style={[
+                    styles.rocketCount, 
+                    isReplyLiked && styles.activeRocketCount
+                  ]}>
+                    {replyLikes?.length}
+                  </Text>
+                </View>
+              </TouchableOpacity>
             )}
 
-            {/* Using the new ReviewIndicators component for all indicator types */}
-              {!isReply && (
-                <ReviewIndicators item={item} />
-              )}
+            {isReply && (
+              <TouchableOpacity 
+                onPress={handleReplyPress}
+                activeOpacity={0.7}
+              >
+                <View style={styles.rocketWrapper}>
+                  <Icon 
+                    name="replycmt" 
+                    size={hp(2.4)} 
+                  />
+                </View>
+              </TouchableOpacity>
+            )}
           </View>
+        </View>
+            
+        {/* Rating and Popcorn section */}
+        {!isReply && item?.userRating > 0 && (
+          <View style={styles.ratingContainer}>
+            <PratingStars 
+              rating={item.userRating} 
+              showRatingText={true} 
+              starSize={hp(1.8)}
+              textStyle={{color: "#BDBDBD"}}
+            />
+            {item?.popCorn && (
+              <View style={styles.popcornContainer}>
+                <Icon name="popcorn" size={hp(2)} color="#FFD700" />
+              </View>
+            )}
+          </View>
+        )}
+            
+        {item?.text && (
+          <Text style={[styles.text, {fontWeight: 'normal'}]}>
+            {renderTextWithTags(item?.text)}
+          </Text>
+        )}
+
+        {/* Using the new ReviewIndicators component for all indicator types */}
+        {!isReply && (
+          <ReviewIndicators item={item} />
+        )}
+      </View>
     </View>
   )
 }
@@ -440,19 +440,19 @@ const styles = StyleSheet.create({
     color: '#ffffff', // Text color for dark theme
     fontWeight: theme.fonts.textDark,
   },
-   highlight: {
-      borderWidth: 1,
-      borderColor: theme.colors.bmw, // Fallback color if gradient can't be applied
-      // Use a LinearGradient component for the border in your render method
-      shadowColor: '#4A00E0',
-      shadowOffset: {
-        width: 0.7,
-        height: 4
-      },
-      shadowOpacity: 0.6,
-      shadowRadius: 24,
-      elevation: 34
+  highlight: {
+    borderWidth: 1,
+    borderColor: theme.colors.bmw, // Fallback color if gradient can't be applied
+    // Use a LinearGradient component for the border in your render method
+    shadowColor: '#4A00E0',
+    shadowOffset: {
+      width: 0.7,
+      height: 4
     },
+    shadowOpacity: 0.6,
+    shadowRadius: 24,
+    elevation: 34
+  },
   usernameTag: {
     color: theme.colors.primaryDark,
     fontWeight: 'bold',

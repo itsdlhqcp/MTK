@@ -156,8 +156,7 @@ export default ReleaseInfo;
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#121212',
-        padding: wp(4),
+        backgroundColor: '#121212'
     },
     center: {
         justifyContent: 'center',

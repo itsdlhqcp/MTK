@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Text, View, StyleSheet, TouchableOpacity, Animated, Alert } from 'react-native';
 import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system';
-import ViewShot from 'react-native-view-shot';
 import { captureRef } from 'react-native-view-shot';
 import Icon from '../assets/icons';
 import theme from '../constants/theme';
@@ -248,7 +246,7 @@ const TwistFooter = ({
       // Generate a high-quality image of our poster component
       const uri = await captureRef(posterRef, {
         format: 'jpg',
-        quality: 0.9,
+        quality: 1,
         result: 'file',
       });
       

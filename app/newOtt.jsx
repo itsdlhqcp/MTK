@@ -344,6 +344,10 @@ const NewOtt = () => {
     if (release.cast) {
       setEdit(release.cast);
     }
+
+    if (release.defRating) {
+      setRating(release.defRating);
+    }
   };
 
 

@@ -2,9 +2,8 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StyleSheet, TouchableOpacity, Alert, Animated, RefreshControl, Easing } from "react-native";
 import Input from '../../components/Input';
-import { fetchPeopleReviewReplies, fetchPeoplesReleaseDetailsUsingTitle, removeReplyPeopleReview, fetchPeoplesReleaseDetailsx } from "../../services/releaseService";
+import { fetchPeopleReviewReplies, removeReplyPeopleReview, fetchPeoplesReleaseDetailsx, hasUserPostedAnyReview, fetchReleaseDetailsx } from "../../services/releaseService";
 import { createReviewReply, removeReview, fetchReviewReplies, fetchReleaseDetails, createReleaseReview, fetchPeoplesReleaseDetails, createPeopleReleaseReview, removePeopleReview, createPeopleReviewReply } from "../../services/ottService"
-// import { fetchReviewReplies  } from '../services/ottService'
 import { View } from "react-native";
 import { createNotifications } from '../../services/notificationService'
 import ReviewItem from "../../components/ReviewItem";
@@ -14,7 +13,6 @@ import { ScrollView } from "react-native";
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import ReleaeCard from '../../components/RelesaeCard';
-import Loading from "../../components/Loading";
 import FeedLoader from "../../components/FeedLoader";
 import Icon from '../../assets/icons';
 import { Text } from "react-native";
@@ -25,7 +23,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useFocusEffect } from "@react-navigation/native";
 import { useReview } from "../../contexts/ReviewContext";
 import PeoplesReviewList from "../releasePeopleSection/releasePeopleReview";
-import TheatreReviewTabs from "../../components/TheatreReviewTabs";
+import DigitalReviewTabs from "../../components/DigitalReviewTabs";
 
 const MIN_CHARS = 0;
 
@@ -59,9 +57,10 @@ const StreamPeopleDetails = () => {
     const [refreshing, setRefreshing] = useState(false);
     const { updateReviewData} = useReview();
     const [thReview, setThReview] = useState(null);  // THeatre RENDER VARIABLE
+    const [hasUserPostedReview, setHasUserPostedReview] = useState(false);
+    const [tharelease, setTharelease] = useState(null);
 
     const buttonSlideAnim = useRef(new Animated.Value(100)).current;
-
 
     useEffect(() => {
         // Set a timeout to animate the button after 5 seconds
@@ -77,15 +76,28 @@ const StreamPeopleDetails = () => {
         return () => clearTimeout(timer); // Clean up on component unmount
       }, []);
 
+      // seperate useffetct for checking user reviewed
+      useEffect(() => {
+        if (release) {
+            checkUserReview();
+        }
+    }, [release]);
+
     // use effect which fetch the reviews from theatre
     useEffect(() => {
         if (release && release.connectedId) {
             getThPeoplesReleaseDetails();
+        }   
+    }, [release]);
+
+    useEffect(() => {
+        if (release && release?.connectedId) {
+            getThareleaseDetails();
         }
     }, [release]);
 
     useEffect(() => {
-       // getThPeoplesReleaseDetails();
+        getThPeoplesReleaseDetails();
         getAreleaseDetails();
         getReleaseDetails();
         subscribeToChanges();
@@ -93,6 +105,19 @@ const StreamPeopleDetails = () => {
             cleanup();
         };
     }, []);
+
+      // Add this function to check if the user has posted reviews
+      const checkUserReview = async () => {
+        if (!streamId) return;
+        try {
+          const res = await hasUserPostedAnyReview(user.id, release.connectedId, streamId);
+          if (res.success) {
+            setHasUserPostedReview(res.hasPostedReview);
+          }
+        } catch (error) {
+          console.error("Error checking user review:", error);
+        }
+      };
 
     // function to fetch the reviews from theatre
     const getThPeoplesReleaseDetails = async () => {
@@ -132,6 +157,13 @@ const StreamPeopleDetails = () => {
           }
         }, [router, reviewRef, ratingModalVisible])
       );
+
+      const getThareleaseDetails = async () => {
+        // add another loading skeleton true
+        let res = await fetchReleaseDetailsx(release?.connectedId);
+        if (res.success) setTharelease(res.data);
+        // set loading skeleton false
+    };
 
       const getAreleaseDetails = async () => {
             setStartLoading(true);
@@ -546,16 +578,6 @@ const StreamPeopleDetails = () => {
             }
             return "Share your thoughts...";
         };
-    
-        // if (startLoading) return <View style={styles.center}><Loading /></View>;
-    
-        // if (!release) {
-        //     return (
-        //         <View style={[styles.center, { justifyContent: 'flex-start', marginTop: 100 }]}>
-        //             <Text style={styles.notFound}>Release not found</Text>
-        //         </View>
-        //     );
-        // }
 
         if (startLoading || !release) return (
             <View style={[styles.center, { backgroundColor: "black" }]}>
@@ -591,11 +613,11 @@ const StreamPeopleDetails = () => {
         };
 
     // to check user review from digital
-        const hasUserPostedReview = thReview?.peoplesReview?.some(
-            (review) => review.user?.id === user?.id);
+        // const hasUserPostedReview = thReview?.peoplesReview?.some(
+        //     (review) => review.user?.id === user?.id);
     // to check user review from theatre
-        const hasUserPosterTheatreReview = release?.theatreReviews?.some(
-            (review) => review.user?.id === user?.id);
+        // const hasUserPosterTheatreReview = release?.theatreReviews?.some(
+        //     (review) => review.user?.id === user?.id);
 
             // trigger to get data 
 
@@ -713,6 +735,76 @@ const StreamPeopleDetails = () => {
         )}
 
 
+
+
+         {/* tha Reviews rendering here ADMINS*/}
+
+         {tharelease?.reviews && (
+                             <View style={styles.reviewsContainer}>
+                             {tharelease?.reviews?.length > 0 ? (
+                                 tharelease?.reviews
+                                     .filter(review => !review.parentReviewId)
+                                     .map(review => (
+                                         <View key={review?.id?.toString()}>
+                                             <ReviewItem
+                                                 item={review}
+                                                 onDelete={onDeleteReview}
+                                                 canDelete={user.id === review.userId || user.id === tharelease?.userId}
+                                                 onReplyReviewPress={() => toggleReplyBox(review.id)}
+                                                 replyCount={areviewReplies[review.id]?.length || 0}
+                                                 isReply={false}
+                                                 // openProfilePopup={() => openProfilePopup(review.user)}
+                                                 onShowProfile={() => openProfilePopup(review.user)}
+                                             />
+                                             
+                                             {/* Render replies when reply box is open */}
+                                             {openReplyBox === review.id && areviewReplies[review.id]?.map(reply => (
+                                                 <View key={reply.id} style={styles.replyContainer}>
+                                                     <ReviewItem
+                                                         item={reply}
+                                                         onDelete={onDeleteReview}
+                                                         canDelete={user.id === reply.userId || user.id === tharelease?.userId}
+                                                         replyCount={areviewReplies[review.id]?.length || 0}
+                                                         isReply={true}
+                                                     />
+                                                 </View>
+                                             ))}
+                                             
+                                             {/* Reply input box */}
+                                             {openReplyBox === review.id && (
+                                                 <View style={styles.replyInputContainer}>
+                                                     <Input
+                                                         placeholder={`Reply to @${review.user.name}...`}
+                                                         onChangeText={value => replyRef.current = value}
+                                                         placeholderTextColor={theme.colors.textLight}
+                                                         containerStyle={{
+                                                             flex: 1,
+                                                             height: hp(5),
+                                                             borderRadius: theme.radius.sm
+                                                         }}
+                                                     />
+                                                     {loading ? (
+                                                         <View style={styles.loading}>
+                                                             <FeedLoader size="small" color={theme.colors.primaryDark} />
+                                                         </View>
+                                                     ) : (
+                                                         <TouchableOpacity
+                                                             style={styles.replySendIcon}
+                                                             onPress={() => onSubmitReply(review.id)}
+                                                         >
+                                                             <Icon name="send" size={hp(2)} color={theme.colors.primaryDark} />
+                                                         </TouchableOpacity>
+                                                     )}
+                                                 </View>
+                                             )}
+                                         </View>
+                                     ))
+                             ) : ""}
+                         </View>
+
+                   )}
+
+
                         {/* Reviews rendering here admin */}
 
                         {arelease?.preview && (
@@ -779,7 +871,7 @@ const StreamPeopleDetails = () => {
                             </View>
                         )}      
                        
-                       <TheatreReviewTabs>
+                       <DigitalReviewTabs>
   {/* Tab 1: Digital Reviews */}
   <View>
     <PeoplesPreviewList
@@ -813,7 +905,7 @@ const StreamPeopleDetails = () => {
       </View>
     )}
   </View>
-</TheatreReviewTabs>
+</DigitalReviewTabs>
                 
                     <ProfilePopup
                         user={selectedUser}
@@ -823,7 +915,7 @@ const StreamPeopleDetails = () => {
                     />
                 </ScrollView>
 
-{!hasUserPostedReview && !hasUserPosterTheatreReview && (
+{!hasUserPostedReview && (
   <Animated.View
     style={{
       position: 'absolute',

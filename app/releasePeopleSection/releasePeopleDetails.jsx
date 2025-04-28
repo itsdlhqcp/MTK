@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StyleSheet, TouchableOpacity, Alert, Animated, RefreshControl, Easing } from "react-native";
 import Input from '../../components/Input';
-import { createReleaseReview, createPeopleReleaseReview, fetchPeoplesReleaseDetails, removePeopleReview ,createPeopleReviewReply, fetchPeopleReviewReplies, removeReplyPeopleReview, fetchReleaseDetails, fetchReviewReplies, createReviewReply} from "../../services/releaseService";
+import { createReleaseReview, createPeopleReleaseReview, fetchPeoplesReleaseDetails, removePeopleReview , removeReplyPeopleReview, fetchReleaseDetailsx, fetchReviewReplies, createReviewReply, hasUserPostedAnyReview} from "../../services/releaseService";
 import { View } from "react-native";
 import { createNotifications } from '../../services/notificationService'
 import ReviewItem from "../../components/PreviewItem";
@@ -12,12 +12,8 @@ import { ScrollView } from "react-native";
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import ReleaeCard from '../../components/RelesaeCard';
-import Loading from "../../components/Loading";
 import FeedLoader from "../../components/FeedLoader";
 import Icon from '../../assets/icons';
-import { Text } from "react-native";
-import RatingModal from "../../components/RatingModel";
-import PeoplesReviewItem from "../../components/PeopleReviewItem";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import PeoplesReviewList from "./releasePeopleReview";
 import PeoplesPreviewList from "../streamPeopleSection/streamPeopleReview";
@@ -60,6 +56,7 @@ const ReleasePeopleDetails = () => {
     const [refreshing, setRefreshing] = useState(false);
     const { updateReviewData} = useReview();
     const [thReview, setThReview] = useState(null);
+    const [hasUserPostedReview, setHasUserPostedReview] = useState(false);
     const route = useRoute();
 
     const buttonSlideAnim = useRef(new Animated.Value(100)).current;
@@ -135,24 +132,18 @@ useEffect(() => {
     }
   }, [route.params?.updatedReview]);
 
-        // useEffect(() => {
-        //     subscribeToChanges();
-        //     return () => {
-        //         cleanup();
-        //     };
-        // }, []);
-
         useEffect(() => {
                 if (release && release.sconnectedId) {
                     getThPeoplesReleaseDetails();
                 }
             }, [release]);
 
-        // useEffect(() => {
-        //         if (release && release.connectedId) {
-        //             getThPeoplesReleaseDetails();
-        //         }
-        //     }, [release]);
+             // seperate useffetct for checking user reviewed
+            useEffect(() => {
+                if (release) {
+                    checkUserReview();
+                }
+            }, [release]);
 
         useEffect(() => {
             getAreleaseDetails();
@@ -163,13 +154,25 @@ useEffect(() => {
             };
         }, []);
 
+         // Add this function to check if the user has posted reviews
+         const checkUserReview = async () => {
+            if (!releaseId) return;
+            try {
+              const res = await hasUserPostedAnyReview(user.id, releaseId);
+              if (res.success) {
+                setHasUserPostedReview(res.hasPostedReview);
+              }
+            } catch (error) {
+              console.error("Error checking user review:", error);
+            }
+          };
+
           const getThPeoplesReleaseDetails = async () => {
                 if (!release || !release.sconnectedId) {
                     console.log("Release or connectedId not available yet");
                     return;
                 }
                 
-               // setStartLoading(true);
                 try {
                     let res = await fetchPeoplesStreamDetailsx(release.sconnectedId);
                     if (res.success) setThReview(res.data);
@@ -182,7 +185,7 @@ useEffect(() => {
     
           const getAreleaseDetails = async () => {
                 setStartLoading(true);
-                let res = await fetchReleaseDetails(releaseId);
+                let res = await fetchReleaseDetailsx(releaseId);
                 if (res.success) setArelease(res.data);
                 setStartLoading(false);
             };
@@ -449,12 +452,6 @@ useEffect(() => {
             });
           };
 
-        // const handleEditReview = () => {
-        //     console.log('## handleEditReview called');
-        //   };
-
-        // below is a cup of tea variable which is a boolean value
-
         const handleFinalReviewSubmit = async (rating, cupOfTea, prefer, predict, repeat, reviewTextFromSheet, favour) => {
 
             const finalReviewText = reviewTextFromSheet || reviewRef.current;
@@ -599,24 +596,7 @@ useEffect(() => {
                   <FeedLoader size="medium" color={theme.colors.assent} />
                </View>
             </View>
-          );
-    
-
-        // console.log('Below are the set of peoples reviews', release?.peoplesReview);
-        //  const isCurrentUserReview = release?.peoplesReview?.user?.id === user?.id;  // this code not working
-        // const isCurrentUserReview = release?.peoplesReview?.some(review => review?.user?.id === user?.id);
-        
-
-        const hasUserPostedReview = release?.peoplesReview?.some(
-            (review) => review.user?.id === user?.id);
-
-             // to check user review from theatre
-        const hasUserPosterTheatreReview = thReview?.dpeopreviews.some(
-            (review) => review.user?.id === user?.id);
-
-
-             /// below are functional code for the admin benh review
-            
+          );    
             const isadmin =  user?.id === "a4424502-53de-4814-8882-7a4b5c09a76c"
 
             // on submit admin review 
@@ -674,6 +654,11 @@ useEffect(() => {
                             setLoading(false);
                         }
                     }
+
+                 
+                        
+                        // Call this function in useEffect, after getting the release details
+                      
     
         return (
 
@@ -799,6 +784,8 @@ useEffect(() => {
                          </View>
 
                    )}
+
+                    {/* IN CASE OF THEATRE */}
                               {!release?.sconnectedId && (
                                      <PeoplesReviewList
                                      reviews={release?.peoplesReview || []}
@@ -812,35 +799,38 @@ useEffect(() => {
                                      />
                               )}    
 
+                                {/* IN CASE OF LIBRARY */}
+
                               {release?.sconnectedId && (
                                     <TheatreReviewTabs>
                                    {/* Tab 1: Digital Reviews */}
                                    <View>
-                                     <PeoplesPreviewList
-                                       reviews={release?.dpeopreviews || []}  
-                                       releaseId={release.id}
-                                       releaseUserId={release.userId}
-                                       currentUser={user}
-                                       onDeleteReview={onDeleteReview}
-                                       openProfilePopup={openProfilePopup}
-                                       reviewId={reviewId}
-                                       onhandleEdit={handleEditReview} 
-                                     />
+                                   <PeoplesReviewList
+                                        reviews={release?.peoplesReview || []}
+                                        releaseId={release?.id}
+                                        releaseUserId={release?.userId}
+                                        currentUser={user}
+                                        onDeleteReview={onDeleteReview}
+                                        openProfilePopup={openProfilePopup}
+                                        reviewId={reviewId}
+                                        onhandleEdit={handleEditReview} 
+                                    />
                                    </View>
                                    
                                    {/* Tab 2: Theatre Reviews */}
                                    <View>
                                    {thReview?.dpeopreviews && (
+                                 
                                     <PeoplesPreviewList
                                     reviews={thReview?.dpeopreviews || []}  
-                                    releaseId={thReview.id}
-                                    releaseUserId={thReview.userId}
+                                    releaseId={thReview?.id}
+                                    releaseUserId={thReview?.userId}
                                     currentUser={user}
                                     onDeleteReview={onDeleteReview} // upgrade
                                     openProfilePopup={openProfilePopup}
                                     reviewId={reviewId} // need a change
                                     onhandleEdit={handleEditReview}  // upgrade
-                                    />
+                             />
                                     )}
                                    </View>
                                  </TheatreReviewTabs>
@@ -858,7 +848,7 @@ useEffect(() => {
                    </ScrollView>
                  {/* Adding the floating button */}
 
-                 {!hasUserPostedReview && !hasUserPosterTheatreReview && (
+                 { !hasUserPostedReview && (
                         <Animated.View
                             style={{
                             position: 'absolute',

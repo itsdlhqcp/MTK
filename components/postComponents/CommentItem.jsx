@@ -1,12 +1,10 @@
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import theme from '../../constants/theme'
-import { wp, hp, stripHtmlTags } from '../../helpers/common'
+import { hp } from '../../helpers/common'
 import Avatar from '../Avatar'
 import Icon from '@/assets/icons'
 import moment from 'moment'
-import { getUserData } from '../../services/userServices';
-import { router } from 'expo-router'
 import { userService } from '../../services/helperService'
 import { createCommentLike, createCommentReplylike, createCommentUnlike, removeCommentLike, removeCommentReplyunlike, removeCommentUnlike } from '../../services/postService'
 import { useAuth } from '../../contexts/AuthContext'
@@ -16,7 +14,7 @@ const CommentItem = ({
   canDelete=false,
   onDelete = () => {},
   highlight = false,
-  onReplyPress,  // New prop to handle reply press
+  onReplyPress, 
   onShowProfile,
   router
 }) => {
@@ -97,25 +95,32 @@ const CommentItem = ({
   }, [])
   
   const handleCommentLike = async () => {
-    if(cmtliked) {
+    if (cmtliked) {
       let updatedCmtLikes = cmtlikes.filter(upvote => upvote.userId !== user?.id);
-      setCmtlikes([...updatedCmtLikes]);
+      setCmtlikes(updatedCmtLikes);
       const res = await removeCommentLike(item?.id, user?.id);
-      if(!res.success){
+      if (!res.success) {
         Alert.alert('Error', res.msg || 'Something went wrong');
       }
     } else {
       let data = {
         userId: user?.id,
         commentId: item?.id
-      }
+      };
       setCmtlikes([...cmtlikes, data]);
+  
+      // Remove unlike if exists
+      let updatedCmtUnlikes = cmtunlikes.filter(unlike => unlike.userId !== user?.id);
+      setCmtunlikes(updatedCmtUnlikes);
+      await removeCommentUnlike(item?.id, user?.id);
+  
       const res = await createCommentLike(data);
-      if(!res.success){
+      if (!res.success) {
         Alert.alert('Error', res.msg || 'Something went wrong');
       }
     }
-  }
+  };
+  
   
   const cmtliked = cmtlikes?.filter(cmtlike => cmtlike?.userId === user?.id)[0] ? true : false;
 
@@ -127,25 +132,32 @@ const CommentItem = ({
   }, [])
   
   const handleCommentUnlike = async () => {
-    if(cmtunliked) {
+    if (cmtunliked) {
       let updatedCmtUnlikes = cmtunlikes.filter(unlike => unlike.userId !== user?.id);
-      setCmtunlikes([...updatedCmtUnlikes]);
+      setCmtunlikes(updatedCmtUnlikes);
       const res = await removeCommentUnlike(item?.id, user?.id);
-      if(!res.success){
+      if (!res.success) {
         Alert.alert('Error', res.msg || 'Something went wrong');
       }
     } else {
       let data = {
         userId: user?.id,
         commentId: item?.id
-      }
+      };
       setCmtunlikes([...cmtunlikes, data]);
+  
+      // Remove like if exists
+      let updatedCmtLikes = cmtlikes.filter(upvote => upvote.userId !== user?.id);
+      setCmtlikes(updatedCmtLikes);
+      await removeCommentLike(item?.id, user?.id);
+  
       const res = await createCommentUnlike(data);
-      if(!res.success){
+      if (!res.success) {
         Alert.alert('Error', res.msg || 'Something went wrong');
       }
     }
-  }
+  };
+  
   
   const cmtunliked = cmtunlikes?.filter(cmtunlike => cmtunlike?.userId === user?.id)[0] ? true : false;
 
@@ -344,14 +356,12 @@ const styles = StyleSheet.create({
     color: theme.colors.primaryDark,
     fontWeight: 'bold',
   },
-  // New container for interaction icons
   interactionContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     marginTop: 8,
   },
-  // Style for each icon and its count
   iconButton: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -32,8 +32,6 @@ const MemoizedPostCard = memo(({ item, currentUser, router, isVisible }) => {
       // Add other needed properties here SpotlightCard
     };
   }, [item.id, item.body, item.file, item.userId, item.created_at, item.tags, item.user.name, item.user.image]);
-
-  // console.log("postData", item);
   
   return (
     <SpotlightCard
