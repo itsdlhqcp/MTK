@@ -1,8 +1,17 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Image, Dimensions } from 'react-native';
-import { fetchUserReviews, fetchUserDreviews } from '../services/ProfileTilesService';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { 
+  View, 
+  Text, 
+  FlatList, 
+  StyleSheet, 
+  TouchableOpacity, 
+  Image, 
+  Dimensions 
+} from 'react-native';
+import { fetchAllUserReviews } from '../services/ProfileTilesService';
 import { wp, hp } from '../helpers/common';
 import MLoading from '../components/MaterialLoader';
+import FeedLoader from '../components/FeedLoader';
 import { useAuth } from '../contexts/AuthContext'; 
 import theme from '../constants/theme';
 import moment from 'moment/moment';
@@ -22,16 +31,16 @@ const MonthHeader = ({ month, viewMode, onToggleView, isFirstHeader }) => (
       </View>
 
       {isFirstHeader && (
-         <TouchableOpacity 
-         style={styles.toggleButton} 
-         onPress={onToggleView}
-       >
-         <Icon 
-           name={viewMode === 'grid' ? 'list' : 'grid'} 
-           size={hp(2.6)} 
-           color="#FFFFFF" 
-         />
-       </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.toggleButton} 
+          onPress={onToggleView}
+        >
+          <Icon 
+            name={viewMode === 'grid' ? 'list' : 'grid'} 
+            size={hp(2.6)} 
+            color="#FFFFFF" 
+          />
+        </TouchableOpacity>
       )}
     </View>
   </View>
@@ -40,11 +49,18 @@ const MonthHeader = ({ month, viewMode, onToggleView, isFirstHeader }) => (
 const UserReviewsComponent = ({ navigation }) => {
   const [combinedReviews, setCombinedReviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
   const { user } = useAuth();
   const [isConnected, setIsConnected] = useState(true);
   const [initialCheckDone, setInitialCheckDone] = useState(false);
-
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMorePages, setHasMorePages] = useState(true);
+  const [totalPages, setTotalPages] = useState(1);
+  const PAGE_SIZE = 10; // Number of reviews per page
+  
   // Check network status on mount
   useEffect(() => {
     const checkNetworkStatus = async () => {
@@ -66,49 +82,67 @@ const UserReviewsComponent = ({ navigation }) => {
 
   useEffect(() => {
     if (initialCheckDone) {
-      loadAllReviews();
+      loadReviews(1, true); // Load first page on initial load
     }
   }, [initialCheckDone]);
 
-  const loadAllReviews = async () => {
-    setLoading(true);
+  // Load reviews with pagination
+  const loadReviews = useCallback(async (page = 1, reset = false) => {
+    if (page === 1) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
+    
     try {
       // Check if we're online before attempting to fetch
       if (!isConnected) {
         console.log('Skipping fetch - device is offline');
         setLoading(false);
+        setLoadingMore(false);
         return;
       }
       
-      // Fetch both types of reviews concurrently
-      const [reviewsResult, dreviewsResult] = await Promise.all([
-        fetchUserReviews(user.id),
-        fetchUserDreviews(user.id)
-      ]);
+      // Fetch paginated reviews
+      const result = await fetchAllUserReviews(user.id, page, PAGE_SIZE);
       
-      let allReviews = [];
-      
-      if (reviewsResult.success) {
-        allReviews = [...allReviews, ...reviewsResult.data];
+      if (result.success) {
+        if (reset) {
+          // Replace all existing data
+          setCombinedReviews(result.data);
+        } else {
+          // Append new data to existing
+          setCombinedReviews(prevReviews => [...prevReviews, ...result.data]);
+        }
+        
+        // Update pagination state
+        setCurrentPage(page);
+        setTotalPages(result.pagination.totalPages);
+        setHasMorePages(result.pagination.hasMore);
       } else {
-        console.error('Failed to load reviews:', reviewsResult.msg);
+        console.error('Failed to load reviews:', result.msg);
       }
-      
-      if (dreviewsResult.success) {
-        allReviews = [...allReviews, ...dreviewsResult.data];
-      } else {
-        console.error('Failed to load dreviews:', dreviewsResult.msg);
-      }
-      
-      // Sort by created_at date, newest first
-      allReviews.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-      setCombinedReviews(allReviews);
     } catch (error) {
       console.error('Error loading reviews:', error);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
-  };
+  }, [user.id, isConnected]);
+
+  // Handle pull-to-refresh
+  const handleRefresh = useCallback(() => {
+    if (isConnected) {
+      loadReviews(1, true);
+    }
+  }, [isConnected, loadReviews]);
+
+  // Load more data when reaching end of list
+  const handleLoadMore = useCallback(() => {
+    if (!loadingMore && hasMorePages && isConnected) {
+      loadReviews(currentPage + 1, false);
+    }
+  }, [currentPage, hasMorePages, loadingMore, isConnected, loadReviews]);
 
   // Group reviews by month - useMemo for performance
   const groupedReviews = useMemo(() => {
@@ -145,7 +179,6 @@ const UserReviewsComponent = ({ navigation }) => {
       ];
     }, []);
   }, [groupedReviews]);
-
 
   // Navigate to release details screen which can be also stream details page
   const handleViewRelease = (item) => {
@@ -189,8 +222,7 @@ const UserReviewsComponent = ({ navigation }) => {
   };
 
   // Render list view item (Format 1) or header
-  const renderListItem = ({ item , index }) => {
-
+  const renderListItem = ({ item, index }) => {
     const isFirstHeader = flatListData.findIndex(i => i.isHeader) === index;
     
     // Render header if isHeader is true
@@ -241,19 +273,18 @@ const UserReviewsComponent = ({ navigation }) => {
                         </View>
                       )}
 
-                      {item.favour  && (
-                                        <TouchableOpacity activeOpacity={0.7}>
-                                 <Icon 
-                                    name='heart' 
-                                    size={15} 
-                                    fill={theme.colors.bmw} 
-                                    strokeWidth={1.4} 
-                                    color={theme.colors.dark}
-                                   />
-                                 </TouchableOpacity>
-                                        )}
-                     </View>
-                  
+                      {item.favour && (
+                        <TouchableOpacity activeOpacity={0.7}>
+                          <Icon 
+                            name='heart' 
+                            size={15} 
+                            fill={theme.colors.bmw} 
+                            strokeWidth={1.4} 
+                            color={theme.colors.dark}
+                          />
+                        </TouchableOpacity>
+                      )}
+                  </View>
                   
                   {/* Rating stars and popcorn */}
                   {item.userRating > 0 && (
@@ -273,12 +304,10 @@ const UserReviewsComponent = ({ navigation }) => {
                   )}
                 </View>
 
-            <View style={styles.dayContainer}>
-                 {/* <Text style={styles.dayText}>{dayName}</Text> */}
-                       <Text style={styles.dayText}>{monName}</Text>
-                       <Text style={styles.dayText}>{day}</Text> 
-              </View>
-
+                <View style={styles.dayContainer}>
+                  <Text style={styles.dayText}>{monName}</Text>
+                  <Text style={styles.dayText}>{day}</Text> 
+                </View>
               </View>
             </TouchableOpacity>
             
@@ -317,8 +346,8 @@ const UserReviewsComponent = ({ navigation }) => {
     return chunked;
   }
 
-// Render a row of grid items (3 per row)
-const renderGridRow = ({ item }) => {
+  // Render a row of grid items (3 per row)
+  const renderGridRow = ({ item }) => {
     return (
       <View style={styles.gridRow}>
         {item.map((review, index) => (
@@ -367,7 +396,7 @@ const renderGridRow = ({ item }) => {
   };
 
   // Grid section with header and rows
-  const renderGridSection = ({ item , index }) => {
+  const renderGridSection = ({ item, index }) => {
     const isFirstHeader = index === 0;
     return (
       <View style={styles.gridSection}>
@@ -404,42 +433,78 @@ const renderGridRow = ({ item }) => {
     );
   };
 
+  // Pagination info display
+  const renderPaginationInfo = () => {
+    if (combinedReviews.length === 0 || loading) return null;
+    
+    return (
+      <View style={styles.paginationInfoContainer}>
+        <Text style={styles.paginationText}>
+          Page {currentPage} of {totalPages}
+        </Text>
+      </View>
+    );
+  };
+
+  // Footer component for pagination
+  const renderFooter = () => {
+    return (
+      <View style={{ marginVertical: 0, paddingBottom: 16 }}>
+        {loadingMore && <FeedLoader />}
+        {!hasMorePages && combinedReviews.length > 0 && (
+          <Text style={styles.noPosts}>End of DLHQ review !!</Text>
+        )}
+      </View>
+    );
+  };
+
   return (
     <View style={styles.container}>
-      
       {loading ? (
         <View style={styles.loadingContainer}>
           <MLoading />
         </View>
       ) : (
-        viewMode === 'list' ? (
-          // List View with headers (Format 1)
-          <FlatList
-            key="list"
-            data={flatListData}
-            renderItem={renderListItem}
-            keyExtractor={(item, index) => 
-              item.isHeader ? `header-${item.month}` : `review-list-${item.id || index}`
-            }
-            contentContainerStyle={styles.listContainer}
-            showsVerticalScrollIndicator={false}
-            ListEmptyComponent={renderEmptyComponent}
-            onRefresh={isConnected ? loadAllReviews : null} 
-            refreshing={loading}
-          />
-        ) : (
-          <FlatList
-            key="grid"
-            data={groupedReviews}
-            renderItem={renderGridSection}
-            keyExtractor={(item) => `month-section-${item.month}`}
-            contentContainerStyle={styles.gridContainer}
-            showsVerticalScrollIndicator={false}
-            ListEmptyComponent={renderEmptyComponent}
-            onRefresh={isConnected ? loadAllReviews : null} 
-            refreshing={loading}
-          />
-        )
+        <>
+          {viewMode === 'list' ? (
+            // List View with headers (Format 1)
+            <FlatList
+              key="list"
+              data={flatListData}
+              renderItem={renderListItem}
+              keyExtractor={(item, index) => 
+                item.isHeader ? `header-${item.month}` : `review-list-${item.id || index}`
+              }
+              contentContainerStyle={styles.listContainer}
+              showsVerticalScrollIndicator={false}
+              ListEmptyComponent={renderEmptyComponent}
+              ListFooterComponent={renderFooter}
+              onRefresh={handleRefresh}
+              refreshing={loading}
+              onEndReached={handleLoadMore}
+              onEndReachedThreshold={0.3}
+            />
+          ) : (
+            // Grid View with month sections
+            <FlatList
+              key="grid"
+              data={groupedReviews}
+              renderItem={renderGridSection}
+              keyExtractor={(item) => `month-section-${item.month}`}
+              contentContainerStyle={styles.gridContainer}
+              showsVerticalScrollIndicator={false}
+              ListEmptyComponent={renderEmptyComponent}
+              ListFooterComponent={renderFooter}
+              onRefresh={handleRefresh}
+              refreshing={loading}
+              onEndReached={handleLoadMore}
+              onEndReachedThreshold={0.3}
+            />
+          )}
+          
+          {/* Pagination info at the bottom */}
+          {renderPaginationInfo()}
+        </>
       )}
     </View>
   );
@@ -682,5 +747,24 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     paddingHorizontal: wp(10),
-  }
+  },
+  noPosts: {
+    textAlign: 'center',
+    fontSize: hp(1.8),
+    color: theme.colors.textSecondary,
+    marginTop: hp(1),
+  },
+  // Pagination info styles
+  paginationInfoContainer: {
+    padding: hp(1.5),
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    borderRadius: hp(1),
+    marginBottom: hp(1),
+    marginHorizontal: wp(4),
+  },
+  paginationText: {
+    fontSize: hp(1.6),
+    color: theme.colors.textSecondary,
+  },
 });

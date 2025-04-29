@@ -3,7 +3,6 @@ import React from 'react';
 import { StyleSheet } from 'react-native';
 import theme from '@/constants/theme';
 import { hp } from '@/helpers/common';
-
 import {
   BallIndicator,
   BarIndicator,
@@ -22,9 +21,8 @@ const Button = ({
   title = '',
   onPress = () => {},
   loading = false,
-  loaderType, 
+  loaderType,
   hasShadow = true,
-  
 }) => {
   const shadowStyle = {
     shadowColor: theme.colors.dark,
@@ -50,16 +48,18 @@ const Button = ({
   // Default to BarIndicator if loaderType is invalid
   const LoaderComponent = loaderComponents[loaderType] || BarIndicator;
 
-  if (loading) {
-    return <LoaderComponent color="green" />;
-  }
-
   return (
     <Pressable
-      onPress={onPress}
+      onPress={loading ? null : onPress}
       style={[styles.button, buttonStyle, hasShadow && shadowStyle]}
     >
-      <Text style={[styles.text, textStyle]}>{title}</Text>
+      {loading ? (
+        <View style={styles.loaderContainer}>
+          <LoaderComponent color="white" size={hp(3)} />
+        </View>
+      ) : (
+        <Text style={[styles.text, textStyle]}>{title}</Text>
+      )}
     </Pressable>
   );
 };
@@ -69,7 +69,7 @@ export default Button;
 const styles = StyleSheet.create({
   button: {
     backgroundColor: theme.colors.primary,
-    height: hp(6.6),
+    height: hp(6.4),
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: theme.radius.xl,
@@ -79,4 +79,9 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: theme.fonts.bold,
   },
+  loaderContainer: {
+    height: hp(4),
+    justifyContent: 'center',
+    alignItems: 'center',
+  }
 });
