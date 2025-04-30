@@ -69,7 +69,7 @@ export default Button;
 const styles = StyleSheet.create({
   button: {
     backgroundColor: theme.colors.primary,
-    height: hp(6.4),
+    height: hp(5.4),
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: theme.radius.xl,

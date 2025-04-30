@@ -24,15 +24,12 @@ const AdminPanel = () => {
         style={styles.header}
          rightIcon={
                   <TouchableOpacity
-                    //onPress={onSubmit} 
-                  //  disabled={isSubmitting}
-                   // style={{ opacity: isSubmitting ? 0.5 : 1 }}  AdminControl.jsx
                    onPress={() => router.push('AdminControl')}
                   >
                     <Icon name="activity" size={24} color="white" />
                   </TouchableOpacity>
                 }
-      />
+             />
       
       <View style={styles.content}>
         <Text style={styles.sectionTitle}>Dashboard Controls</Text>
@@ -45,7 +42,7 @@ const AdminPanel = () => {
             <View style={styles.iconContainer}>
               <Icon name="plus" size={hp(3.2)} color="#fff" />
             </View>
-            <Text style={styles.buttonText}>Create Feed</Text>
+            <Text style={styles.buttonText}>Create News</Text>
           </Pressable>
           
           <Pressable 
@@ -55,7 +52,7 @@ const AdminPanel = () => {
             <View style={[styles.iconContainer, styles.greenIcon]}>
               <Icon name="plus" size={hp(3.2)} color="#fff" />
             </View>
-            <Text style={styles.buttonText}>New Release</Text>
+            <Text style={styles.buttonText}>New Theatre</Text>
           </Pressable>
           
           <Pressable 
@@ -65,14 +62,14 @@ const AdminPanel = () => {
             <View style={[styles.iconContainer, styles.redIcon]}>
               <Icon name="plus" size={hp(3.2)} color="#fff" />
             </View>
-            <Text style={styles.buttonText}>New OTT</Text>
+            <Text style={styles.buttonText}>New Digital</Text>
           </Pressable>
         </View>
         
         <View style={styles.statsContainer}>
           <View style={styles.statCard}>
             <Text style={styles.statNumber}>24</Text>
-            <Text style={styles.statLabel}>Active Feeds</Text>
+            <Text style={styles.statLabel}>Active News</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statNumber}>12</Text>
@@ -80,7 +77,7 @@ const AdminPanel = () => {
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statNumber}>8</Text>
-            <Text style={styles.statLabel}>OTT Platforms</Text>
+            <Text style={styles.statLabel}>New Digital</Text>
           </View>
         </View>
       </View>

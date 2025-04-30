@@ -463,7 +463,42 @@ export const fetchPosts = async (limit=10,userId) => {
               console.log('got comment twsit reply like removing error', error);
               return {success: false, msg: error?.message};
             }
-          
           }
+
+          // create a service to fetch twists of that user into profile
+          export const fetchTwists = async (limit=10,userId) => {
+            try {
+              if(userId){
+                const { data, error } = await supabase
+                .from('twists')
+                .select(`*,user: users (id, name, image)
+                  `,
+                )
+                .order('created_at', { ascending: false })
+                .eq('userId', userId)
+                .limit(limit);
+              if (error) {
+                return { success: false, msg: 'Could not fetch the twists' };
+              }
+              return { success: true, data };
+              }else{
+                const { data, error } = await supabase
+                .from('twists')
+                .select(`*,user: users (id, name, image)
+                  `,
+                )
+                .order('created_at', { ascending: false })
+                .limit(limit);
+              if (error) {
+                return { success: false, msg: 'Could not fetch the twist' };
+              }
+              return { success: true, data };
+              }
+            } catch (error) {
+              return { success: false, msg: 'Could not fetch the twists due to an exception' };
+            }
+          };
+
+
                 
             

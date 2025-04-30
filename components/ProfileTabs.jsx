@@ -2,19 +2,15 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { wp, hp } from '../helpers/common';
 import theme from '../constants/theme';
-import PostCard from '../components/PostCard';
 import MLoading from '../components/MaterialLoader';
-import { FlatList } from 'react-native';
 import UserReviewsComponent from '../components/userReviewTiles';
+import UserPostsComponent from './UserPostComponent';
 
 // Tab navigator component for Profile screen
 const TabNavigator = ({ 
   posts, 
   loading, 
   hasMore, 
-  getPosts, 
-  user, 
-  router, 
   theme: activeTheme,
   navigation // Add navigation prop for the reviews component
 }) => {
@@ -49,37 +45,11 @@ const TabNavigator = ({
         );
       case 'plots':
         return (
-          <Text style={styles.library}>Post feature coming soon!!</Text>
-          // <View style={styles.plotsContainer}>
-          //   <FlatList
-          //     data={posts}
-          //     showsVerticalScrollIndicator={false}
-          //     contentContainerStyle={styles.listStyle}
-          //     keyExtractor={item => item.id.toString()}
-          //     renderItem={({ item }) => (
-          //       <PostCard
-          //         item={item}
-          //         currentUser={user}
-          //         router={router}
-          //       />
-          //     )}
-          //     onEndReached={() => {
-          //       if (hasMore && !loading) {
-          //         getPosts();
-          //       }
-          //     }}
-          //     onEndReachedThreshold={0.5}
-          //     scrollEnabled={false} // Important: Disable scrolling here
-          //     ListFooterComponent={FooterComponent}
-          //     ListEmptyComponent={() => (
-          //       <View style={styles.loadingContainer}>
-          //         <Text style={[styles.noPosts, { color: activeTheme.colors.primary }]}>
-          //           {loading ? <MLoading /> : "Section Coming Soon!!"}
-          //         </Text>
-          //       </View>
-          //     )}
-          //   />
-          // </View>
+            // In below code where i need to pass post components 
+          // <Text style={styles.library}>Post feature coming soon!!</Text>
+          <View style={styles.reviewContent}>
+            <UserPostsComponent navigation={navigation} />
+        </View>
         );
       default:
         return null;
@@ -168,10 +138,10 @@ const styles = StyleSheet.create({
     fontSize: hp(1.8),
   },
   reviewsContainer: {
-    minHeight: hp(50), // Set minimum height to show content
+    minHeight: hp(50), 
   },
   plotsContainer: {
-    minHeight: hp(50), // Set minimum height to show content
+    minHeight: hp(50),
   },
   reviewContent: {
     paddingBottom: hp(2),

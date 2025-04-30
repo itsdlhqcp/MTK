@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, Image, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, FlatList } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '../contexts/AuthContext';
 import ScreenWrapper from '../components/ScreenWrapper';
@@ -49,6 +49,8 @@ const FriendProfile = () => {
   const [hasMore, setHasMore] = useState(true);
   const [friendshipStatus, setFriendshipStatus] = useState(null);
   const [friendshipLoading, setFriendshipLoading] = useState(false);
+
+  console.log("the set of posts of that user", posts);
 
   // Check if profile is the current user
   const isCurrentUser = user?.id === userId;

@@ -5,7 +5,7 @@ import { captureRef } from 'react-native-view-shot';
 import Icon from '../assets/icons';
 import theme from '../constants/theme';
 import { hp, stripHtmlTags } from '../helpers/common';
-import { createTwistLikes, createTwistUnlikes, removeTwistLikes, removeTwistUnlikes } from '../services/homeService'
+import { createTwistLikes, createTwistUnlikes, removeTwistLikes, removeTwistUnlikes } from '../services/homeService';
 import { getSupabaseFileUrl } from '../services/imageService';
 import { useFocusEffect } from 'expo-router';
 import { Image } from 'react-native';

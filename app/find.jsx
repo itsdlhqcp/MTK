@@ -1,5 +1,5 @@
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, ActivityIndicator, TextInput } from 'react-native';
-import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, ActivityIndicator, TextInput, Dimensions, StatusBar } from 'react-native';
+import React, { useState, useCallback } from 'react';
 import { hp, wp } from '@/helpers/common';
 import theme from '../constants/theme';
 import Icon from '@/assets/icons';
@@ -7,6 +7,21 @@ import Avatar from '../components/Avatar';
 import { friendRequestService } from '../services/requestService';
 import { supabase } from '../lib/supabase';
 import { useFocusEffect } from '@react-navigation/native';
+
+// Instagram-inspired dark theme colors
+const instaTheme = {
+  ...theme,
+  colors: {
+    ...theme.colors,
+    background: '#000000',
+    card: '#121212',
+    text: '#FFFFFF',
+    textLight: '#8E8E8E',
+    primary: '#0095F6', // Instagram blue
+    border: '#262626',
+    buttonText: '#FFFFFF',
+  },
+};
 
 const UserSearchTab = () => {
   const [loading, setLoading] = useState(false);
@@ -110,41 +125,41 @@ const UserSearchTab = () => {
 
   const renderUserItem = ({ item }) => {
     // Determine button state based on friendship status
-    let buttonText = 'Add Friend';
+    let buttonText = 'Follow';
     let buttonStyle = styles.addButton;
     let buttonTextStyle = styles.addButtonText;
     let buttonDisabled = false;
     
     switch (friendships[item.id]) {
       case 'accepted':
-        buttonText = 'Friends';
+        buttonText = 'Following';
         buttonStyle = styles.friendsButton;
         buttonTextStyle = styles.friendsButtonText;
         buttonDisabled = true;
         break;
       case 'pending':
-        buttonText = 'Pending';
+        buttonText = 'Requested';
         buttonStyle = styles.pendingButton;
         buttonTextStyle = styles.pendingButtonText;
         buttonDisabled = true;
         break;
       case 'rejected':
-        buttonText = 'Add Friend';
+        buttonText = 'Follow';
         break;
       default:
-        buttonText = 'Add Friend';
+        buttonText = 'Follow';
     }
     
     return (
-      <View style={styles.userItem}>
-        <View style={styles.userInfo}>
+      <View style={styles.userCard}>
+        <View style={styles.userInfoContainer}>
           <Avatar
             uri={item.image}
-            size={hp(6)}
-            rounded={theme.radius.xl}
+            size={hp(7)}
+            rounded={hp(7) / 2} // Fully rounded for Instagram-style
           />
           <View style={styles.userText}>
-            <Text style={styles.username}>{item.name}</Text>
+            <Text style={styles.username} numberOfLines={1} ellipsizeMode="tail">{item.name}</Text>
             {item.bio && (
               <Text style={styles.userBio} numberOfLines={1} ellipsizeMode="tail">
                 {item.bio}
@@ -165,11 +180,14 @@ const UserSearchTab = () => {
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#000000" />
+      
       <View style={styles.searchContainer}>
-        <Icon name="search" size={hp(2.5)} color={theme.colors.textLight} style={styles.searchIcon} />
+        <Icon name="search" size={hp(2.5)} color={instaTheme.colors.textLight} style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
-          placeholder="Search for users..."
+          placeholder="Search"
+          placeholderTextColor={instaTheme.colors.textLight}
           value={searchTerm}
           onChangeText={handleSearchChange}
           returnKeyType="search"
@@ -183,20 +201,18 @@ const UserSearchTab = () => {
               setSearchResults([]);
             }}
           >
-            <Icon name="close" size={hp(2)} color={theme.colors.textLight} />
+            {loading ? (
+              <ActivityIndicator size="small" color={instaTheme.colors.primary} />
+            ) : (
+              <Icon name="close" size={hp(2)} color={instaTheme.colors.textLight} />
+            )}
           </TouchableOpacity>
         )}
       </View>
       
-      {loading && (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-        </View>
-      )}
-      
       {!loading && searchResults.length === 0 && searchTerm.length > 0 ? (
         <View style={styles.emptyContainer}>
-          <Icon name="user" size={hp(6)} color={theme.colors.textLight} />
+          <Icon name="user" size={hp(6)} color={instaTheme.colors.textLight} />
           <Text style={styles.emptyText}>No users found</Text>
           <Text style={styles.emptySubtext}>
             Try a different search term
@@ -204,11 +220,16 @@ const UserSearchTab = () => {
         </View>
       ) : !loading && searchTerm.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Icon name="search" size={hp(6)} color={theme.colors.textLight} />
-          <Text style={styles.emptyText}>Search for users</Text>
+          <Icon name="search" size={hp(6)} color={instaTheme.colors.textLight} />
+          <Text style={styles.emptyText}>Search</Text>
           <Text style={styles.emptySubtext}>
-            Find friends by name and send them a friend request
+            Find people to follow
           </Text>
+        </View>
+      ) : loading ? (
+        <View style={styles.emptyContainer}>
+          <ActivityIndicator size="large" color={instaTheme.colors.primary} />
+          <Text style={styles.emptyText}>Searching...</Text>
         </View>
       ) : (
         <FlatList
@@ -225,17 +246,17 @@ const UserSearchTab = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: '#000000', 
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.card,
-    borderRadius: 22,
+    backgroundColor: '#262626', 
+    borderRadius: 10,
     paddingHorizontal: wp(4),
     marginVertical: hp(2),
     marginHorizontal: wp(4),
-    height: hp(6),
+    height: hp(5),
   },
   searchIcon: {
     marginRight: wp(2),
@@ -243,24 +264,25 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     height: '100%',
-    fontSize: 22,
-    color: theme.colors.text,
+    fontSize: 16,
+    color: '#FFFFFF',
   },
   clearButton: {
     padding: wp(2),
   },
   usersList: {
-    paddingHorizontal: wp(4),
+    padding: wp(2),
   },
-  userItem: {
+  userCard: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: hp(1.5),
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    paddingHorizontal: wp(4),
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#262626',
   },
-  userInfo: {
+  userInfoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
@@ -270,52 +292,47 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   username: {
-    fontSize: 22,
+    fontSize: 14,
     fontWeight: '600',
-    color: theme.colors.text,
+    color: '#FFFFFF',
   },
   userBio: {
-    fontSize: 22,
-    color: theme.colors.textLight,
-    marginTop: hp(0.5),
+    fontSize: 13,
+    color: '#8E8E8E', 
+    marginTop: hp(0.3),
   },
   actionButton: {
-    paddingHorizontal: wp(4),
-    paddingVertical: hp(1),
-    borderRadius: 22,
+    paddingVertical: hp(0.8),
+    paddingHorizontal: wp(3),
+    borderRadius: 4,
     justifyContent: 'center',
     alignItems: 'center',
   },
   addButton: {
-    backgroundColor: theme.colors.primary,
+    backgroundColor: '#0095F6', 
   },
   pendingButton: {
-    backgroundColor: theme.colors.card,
+    backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: '#262626', 
   },
   friendsButton: {
-    backgroundColor: theme.colors.card,
+    backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: '#262626', 
   },
   buttonText: {
-    fontSize: 22,
+    fontSize: 13,
     fontWeight: '600',
   },
   addButtonText: {
-    color: theme.colors.buttonText,
+    color: '#FFFFFF',
   },
   pendingButtonText: {
-    color: theme.colors.textLight,
+    color: '#FFFFFF',
   },
   friendsButtonText: {
-    color: theme.colors.text,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    color: '#FFFFFF',
   },
   emptyContainer: {
     flex: 1,
@@ -324,14 +341,14 @@ const styles = StyleSheet.create({
     padding: wp(6),
   },
   emptyText: {
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: '600',
-    color: theme.colors.text,
+    color: '#FFFFFF',
     marginTop: hp(2),
   },
   emptySubtext: {
-    fontSize: 22,
-    color: theme.colors.textLight,
+    fontSize: 16,
+    color: '#8E8E8E', 
     textAlign: 'center',
     marginTop: hp(1),
   },

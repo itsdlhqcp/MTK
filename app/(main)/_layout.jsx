@@ -1,18 +1,15 @@
 global.Buffer = global.Buffer || require('buffer').Buffer;
 import { Tabs } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Platform, Linking, View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { router } from 'expo-router';
 import { HapticTab } from '@/components/NavTabMain/HapticTab.tsx';
 import { IconSymbol } from '@/components/NavTabMain/ui/IconSymbol.tsx';
 import Icon from '@/assets/icons' 
 import TabBarBackground from '@/components/NavTabMain/ui/TabBarBackground.tsx';
-import { Colors } from '../../constants/mainTab.ts';
 import { useColorScheme } from '../../hooks/useColorScheme.ts';
-import { Pressable } from 'react-native';
 import Avatar from '@/components/Avatar'; 
 import { useAuth } from '../../contexts/AuthContext';
-// import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
 import { hp } from '../../helpers/common.js';
 import theme from '../../constants/theme.js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
