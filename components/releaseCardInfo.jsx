@@ -23,7 +23,6 @@ const ReleaseCardInfo = ({
     const [isSharing, setIsSharing] = useState(false);
     const [showPosterView, setShowPosterView] = useState(false);
     const scaleAnim = useRef(new Animated.Value(1)).current;
-    
     const shadowStyle = {
         shadowOffset: {
             width: 0,

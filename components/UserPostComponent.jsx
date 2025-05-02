@@ -95,10 +95,7 @@ const UserPostsComponent = ({ navigation }) => {
         return;
       }
       
-      // For initial load, start with default limit
-      // For load more, increase the limit
       const currentLimit = isInitialLoad ? 10 : limit + 10;
-      console.log('fetching posts with limit:', currentLimit);
       
       let res = await fetchTwists(currentLimit, user.id);
       
@@ -106,16 +103,12 @@ const UserPostsComponent = ({ navigation }) => {
         setPosts(res.data);
         setLimit(currentLimit); // Update limit state
         
-        // Determine if there's more data to load
-        // If the current result count equals the previous result count, we've reached the end
         if (!isInitialLoad && lastFetchCount === res.data.length) {
           setHasMore(false);
         }
         
-        // Store current count for next comparison
         setLastFetchCount(res.data.length);
         
-        // Update pagination info
         const pageSize = 10;
         setCurrentPage(Math.ceil(res.data.length / pageSize));
         setTotalPages(Math.max(1, Math.ceil(res.data.length / pageSize)));
@@ -191,11 +184,8 @@ const UserPostsComponent = ({ navigation }) => {
   const handleViewPost = (item) => {
     if (!item?.id) return null;
     
-    // Call your navigation logic here
-    console.log("Viewing post:", item.id);
-    // Example navigation
     router.push({ 
-      pathname: 'postDetails', 
+      pathname: 'twistDetails', 
       params: { postId: item.id } 
     });
   };
@@ -661,7 +651,6 @@ const styles = {
   },
 };
 
-// Tags styles for displaying HTML content
 const titleTagsStyles = {
   div: {
     color: 'white',

@@ -8,7 +8,6 @@ import { friendRequestService } from '../services/requestService';
 import { supabase } from '../lib/supabase';
 import { useFocusEffect } from '@react-navigation/native';
 
-// Instagram-inspired dark theme colors
 const instaTheme = {
   ...theme,
   colors: {
@@ -17,7 +16,7 @@ const instaTheme = {
     card: '#121212',
     text: '#FFFFFF',
     textLight: '#8E8E8E',
-    primary: '#0095F6', // Instagram blue
+    primary: '#0095F6', 
     border: '#262626',
     buttonText: '#FFFFFF',
   },
@@ -52,12 +51,11 @@ const UserSearchTab = () => {
       const { data: userData } = await supabase.auth.getUser();
       const currentUserId = userData.user.id;
 
-      // Search for users by name
       const { data, error } = await supabase
         .from('users')
         .select('id, name, image, bio')
         .ilike('name', `%${searchTerm}%`)
-        .neq('id', currentUserId) // Don't include current user
+        .neq('id', currentUserId)
         .limit(20);
 
       if (error) {
@@ -156,7 +154,7 @@ const UserSearchTab = () => {
           <Avatar
             uri={item.image}
             size={hp(7)}
-            rounded={hp(7) / 2} // Fully rounded for Instagram-style
+            rounded={hp(7) / 2} 
           />
           <View style={styles.userText}>
             <Text style={styles.username} numberOfLines={1} ellipsizeMode="tail">{item.name}</Text>
@@ -183,7 +181,7 @@ const UserSearchTab = () => {
       <StatusBar barStyle="light-content" backgroundColor="#000000" />
       
       <View style={styles.searchContainer}>
-        <Icon name="search" size={hp(2.5)} color={instaTheme.colors.textLight} style={styles.searchIcon} />
+        <Icon name="search" size={hp(2.5)} color={theme.colors.textLight} style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
           placeholder="Search"

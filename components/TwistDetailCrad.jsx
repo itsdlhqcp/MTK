@@ -194,7 +194,7 @@ const renderYouTubeContent = () => {
       <View style={styles.youtubeContainer}>
         {!isVideoReady && (
           <Image
-            source={require('../assets/images/loader/homeldr.jpeg')}
+            source={require('../assets/images/loader/homeldr.png')}
             style={{ width: '100%', height: 200 }} 
           />
         )}

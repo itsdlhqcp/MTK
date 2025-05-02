@@ -116,9 +116,9 @@ const AdminPanel = () => {
         </View>
         </TouchableOpacity>
         </View>
-        <View style={styles.statsContainer}>
+        {/* <View style={styles.statsContainer}>
         <ReportsListComponent onReportsCountChange={handleReportsCountChange} />
-        </View>
+        </View> */}
       </View>
     </View>
   );

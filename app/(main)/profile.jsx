@@ -15,7 +15,6 @@ import { friendRequestService } from '../../services/requestService';
 import TabNavigator from '../../components/ProfileTabs';
 import { NetworkUtils } from '../../utils/network';
 
-// Dark mode colors remain unchanged
 const darkTheme = {
   ...theme,
   colors: {
@@ -56,7 +55,7 @@ const Profile = () => {
   const [cachedProfileStats, setCachedProfileStats] = useState(null);
   const [isConnected, setIsConnected] = useState(true); // New state for network connection
   const [offlineMode, setOfflineMode] = useState(false); // Track if we're in offline mode
-
+  const [hasPostsAvailable, setHasPostsAvailable] = useState(false); // New state to track post availability
 
   // Set up network listener
   useEffect(() => {
@@ -94,6 +93,9 @@ const Profile = () => {
     const cachedPosts = await UserStorageService.getCachedPosts();
     if (cachedPosts.length > 0) {
       setPosts(cachedPosts);
+      setHasPostsAvailable(true); // Update post availability based on cache
+    } else {
+      setHasPostsAvailable(false);
     }
   };
 
@@ -206,6 +208,9 @@ const precacheImages = useCallback(async (userData, postsData) => {
         
         setProfileStats(newStats);
         
+        // Update the post availability state based on post count
+        setHasPostsAvailable(count > 0);
+        
         // Cache the profile stats with timestamp
         const timestamp = Date.now();
         setProfileDataTimestamp(timestamp);
@@ -259,6 +264,9 @@ const precacheImages = useCallback(async (userData, postsData) => {
           setHasMore(false);
         }
         
+        // Update post availability based on API response
+        setHasPostsAvailable(res.data.length > 0);
+        
         // Append new posts, avoiding duplicates
         setPosts(prevPosts => {
           const newPosts = res.data.filter(
@@ -278,6 +286,7 @@ const precacheImages = useCallback(async (userData, postsData) => {
         setPage(prev => prev + 1);
       } else {
         Alert.alert('Error', 'Failed to fetch posts');
+        setHasPostsAvailable(false);
       }
     } catch (error) {
       console.error('Error fetching posts:', error);
@@ -316,7 +325,7 @@ const precacheImages = useCallback(async (userData, postsData) => {
           offlineMode={offlineMode}
         />
         
-        {/* Tab Navigator */}
+        {/* Tab Navigator - Now passes hasPostsAvailable prop */}
         <View style={styles.tabSection}>
           <TabNavigator
             posts={posts}
@@ -328,6 +337,7 @@ const precacheImages = useCallback(async (userData, postsData) => {
             theme={activeTheme}
             navigation={router}
             offlineMode={offlineMode}
+            hasPostsAvailable={hasPostsAvailable} // Pass the posts availability flag
           />
         </View>
       </ScrollView>

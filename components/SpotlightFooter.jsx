@@ -206,6 +206,16 @@ const SpotlightFooter = ({
     });
   }
 
+ const onEditPost = () => {
+    if (router) {
+      router.push({
+        pathname: 'createFeed', 
+        params: {...item}
+      });
+    } else {
+      console.error("Router is undefined in TwistCard");
+    }
+  };
   // Share function that creates and shares an embedded poster
   const onShare = async () => {
     if (isSharing) return; // Prevent multiple share requests
@@ -308,8 +318,8 @@ const SpotlightFooter = ({
             </TouchableOpacity>
           </View>
           
-          <TouchableOpacity style={styles.actionButton}>
-            <Icon name='bookmark' size={hp(2.6)} strokeWidth={2} color={theme.colors.light} />
+          <TouchableOpacity style={styles.actionButton} onPress={onEditPost}>
+            <Icon name='edit' size={hp(2.6)} strokeWidth={2} color={theme.colors.silver} />
           </TouchableOpacity>
         </View>
         

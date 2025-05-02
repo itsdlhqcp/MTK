@@ -401,3 +401,13 @@ add at top
     }
   }
 }
+
+///////////////process done before build apk success on cloud /////////
+
+## succes 🍿 at bld 3 folder
+
+## remove the ./android folder before build apk
+
+## run npx expo-doctor which gives the correct check version for all the packages (remove the unwanted context-error )
+
+## chaged the image into correct format (png) and added the image in the assets folder

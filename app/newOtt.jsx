@@ -14,7 +14,6 @@ import { getSupabaseFileUrl } from '../services/imageService'
 import * as ImagePicker from 'expo-image-picker';
 import DatePicker from '../components/DatePicker'
 import RatingInput from '../components/RatingInput'
-import UserRatingImpact from '../components/userRatingImpact'
 import { createOrUpdateOtt, fetchOtt, updateReleaseSconnectedId } from '../services/ottService'
 import TagInput from '../components/OttTagInput'
 import { fetchReleases } from '../services/releaseService'

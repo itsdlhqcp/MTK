@@ -17,7 +17,7 @@ import DatePicker from '../components/DatePicker'
 import RatingInput from '../components/RatingInput'
 import UserRatingImpact from '../components/userRatingImpact'
 import { createOrUpdateRelease } from '../services/releaseService'
-import TagInput from '../components/OttTagInput'  // Import the TagInput component
+import TagInput from '../components/OttTagInput'  
 
 const NewRelease = () => {
 
@@ -29,15 +29,16 @@ const NewRelease = () => {
   const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
   const [file, setFile] = useState(null);
-  const [filel, setFilel] = useState(null); // Added second file state
+  const [filel, setFilel] = useState(null); 
   const [rating, setRating] = useState(null);
   const [userRatingImpact, setUserRatingImpact] = useState(0);
-  const [tags, setTags] = useState([]); // Add state for platform tags
+  const [tags, setTags] = useState([]); 
   
   // Film information fields as individual state variables
   const [lang, setLang] = useState('');
   const [genre, setGenre] = useState('');
   const [duration, setDuration] = useState('');
+  const [durationError, setDurationError] = useState('');
   const [director, setDirector] = useState('');
   const [writer, setWriter] = useState('');
   const [music, setMusic] = useState('');
@@ -77,13 +78,47 @@ const NewRelease = () => {
       if (post.dop) setDop(post.dop);
       if (post.edit) setEdit(post.edit);
       if (post.cast) setCast(post.cast);
-      if (post.tags) setTags(post.tags); // Load tags if they exist
+      if (post.tags) {
+        const tagArray = Array.isArray(post.tags) ? post.tags : 
+                       (typeof post.tags === 'string' ? [post.tags] : []);
+        setTags(tagArray);
+      }
+      if (post.defRating) setRating(post.defRating);
+      if (post.userRatImpact) setUserRatingImpact(post.userRatImpact);
+      if (post.rDate) setSelectedDate(new Date(post.rDate));
+      if (post.endDate) setselectedEndate(new Date(post.endDate));
       
       setTimeout(() => {
-        editorRef?.current?.setContentHTML(post.body);
-      },300)
+        if (editorRef?.current?.setContentHTML && post.body) {
+          editorRef.current.setContentHTML(post.body);
+        }
+      }, 300);
     }
-  }, [post])
+  }, [post.id]);
+
+  // Validate duration format (hh:mm:ss)
+  const validateDuration = (value) => {
+    if (!value) {
+      setDurationError('');
+      return true; // Empty is valid as we're allowing film info to be optional
+    }
+    
+    const timeFormat = /^([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])$/;
+    const isValid = timeFormat.test(value);
+    
+    if (isValid) {
+      setDurationError('');
+      return true;
+    } else {
+      setDurationError('Please use format HH:MM:SS (e.g., 02:30:45)');
+      return false;
+    }
+  };
+
+  const handleDurationChange = (text) => {
+    setDuration(text);
+    validateDuration(text);
+  };
 
   const onPick = async (isImage, allowEditing = true) => {
     try {
@@ -195,30 +230,24 @@ const NewRelease = () => {
   };
 
   const onSubmit = async () => {
-    if (!selectedDate && !file && !filel && !bodyRef.current && !selectedEndate && !rating && !lang && !genre && !duration && !director && !writer && !music && !dop && !edit && !cast) {
-      Alert.alert('Error', 'Enter All the fields!! Title, post img and release date');
+    // Basic validation for required fields
+    if (!selectedDate && !file && !bodyRef.current && !rating) {
+      Alert.alert('Error', 'Please provide at least release date, poster image, title, and rating');
       return;
     }
+    
     if (!rating) {
       Alert.alert('Error', 'Please enter Rating of release!!');
       return;
     }
 
-    // Check if all film info fields are filled
-    const filmFields = {
-      lang, genre, duration, director, writer, music, dop, edit, cast
-    };
-    
-    const missingFields = Object.entries(filmFields)
-      .filter(([_, value]) => !value)
-      .map(([key]) => key);
-    
-    if (missingFields.length > 0) {
-      Alert.alert('Error', `Please fill all film information fields. Missing: ${missingFields.join(', ')}`);
-      return;
+    // Check duration format if it's provided
+    if (duration && !validateDuration(duration)) {
+      return; // Stop submission if duration format is invalid
     }
 
     let data = {
+      ...(post?.id && { id: post.id }),
       file, 
       filel, // Added second file to submission data
       body: bodyRef.current,
@@ -226,18 +255,20 @@ const NewRelease = () => {
       rDate: selectedDate,
       defRating: rating,
       userRatImpact: userRatingImpact,
-      type: tags, // Include tags in the submission data
-      endDate: selectedEndate,
-      lang,
-      genre,
-      duration,
-      director,
-      writer,
-      music,
-      dop,
-      edit,
-      cast
+      type: tags, 
+      endDate: selectedEndate
     }
+    
+    // Add film information only if provided
+    if (lang) data.lang = lang;
+    if (genre) data.genre = genre;
+    if (duration) data.duration = duration;
+    if (director) data.director = director;
+    if (writer) data.writer = writer;
+    if (music) data.music = music;
+    if (dop) data.dop = dop;
+    if (edit) data.edit = edit;
+    if (cast) data.cast = cast;
 
     // CREATING A NEW RELEASE 
     setLoading(true);
@@ -372,42 +403,46 @@ const NewRelease = () => {
             </View>
           </View>
 
-          {/* Platform Pills Section - Added from NewOtt */}
+          {!post?.id && (
           <View style={styles.platformsContainer}>
-            <Text style={styles.platformsTitle}>Film Type</Text>
-            <View style={styles.platformsScrollContainer}>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <View style={styles.platformPills}>
-                  {platformOptions.map((platform, index) => (
-                    <TouchableOpacity 
-                      key={index} 
+          <Text style={styles.platformsTitle}>Film Type (Very Important $$)</Text>
+          <View style={styles.platformsScrollContainer}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View style={styles.platformPills}>
+                {platformOptions.map((platform, index) => (
+                  <TouchableOpacity 
+                    key={index} 
+                    style={[
+                      styles.platformPill,
+                      tags.includes(platform) && styles.platformPillSelected
+                    ]}
+                    onPress={() => addPlatformTag(platform)}
+                  >
+                    <Text 
                       style={[
-                        styles.platformPill,
-                        tags.includes(platform) && styles.platformPillSelected
+                        styles.platformPillText,
+                        tags.includes(platform) && styles.platformPillTextSelected
                       ]}
-                      onPress={() => addPlatformTag(platform)}
                     >
-                      <Text 
-                        style={[
-                          styles.platformPillText,
-                          tags.includes(platform) && styles.platformPillTextSelected
-                        ]}
-                      >
-                        {platform}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </ScrollView>
-            </View>
+                      {platform}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
           </View>
-          
+        </View>
+          )}
+        
           {/* Tag Input for custom tags or displaying selected tags */}
-          <TagInput tags={tags} setTags={setTags} />
+          {!post?.id && (
+            <TagInput tags={tags} setTags={setTags} />
+          )}
+          
 
           {/* Film Information Section */}
           <View style={styles.sectionDivider}>
-            <Text style={styles.sectionTitle}>Film Information</Text>
+            <Text style={styles.sectionTitle}>Film Information (If present looks gd)</Text>
           </View>
 
           {/* Language Field */}
@@ -416,7 +451,7 @@ const NewRelease = () => {
             <TextInput
               style={styles.input}
               value={lang}
-              onChangeText={setLang}
+              onChangeText={(text) => setLang(text)}
               placeholder="Enter film language"
             />
           </View>
@@ -427,7 +462,7 @@ const NewRelease = () => {
             <TextInput
               style={styles.input}
               value={genre}
-              onChangeText={setGenre}
+              onChangeText={(text) => setGenre(text)}
               placeholder="Enter film genre"
             />
           </View>
@@ -436,12 +471,15 @@ const NewRelease = () => {
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>Duration</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, durationError ? styles.inputError : null]}
               value={duration}
-              onChangeText={setDuration}
+              onChangeText={handleDurationChange}
               placeholder="Enter film duration (HH:MM:SS)"
               keyboardType="default"
             />
+            {durationError ? (
+              <Text style={styles.errorText}>{durationError}</Text>
+            ) : null}
           </View>
 
           {/* Director Field */}
@@ -450,7 +488,7 @@ const NewRelease = () => {
             <TextInput
               style={styles.input}
               value={director}
-              onChangeText={setDirector}
+              onChangeText={(text) => setDirector(text)}
               placeholder="Enter film director"
             />
           </View>
@@ -461,7 +499,7 @@ const NewRelease = () => {
             <TextInput
               style={styles.input}
               value={writer}
-              onChangeText={setWriter}
+              onChangeText={(text) => setWriter(text)}
               placeholder="Enter film writer"
             />
           </View>
@@ -472,7 +510,7 @@ const NewRelease = () => {
             <TextInput
               style={styles.input}
               value={music}
-              onChangeText={setMusic}
+              onChangeText={(text) => setMusic(text)}
               placeholder="Enter music composer"
             />
           </View>
@@ -483,7 +521,7 @@ const NewRelease = () => {
             <TextInput
               style={styles.input}
               value={dop}
-              onChangeText={setDop}
+              onChangeText={(text) => setDop(text)}
               placeholder="Enter DOP"
             />
           </View>
@@ -494,7 +532,7 @@ const NewRelease = () => {
             <TextInput
               style={styles.input}
               value={edit}
-              onChangeText={setEdit}
+              onChangeText={(text) => setEdit(text)}
               placeholder="Enter film editor"
             />
           </View>
@@ -505,7 +543,7 @@ const NewRelease = () => {
             <TextInput
               style={[styles.input, styles.multilineInput]}
               value={cast}
-              onChangeText={setCast}
+              onChangeText={(text) => setCast(text)}
               placeholder="Enter cast members"
               multiline={true}
               numberOfLines={4}
@@ -570,7 +608,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderCurve: 'continuous',
     paddingVertical: wp(8),
-    // Add these properties to make it visible
     borderWidth: 1,
     borderColor: theme.colors.gray,
     borderRadius: theme.radius.md,
@@ -732,5 +769,39 @@ const styles = StyleSheet.create({
   },
   platformPillTextSelected: {
     color: '#ffffff',
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: theme.colors.dark,
+  },
+  inputContainer: {
+    marginBottom: 12,
+  },
+  inputLabel: {
+    fontSize: 15,
+    marginBottom: 5,
+    color: theme.colors.dark,
+  },
+  input: {
+    height: hp(6),
+    borderWidth: 0.5,
+    borderColor: theme.colors.blue,
+    borderRadius: theme.radius.md,
+    paddingHorizontal: 12,
+    fontSize: 15,
+  },
+  inputError: {
+    borderColor: 'red',
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 12,
+    marginTop: 4,
+  },
+  multilineInput: {
+    height: hp(12),
+    textAlignVertical: 'top',
+    paddingTop: 12,
   },
 })

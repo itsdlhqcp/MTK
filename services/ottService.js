@@ -645,6 +645,145 @@ export const createPeopleReviewUpvote = async (upvote) => {
                   }
                 };
 
+            // New function to update only the end date of streams
+            export const updateStreamEndDate = async (streamId, endDate) => {
+              try {
+                // Validate inputs
+                if (!streamId) {
+                  return { success: false, msg: "Release ID is required", error: "Missing release ID" };
+                }
+                
+                if (!endDate) {
+                  return { success: false, msg: "End date is required", error: "Missing end date" };
+                }
+                
+                // Update only the endDate field for the specified release
+                const { data, error } = await supabase
+                  .from('streams')
+                  .update({ endDate: endDate })
+                  .eq('id', streamId)
+                  .select()
+                  .single();
+                
+                if (error) {
+                  console.error("Error in updateReleaseEndDate:", error);
+                  return { 
+                    success: false, 
+                    msg: "Could not update the release end date", 
+                    error: error.message 
+                  };
+                }
+                
+                return { 
+                  success: true, 
+                  data,
+                  msg: "End date updated successfully" 
+                };
+              } catch (error) {
+                console.error("Error in updateReleaseEndDate:", error);
+                return { 
+                  success: false, 
+                  msg: "Could not update the release end date", 
+                  error: error.message 
+                };
+              }
+            }
+
+
+
+/**
+ * Fetch a digital item by its ID
+ * @param {string} id - The ID of the digital item to fetch
+ * @returns {Promise<Object>} - Object containing success status and data/error message
+ */
+export const fetchDigitalById = async (id) => {
+  try {
+    const { data, error } = await supabase
+      .from('streams')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error("Error in fetchDigitalById:", error);
+      return { success: false, msg: "Could not fetch digital item", error: error.message };
+    }
+
+    return { success: true, data };
+  } catch (error) {
+    console.error("Error in fetchDigitalById:", error);
+    return { success: false, msg: "Could not fetch digital item", error: error.message };
+  }
+};
+
+/**
+ * Update a digital item with new data
+ * @param {Object} digitalData - The digital data to update with (must include id)
+ * @returns {Promise<Object>} - Object containing success status and data/error message
+ */
+export const updateDigital = async (digitalData) => {
+  try {
+    if (!digitalData.id) {
+      return { success: false, msg: "Digital item ID is required" };
+    }
+
+    // Create a copy of the data to update
+    const updateData = { ...digitalData };
+    
+    // Ensure dates are in ISO format
+    if (updateData.rDate && updateData.rDate instanceof Date) {
+      updateData.rDate = updateData.rDate.toISOString();
+    }
+    
+    if (updateData.endDate && updateData.endDate instanceof Date) {
+      updateData.endDate = updateData.endDate.toISOString();
+    }
+
+    // Update the digital item in the database
+    const { data, error } = await supabase
+      .from('streams')
+      .update(updateData)
+      .eq('id', digitalData.id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error in updateDigital:", error);
+      return { success: false, msg: "Could not update digital item", error: error.message };
+    }
+
+    return { success: true, data };
+  } catch (error) {
+    console.error("Error in updateDigital:", error);
+    return { success: false, msg: "Could not update digital item", error: error.message };
+  }
+};
+
+/**
+ * Fetch all digital items with optional limit
+ * @param {number} limit - Optional limit of items to fetch (defaults to 20)
+ * @returns {Promise<Object>} - Object containing success status and data/error message
+ */
+export const fetchDigitals = async (limit = 20) => {
+  try {
+    const { data, error } = await supabase
+      .from('streams')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error("Error in fetchDigitals:", error);
+      return { success: false, msg: "Could not fetch digital items", error: error.message };
+    }
+
+    return { success: true, data };
+  } catch (error) {
+    console.error("Error in fetchDigitals:", error);
+    return { success: false, msg: "Could not fetch digital items", error: error.message };
+  }
+};
+
 
 
             

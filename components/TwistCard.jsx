@@ -71,7 +71,6 @@ const TwistCard = ({
   const [showReplayButton, setShowReplayButton] = useState(false);
   const [isVideoReady, setIsVideoReady] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
-  const { width } = Dimensions.get("window");
   const [isNavigating, setIsNavigating] = useState(false);
 
    useFocusEffect(
@@ -112,9 +111,15 @@ const TwistCard = ({
   };
 
   const handleEditPress = () => {
-    // Use the onEdit prop function
-    onEdit(item);
     setShowDropdown(false);
+    if (router) {
+      router.push({
+        pathname: '/addTwist', 
+        params: {...item}
+      });
+    } else {
+      console.error("Router is undefined in TwistCard");
+    }
   };
 
   useFocusEffect(
@@ -226,6 +231,9 @@ const TwistCard = ({
 
   if (!item) return null;
 
+  // Check if current user is the owner of the post
+  const isCurrentUserOwner = currentUser?.id === item?.userId;
+
   // Render YouTube iframe
   const renderYouTubeContent = () => {
     if (!youtubeVideoId) return null;
@@ -236,7 +244,7 @@ const TwistCard = ({
 
       {!isVideoReady && (
           <Image
-            source={require('../assets/images/loader/homeldr.jpeg')}
+            source={require('../assets/images/loader/homeldr.png')}
             alt="loading ##########"
            style={{ width: '100%', height: 200 }} 
           />
@@ -291,14 +299,20 @@ const TwistCard = ({
                 <Icon name="report" size={hp(2)} color={theme.colors.light || '#E0E0E0'} />
                 <Text style={styles.dropdownText}>Report</Text>
               </TouchableOpacity>
-              <View style={styles.divider} />
-              <TouchableOpacity 
-                style={styles.dropdownItem} 
-                onPress={handleEditPress}
-              >
-                <Icon name="edit" size={hp(2)} color={theme.colors.light || '#E0E0E0'} />
-                <Text style={styles.dropdownText}>Edit</Text>
-              </TouchableOpacity>
+              
+              {/* Only show the Edit option if currentUser.id === item.userId */}
+              {isCurrentUserOwner && (
+                <>
+                  <View style={styles.divider} />
+                  <TouchableOpacity 
+                    style={styles.dropdownItem} 
+                    onPress={handleEditPress}
+                  >
+                    <Icon name="edit" size={hp(2)} color={theme.colors.light || '#E0E0E0'} />
+                    <Text style={styles.dropdownText}>Edit</Text>
+                  </TouchableOpacity>
+                </>
+              )}
             </View>
           )}
         </View>
@@ -422,7 +436,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: wp(1),
     marginBottom: hp(1),
-    zIndex: 10, // Ensure header is above other elements for dropdown visibility
+    zIndex: 10, 
   },
   userInfo: {
     flexDirection: 'row',
@@ -433,7 +447,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    position: 'relative', // For positioning the dropdown
+    position: 'relative', 
   },
   username: {
     fontSize: hp(1.7),

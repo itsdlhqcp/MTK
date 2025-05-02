@@ -2,42 +2,22 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { wp, hp } from '../helpers/common';
 import theme from '../constants/theme';
-import MLoading from '../components/MaterialLoader';
 import UserReviewsComponent from '../components/userReviewTiles';
 import UserPostsComponent from './UserPostComponent';
 
-// Tab navigator component for Profile screen
 const TabNavigator = ({ 
-  posts, 
-  loading, 
-  hasMore, 
   theme: activeTheme,
-  navigation // Add navigation prop for the reviews component
+  navigation,
+  hasPostsAvailable = false // New prop to determine if posts are available
 }) => {
-  // State to manage active tab
-  const [activeTab, setActiveTab] = useState('reviews');
-
-  // Footer component for post list
-  const FooterComponent = () => {
-    if (posts.length === 0) return null;
-
-    return (
-      <View style={{marginVertical: 0}} paddingBottom={16}>
-        {loading && <MLoading />}
-        {!hasMore && posts.length > 0 && (
-          <Text style={styles.noPosts}>No more feeds to load !!</Text>
-        )}
-      </View>
-    );
-  };
-
-  // Render tab content based on active tab
+  // Set default active tab to 'reviews' if posts are not available
+  const [activeTab, setActiveTab] = useState(hasPostsAvailable ? 'reviews' : 'reviews');
+  
   const renderTabContent = () => {
     switch (activeTab) {
       case 'reviews':
         return (
           <View style={styles.reviewsContainer}>
-            {/* Review Content - Directly render UserReviewsComponent */}
             <View style={styles.reviewContent}>
               <UserReviewsComponent navigation={navigation} />
             </View>
@@ -45,17 +25,29 @@ const TabNavigator = ({
         );
       case 'plots':
         return (
-            // In below code where i need to pass post components 
-          // <Text style={styles.library}>Post feature coming soon!!</Text>
           <View style={styles.reviewContent}>
             <UserPostsComponent navigation={navigation} />
-        </View>
+          </View>
         );
       default:
         return null;
     }
   };
 
+  // If posts are not available, only show reviews without tabs
+  if (!hasPostsAvailable) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.reviewsContainer}>
+          <View style={styles.reviewContent}>
+            <UserReviewsComponent navigation={navigation} />
+          </View>
+        </View>
+      </View>
+    );
+  }
+
+  // Otherwise, render both tabs
   return (
     <View style={styles.container}>
       {/* Main Tabs */}
@@ -167,7 +159,6 @@ const styles = StyleSheet.create({
     alignContent: 'center',
     justifyContent: 'center',
     textAlign: 'center',
-
   }
 });
 

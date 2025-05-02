@@ -16,6 +16,7 @@ import { createOrUpdatePost } from '../services/homeService'
 import * as ImagePicker from 'expo-image-picker';
 import { extractYouTubeID, getYouTubeThumbnail } from '../helpers/youtubeHelper';
 import * as Clipboard from 'expo-clipboard';
+import { useToast } from '../contexts/ToastContext'
 
 // Dark theme colors
 const darkTheme = {
@@ -47,11 +48,24 @@ const CreateFeed = () => {
   const [tags, setTags] = useState([]);
   const [currentTag, setCurrentTag] = useState('');
   const [youtubeLink, setYoutubeLink] = useState('');
+  const [initialContentSet, setInitialContentSet] = useState(false);
+  const { showToast } = useToast();
+  
+  // Predefined tags for the bubble selector
+  const predefinedTags = ['common', 'malayalam', 'anime', 'kdrama', 'holywod', 'hindi', 'tamil'];
 
   useEffect(() => {
-    if(post && post.id){
+    if(post && post.id && !initialContentSet){
       bodyRef.current = post.body; 
-      setFile(post.file || null);
+      
+      // Check if file is a YouTube link
+      if (post.file && typeof post.file === 'string' && (post.file.includes('youtube.com') || post.file.includes('youtu.be'))) {
+        setYoutubeLink(post.file);
+        setFile(null);
+      } else {
+        setFile(post.file || null);
+        setYoutubeLink('');
+      }
       
       // Parse tags if they exist
       if (post.tags) {
@@ -64,11 +78,15 @@ const CreateFeed = () => {
         }
       }
       
+      // Set initial content only once
       setTimeout(() => {
-        editorRef?.current?.setContentHTML(post.body);
-      },300)
+        if (editorRef?.current) {
+          editorRef.current.setContentHTML(post.body);
+          setInitialContentSet(true);
+        }
+      }, 300);
     }
-  }, [post])
+  }, [post, editorRef.current]);
 
   const onPick = async (isImage) => {
     try {
@@ -152,6 +170,16 @@ const CreateFeed = () => {
     }
   };
 
+  // Add a tag from the predefined list
+  const addPredefinedTag = (tag) => {
+    if (!tags.includes(tag)) {
+      setTags([...tags, tag]);
+    } else {
+      // If tag already exists, remove it (toggle behavior)
+      removeTag(tags.indexOf(tag));
+    }
+  };
+
   const removeTag = (index) => {
     const newTags = [...tags];
     newTags.splice(index, 1);
@@ -160,7 +188,7 @@ const CreateFeed = () => {
 
   const onSubmit = async () => {
     try {
-      if (!bodyRef.current && !file && !youtubeLink) {
+      if (!bodyRef.current && !file && !youtubeLink && tags.length === 0) {
         Alert.alert(
           "Error",
           "Please write something in the post or add media.",
@@ -191,15 +219,12 @@ const CreateFeed = () => {
       if (post && post.id) {
         data.id = post.id;
       }
-
-      console.log("Sending data:", data);
       
       // Create/update post
       setLoading(true);
       let res = await createOrUpdatePost(data);
       setLoading(false);
-      
-      console.log('Post response:', res);
+      showToast('success', 'Home Posted success!!'); 
       
       if (res.success) {
         setFile(null); 
@@ -275,36 +300,6 @@ const CreateFeed = () => {
       Alert.alert("Error", "Could not access clipboard");
     }
   };
-
-  useEffect(() => {
-    if (post && post.id) {
-      bodyRef.current = post.body; 
-      
-      // Check if file is a YouTube link
-      if (post.file && typeof post.file === 'string' && (post.file.includes('youtube.com') || post.file.includes('youtu.be'))) {
-        setYoutubeLink(post.file);
-        setFile(null);
-      } else {
-        setFile(post.file || null);
-        setYoutubeLink('');
-      }
-      
-      // Parse tags if they exist
-      if (post.tags) {
-        try {
-          const parsedTags = typeof post.tags === 'string' ? JSON.parse(post.tags) : post.tags;
-          setTags(Array.isArray(parsedTags) ? parsedTags : []);
-        } catch (e) {
-          console.error('Error parsing tags:', e);
-          setTags([]);
-        }
-      }
-      
-      setTimeout(() => {
-        editorRef?.current?.setContentHTML(post.body);
-      }, 300);
-    }
-  }, [post]);
 
   return (
     <ScreenWrapper bg={darkTheme.colors.background}>
@@ -418,8 +413,32 @@ const CreateFeed = () => {
           ) : null}
 
           {/* Tag Management Section */}
-          {/* <View style={[styles.tagsSection, { backgroundColor: darkTheme.colors.cardBackground, borderRadius: darkTheme.radius.md, padding: 16 }]}>
-            <Text style={[styles.tagsSectionTitle, { color: darkTheme.colors.text }]}>Add Tags</Text>
+          <View style={[styles.tagsSection, { backgroundColor: darkTheme.colors.cardBackground, borderRadius: darkTheme.radius.md, padding: 16 }]}>
+            <Text style={[styles.tagsSectionTitle, { color: darkTheme.colors.text }]}>Add Tags ( content type - important)</Text>
+            
+            {/* Tag bubble selector - NEW COMPONENT */}
+            <View style={styles.tagBubblesContainer}>
+              {predefinedTags.map((tag, index) => (
+                <TouchableOpacity 
+                  key={index} 
+                  style={[
+                    styles.tagBubble,
+                    tags.includes(tag) && styles.selectedTagBubble,
+                    { borderColor: darkTheme.colors.primary }
+                  ]}
+                  onPress={() => addPredefinedTag(tag)}
+                >
+                  <Text style={[
+                    styles.tagBubbleText,
+                    tags.includes(tag) && styles.selectedTagBubbleText,
+                    { color: tags.includes(tag) ? darkTheme.colors.text : darkTheme.colors.primary }
+                  ]}>
+                    #{tag}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            
             <View style={[styles.tagInputContainer, { borderColor: darkTheme.colors.gray, backgroundColor: darkTheme.colors.input }]}>
               <TextInput
                 style={[styles.tagInput, { color: darkTheme.colors.text }]}
@@ -434,12 +453,12 @@ const CreateFeed = () => {
                 onPress={addTag}
                 disabled={currentTag.trim() === ''}
               >
-                <Icon name="send" size={24} color={darkTheme.colors.primary} />
+                <Icon name="plus" size={24} color={darkTheme.colors.primary} />
               </TouchableOpacity>
-            </View> */}
+            </View>
             
             {/* Tags Display */}
-            {/* <View style={styles.tagsContainer}>
+            <View style={styles.tagsContainer}>
               {tags.map((tag, index) => (
                 <View 
                   key={index} 
@@ -455,7 +474,7 @@ const CreateFeed = () => {
                 </View>
               ))}
             </View>
-          </View> */}
+          </View>
 
           <View style={[styles.media, { 
             borderColor: darkTheme.colors.gray, 
@@ -526,8 +545,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: wp(4),
     borderRadius: theme.radius.md, 
     borderCurve: 'continuous', 
-    // marginTop: hp(34),
-   zIndex: 10,
+    zIndex: 10,
   },
   title: {
     fontSize: hp(2.5),
@@ -645,5 +663,29 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: hp(1.8),
     fontWeight: 'bold',
+  },
+  // New styles for tag bubbles
+  tagBubblesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginBottom: hp(1.5),
+  },
+  tagBubble: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    backgroundColor: 'transparent',
+  },
+  selectedTagBubble: {
+    backgroundColor: theme.colors.primary,
+  },
+  tagBubbleText: {
+    fontSize: hp(1.6),
+    fontWeight: '500',
+  },
+  selectedTagBubbleText: {
+    color: 'white',
   }
 });

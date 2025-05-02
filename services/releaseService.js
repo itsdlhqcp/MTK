@@ -782,4 +782,48 @@ export const removePeopleReviewUpvote = async (peoplesReviewId, userId) => {
           };
         }
       };
+
+      // New function to update only the end date of a release
+export const updateReleaseEndDate = async (releaseId, endDate) => {
+  try {
+    // Validate inputs
+    if (!releaseId) {
+      return { success: false, msg: "Release ID is required", error: "Missing release ID" };
+    }
+    
+    if (!endDate) {
+      return { success: false, msg: "End date is required", error: "Missing end date" };
+    }
+    
+    // Update only the endDate field for the specified release
+    const { data, error } = await supabase
+      .from('releases')
+      .update({ endDate: endDate })
+      .eq('id', releaseId)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error("Error in updateReleaseEndDate:", error);
+      return { 
+        success: false, 
+        msg: "Could not update the release end date", 
+        error: error.message 
+      };
+    }
+    
+    return { 
+      success: true, 
+      data,
+      msg: "End date updated successfully" 
+    };
+  } catch (error) {
+    console.error("Error in updateReleaseEndDate:", error);
+    return { 
+      success: false, 
+      msg: "Could not update the release end date", 
+      error: error.message 
+    };
+  }
+}
       

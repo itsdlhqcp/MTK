@@ -71,7 +71,7 @@ const StreamPeopleDetails = () => {
             easing: Easing.out(Easing.back(1.5)),
             useNativeDriver: true,
           }).start();
-        }, 5000); // 5 seconds
+        }, 7000); // 5 seconds
       
         return () => clearTimeout(timer); // Clean up on component unmount
       }, []);
@@ -920,7 +920,7 @@ const StreamPeopleDetails = () => {
     style={{
       position: 'absolute',
       bottom: hp(2.5),
-      right: wp(5),
+      right: wp(3),
       transform: [{ translateX: buttonSlideAnim }]
     }}
   >

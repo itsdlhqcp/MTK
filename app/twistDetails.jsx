@@ -1,15 +1,12 @@
-import { ScrollView, StyleSheet, Text, View, Pressable, TouchableOpacity, Alert } from 'react-native'
+import { ScrollView, StyleSheet, Text, View, Alert } from 'react-native'
 import React, { useEffect, useRef, useState } from 'react'
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router'
-//  import { createReply, fetchCommentReplies } from '../services/postService'
 import {fetchPostDetails, createComment, removeComment, removePost, createReply, fetchCommentReplies  } from '../services/homeService'
 import { hp, wp } from '../helpers/common'
 import theme from '../constants/theme'
 import { useAuth } from '../contexts/AuthContext'
 import TwistDetailCard from '../components/TwistDetailCrad'
-import Icon from '../assets/icons'
 import FeedLoader from '../components/FeedLoader'
-import Input from '../components/Input'
 import TcommentSection from '../components/twistComponents/tcommentsSection'
 import { supabase } from '../lib/supabase'
 import { createNotifications } from '../services/notificationService'
@@ -185,8 +182,7 @@ const twistDetails = () => {
     };
 
     const onEditPost = async (item) => {
-        console.log('item edited', item);
-        router.push({pathname: 'createFeed', params: {...item}})
+        router.push({pathname: 'addTwist', params: {...item}})
     }
 
     const handleClose = () => {

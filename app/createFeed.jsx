@@ -14,6 +14,7 @@ import { getSupabaseFileUrl } from '../services/imageService'
 import { Video } from 'expo-av';
 import { createOrUpdatePost } from '../services/postService'
 import * as ImagePicker from 'expo-image-picker';
+import { useToast } from '../contexts/ToastContext'
 
 const CreateFeed = () => {
 
@@ -26,31 +27,53 @@ const CreateFeed = () => {
   const [file, setFile] = useState(null);
   const [tags, setTags] = useState(['official']);  
   const [currentTag, setCurrentTag] = useState('');
+  const { showToast } = useToast();
   
   // Predefined tags for the bubble selector
   const predefinedTags = [ 'official', 'rumour','anime','kdrama'];
-
+  
   useEffect(() => {
-    if(post && post.id){
-      bodyRef.current = post.body; 
-      setFile(post.file || null);
+    if(post && post.id) {
+      // Set initial loading state to prevent multiple re-renders
+      setLoading(true);
       
-      // Parse tags if they exist
+      // Handle body content
+      if (post.body) {
+        bodyRef.current = post.body;
+      }
+      
+      // Handle file
+      if (post.file) {
+        setFile(post.file);
+      }
+      
+      // Handle tags with safer parsing
       if (post.tags) {
         try {
           const parsedTags = typeof post.tags === 'string' ? JSON.parse(post.tags) : post.tags;
-          setTags(Array.isArray(parsedTags) ? parsedTags : []);
+          setTags(Array.isArray(parsedTags) ? parsedTags : ['official']);
         } catch (e) {
           console.error('Error parsing tags:', e);
-          setTags([]);
+          setTags(['official']);
         }
       }
       
-      setTimeout(() => {
-        editorRef?.current?.setContentHTML(post.body);
-      },300)
+      // Set editor content with a better approach
+      // Use a slightly longer timeout to ensure the editor is fully mounted
+      const editorInitTimer = setTimeout(() => {
+        if (editorRef?.current && post.body) {
+          editorRef.current.setContentHTML(post.body);
+        }
+        // End loading state after editor is initialized
+        setLoading(false);
+      }, 500);
+      
+      // Cleanup function to prevent memory leaks
+      return () => {
+        clearTimeout(editorInitTimer);
+      };
     }
-  }, [post])
+  }, []); 
 
   const onPick = async (isImage) => {
     try {
@@ -160,6 +183,7 @@ const CreateFeed = () => {
     let res = await createOrUpdatePost(data);
     setLoading(false);
     if(res.success){
+      showToast('success', 'Spotlight updated success!!');
       setFile(null); 
       bodyRef.current = ''; 
       editorRef.current?.setContentHTML('');
