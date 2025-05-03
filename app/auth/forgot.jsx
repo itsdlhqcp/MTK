@@ -1,140 +1,5 @@
-// import { View, StyleSheet, Text, Alert } from 'react-native'
-// import React, { Component } from 'react'
-// import ScreenWrapper from '@/components/ScreenWrapper'
-// import { StatusBar } from 'expo-status-bar'
-// import BackButton from '../../components/BackButton'
-// import { useRouter } from 'expo-router'
-// import { hp, wp } from '@/helpers/common'
-// import theme from '@/constants/theme'
-// import Icon from '@/assets/icons'
-// import Input from "../../components/Input"
-// import Button from '@/components/Button'
-// import { supabase } from '@/lib/supabase'
-
-// class Forgot extends Component {
-//   constructor(props) {
-//     super(props);
-//     this.state = {
-//       loading: false,
-//       email: ''
-//     };
-//     this.router = props.router;
-//   }
-
-//   validateEmail = (email) => {
-//     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-//     return emailRegex.test(email);
-//   };
-
-//   handleResetPassword = async () => {
-//     if (!this.state.email) {
-//       Alert.alert("Reset Password", "Please enter your email address");
-//       return;
-//     }
-  
-//     const email = this.state.email.trim();
-    
-//     if (!this.validateEmail(email)) {
-//       Alert.alert("Reset Password", "Please enter a valid email address");
-//       return;
-//     }
-  
-//     this.setState({ loading: true });
-  
-//     try {
-//       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-//         redirectTo: 'exp://192.168.0.101:8081/auth/reset-password',  
-//       });
-  
-//       if (error) throw error;
-  
-//       Alert.alert(
-//         "Reset Password",
-//         "If an account exists with this email, you will receive password reset instructions.",
-//         [{ text: "OK", onPress: () => this.router.back() }]
-//       );
-//     } catch (error) {
-//       Alert.alert("Error", error.message);
-//     } finally {
-//       this.setState({ loading: false });
-//     }
-//   };
-
-//   render() {
-//     return (
-//       <ScreenWrapper bg="white">
-//         <StatusBar style="dark"/>
-//         <View style={styles.container}>
-//           <BackButton router={this.router}/>
-//           <View>
-//             <Text style={styles.welcomeText}>Forgot</Text>
-//             <Text style={styles.welcomeSmallText}>Password?</Text>
-//           </View>
-
-//           <View style={styles.form}>
-//             <Text style={styles.instructionText}>
-//               Enter your email address and we'll send you instructions to reset your password.
-//             </Text>
-//             <Input
-//               icon={<Icon name="mail" size={26} strokeWidth={1.6}/>}
-//               placeholder="Enter your email"
-//               onChangeText={value => this.setState({ email: value })}
-//               keyboardType="email-address"
-//               autoCapitalize="none"
-//             />
-//             <Button 
-//               loaderType="BarIndicator" 
-//               title="Send Reset Link" 
-//               loading={this.state.loading} 
-//               onPress={this.handleResetPassword}
-//             />
-//           </View>
-//         </View>
-//       </ScreenWrapper>
-//     );
-//   }
-// }
-
-// // Styles remain the same
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     padding: wp(4),
-//   },
-//   welcomeText: {
-//     fontSize: hp(4),
-//     fontWeight: theme.fonts.bold,
-//     color: theme.colors.primary,
-//     marginTop: hp(4),
-//   },
-//   welcomeSmallText: {
-//     fontSize: hp(3),
-//     fontWeight: theme.fonts.semibold,
-//     color: theme.colors.text,
-//   },
-//   form: {
-//     marginTop: hp(6),
-//     gap: hp(2),
-//   },
-//   instructionText: {
-//     fontSize: hp(1.5),
-//     color: theme.colors.text,
-//     marginBottom: hp(2),
-//   },
-// });
-
-// // Since we can't use hooks in class components, we need a wrapper
-// const ForgotWithRouter = (props) => {
-//   const router = useRouter();
-//   return <Forgot {...props} router={router} />;
-// };
-
-// export default ForgotWithRouter;
-
-
-
 import React, { useState } from 'react';
-import { View, StyleSheet, Text, Alert } from 'react-native';
+import { View, StyleSheet, Text, Alert, StatusBar as RNStatusBar, TouchableOpacity } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import ScreenWrapper from '@/components/ScreenWrapper';
 import { StatusBar } from 'expo-status-bar';
@@ -145,112 +10,250 @@ import theme from '@/constants/theme';
 import Icon from '@/assets/icons';
 import Input from "@/components/Input";
 import Button from '@/components/Button';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState('');
   const { requestPasswordReset, loading } = useAuth();
   const router = useRouter();
+  const [errors, setErrors] = useState({
+    email: ""
+  });
+
+  // Colors matching the login page
+  const colors = {
+    red: '#E50914',
+    darkRed: '#8B0000',
+    blue: '#0066B1',
+    darkBlue: '#00284D',
+    darkBackground: '#0A0A0A',
+    gradientStart: '#00284D', // Dark blue shade
+    gradientMiddle: '#141414', // Very dark gray/near black
+    gradientEnd: '#8B0000', // Dark red shade
+    lightText: '#e0e0e0',
+  };
 
   const validateEmail = (email) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+    if (!email || email.trim() === "") {
+      return "Email is required";
+    } else if (!emailRegex.test(email)) {
+      return "Please enter a valid email address";
+    }
+    return "";
+  };
+
+  const validateForm = () => {
+    const emailError = validateEmail(email);
+    
+    setErrors({
+      email: emailError
+    });
+
+    return !emailError;
   };
 
   const handleResetPassword = async () => {
-    if (!email.trim()) {
-      Alert.alert('Error', 'Please enter your email address');
+    if (!validateForm()) {
       return;
     }
 
-    if (!validateEmail(email.trim())) {
-      Alert.alert('Error', 'Please enter a valid email address');
-      return;
-    }
+    try {
+      const { error, success } = await requestPasswordReset(email.trim());
 
-    const { error, success } = await requestPasswordReset(email.trim());
+      if (error) {
+        Alert.alert('Error', error.message);
+        return;
+      }
 
-    if (error) {
+      if (success) {
+        Alert.alert(
+          'Check Your Email',
+          'If an account exists with this email, you will receive passwordless login instructions.',
+          [{ text: 'OK', onPress: () => router.back() }]
+        );
+      }
+    } catch (error) {
       Alert.alert('Error', error.message);
-      return;
-    }
-
-    if (success) {
-      Alert.alert(
-        'Check Your Email',
-        'If an account exists with this email, you will receive password reset instructions.',
-        [{ text: 'OK', onPress: () => router.back() }]
-      );
     }
   };
 
   return (
-    <ScreenWrapper bg="white">
-      <StatusBar style="dark" />
+    <View style={styles.mainContainer}>
+      <StatusBar style="light" />
+      
+      {/* Main background gradient */}
+      <LinearGradient
+        colors={[colors.gradientStart, colors.gradientMiddle, colors.gradientEnd]}
+        style={styles.backgroundGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      />
+      
       <View style={styles.container}>
-        {/* <BackButton onPress={() => router.back()} /> */}
-        <BackButton router={router}/>
-        <View style={{ marginTop: hp(9) }}>
-          <Text style={styles.welcomeText}>Let's Authenticate</Text>
-          <Text style={styles.welcomeSmallText}>Passwordless Login!!</Text>
+        <BackButton router={router} iconColor={colors.lightText} />
+        
+        {/* welcome */}
+        <View>
+          <Text style={styles.welcomeText}>
+            <Text style={{color: colors.red}}>Let's</Text>
+          </Text>
+          <Text style={styles.welcomeSmallText}>Authenticate</Text>
         </View>
 
+        {/* form */}
         <View style={styles.form}>
+          <Text style={{fontSize: hp(1.5), color: colors.lightText}}>
+            Enter your email for passwordless login
+          </Text>
+          
+          {/* Email Input */}
+          <View>
+            <Input
+              icon={<Icon name="mail" size={26} strokeWidth={1.6} color={colors.lightText} />}
+              placeholder="Enter your email"
+              value={email}
+              onChangeText={(value) => {
+                setEmail(value);
+                if (errors.email) {
+                  setErrors(prev => ({...prev, email: ""}));
+                }
+              }}
+              inputStyle={styles.inputStyle}
+              containerStyle={[
+                styles.inputContainer,
+                errors.email ? styles.inputError : {}
+              ]}
+              placeholderTextColor="rgba(224, 224, 224, 0.7)"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoComplete="email"
+              textContentType="emailAddress"
+            />
+            {errors.email ? (
+              <Text style={styles.errorText}>{errors.email}</Text>
+            ) : null}
+          </View>
+          
           <Text style={styles.instructionText}>
-            Enter your email address and we'll send you instructions for passwordless login.
+            We'll send you a magic link to sign in without a password
           </Text>
-          <Input
-            icon={<Icon name="mail" size={26} strokeWidth={1.6} />}
-            placeholder="Enter your email"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoComplete="email"
-            textContentType="emailAddress"
+          
+          {/* button */}
+          <Button 
+            loaderType="BarIndicator" 
+            title="Send Magic Link" 
+            loading={loading} 
+            onPress={handleResetPassword} 
+            buttonStyle={{
+              backgroundColor: colors.red,
+              borderRadius: 10,
+              elevation: 5,
+            }}
+            textStyle={{
+              fontWeight: 'bold',
+              fontSize: hp(1.8),
+              color: colors.lightText,
+            }}
           />
-          <Button
-            loaderType="BarIndicator"
-            title="Send Reset Link"
-            loading={loading}
-            onPress={handleResetPassword}
-          />
-          <Text style={styles.instructionText2}>
-            You can reset password later from  your profile settings!!
+        </View>
+
+        {/* footer */} 
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>
+            Remember your password?
           </Text>
+          <TouchableOpacity onPress={() => router.push('/login')}>
+            <Text style={[styles.footerText, { 
+              color: colors.blue, 
+              fontWeight: theme.fonts.semibold,
+              textShadowColor: 'rgba(0, 0, 0, 0.5)',
+              textShadowOffset: { width: 0.5, height: 0.5 },
+              textShadowRadius: 1,
+            }]}>Log in</Text>
+          </TouchableOpacity>
         </View>
       </View>
-    </ScreenWrapper>
+    </View>
   );
 }
 
-
 const styles = StyleSheet.create({
-  container: {
+  mainContainer: {
     flex: 1,
-    padding: wp(4),
+  },
+  backgroundGradient: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+  },
+  container: {
+    flex: 1, 
+    gap: 45, 
+    paddingHorizontal: wp(5),
+    paddingTop: RNStatusBar.currentHeight || 20,
   },
   welcomeText: {
     fontSize: hp(4),
-    fontWeight: theme.fonts.bold,
-    color: theme.colors.primary,
-    marginTop: hp(4),
-  },
+    fontWeight: theme.fonts.bold, 
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
+  }, 
   welcomeSmallText: {
-    fontSize: hp(3.4),
-    fontWeight: theme.fonts.semibold,
-    color: theme.colors.text,
-  },
+    fontSize: hp(3.3),
+    fontWeight: theme.fonts.bold, 
+    color: '#e0e0e0', 
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
+  }, 
   form: {
-    marginTop: hp(3),
-    gap: hp(3.4),
+    gap: 25,
+  },
+  inputContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderWidth: 0,
+    borderRadius: 10,
+  },
+  inputStyle: {
+    color: '#e0e0e0',
+  },
+  inputError: {
+    borderWidth: 1,
+    borderColor: '#E50914',
+  },
+  errorText: {
+    color: '#E50914',
+    fontSize: hp(1.4),
+    marginTop: 5,
+    marginLeft: 10,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0.5, height: 0.5 },
+    textShadowRadius: 1,
   },
   instructionText: {
     fontSize: hp(1.5),
-    color: theme.colors.text,
-    marginBottom: hp(2),
-  },
-  instructionText2: {
-    fontSize: hp(1.5),
-    color: theme.colors.primaryDark,
+    color: '#e0e0e0',
     textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0.5, height: 0.5 },
+    textShadowRadius: 1,
+  },
+  footer: {
+    flexDirection: 'row', 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    gap: 5,
+  },
+  footerText: {
+    textAlign: 'center', 
+    color: '#e0e0e0', 
+    fontSize: hp(1.6),
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0.5, height: 0.5 },
+    textShadowRadius: 1,
   }
 });

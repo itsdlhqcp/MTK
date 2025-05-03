@@ -1,11 +1,13 @@
-import { Text, Button, View, Image, StyleSheet, Dimensions, TouchableOpacity, StatusBar } from 'react-native'
-import React from 'react'
+import { Text, View, Image, StyleSheet, Dimensions, TouchableOpacity, StatusBar, ScrollView } from 'react-native'
+import React, { useRef, useEffect, useState } from 'react'
 import { wp, hp } from '@/helpers/common'
 import { useRouter } from 'expo-router'
-import ScreenWrapper from '@/components/ScreenWrapper';
+import { LinearGradient } from 'expo-linear-gradient'
 
-const onboardingGrid = () => {
+const OnboardingGrid = () => {
     const router = useRouter();
+    const scrollViewRef = useRef(null);
+    const [scrolling, setScrolling] = useState(true);
     
     const gridImages = [
         {
@@ -88,30 +90,148 @@ const onboardingGrid = () => {
   name: 'michael',
   url: 'https://firebasestorage.googleapis.com/v0/b/chat-web-app-46b89.appspot.com/o/chat%2F-OEc42DEriXDT_CajhEn%2F1734769273312kaatta.jpg?alt=media&token=9e71711c-3f41-416b-b02e-597d56f474c1'
 },
+{
+    id: 17,
+    name: 'sonic',
+    url: 'https://firebasestorage.googleapis.com/v0/b/chat-web-app-46b89.appspot.com/o/chat%2F-OEc42DEriXDT_CajhEn%2F1734768273687lastofus.jpg?alt=media&token=0119a36d-7a17-4e83-b2db-cc1500cacd2a'
+},
+{
+  id: 18,
+  name: 'kraven',
+  url: 'https://firebasestorage.googleapis.com/v0/b/chat-web-app-46b89.appspot.com/o/chat%2F-OEc42DEriXDT_CajhEn%2F1734768273687kraven.jpg?alt=media&token=000bad96-bdb5-4c5d-b5fc-816073f71477'
+},
+{
+id: 19,
+name: 'thelionKing',
+url: 'https://firebasestorage.googleapis.com/v0/b/chat-web-app-46b89.appspot.com/o/chat%2F-OEc42DEriXDT_CajhEn%2F1734768273687lionKing.jpg?alt=media&token=f8fcce32-8062-403f-a1d4-6bc1a35871b2'
+},
+{
+id: 20,
+name: 'thelionKing',
+url: 'https://firebasestorage.googleapis.com/v0/b/chat-web-app-46b89.appspot.com/o/chat%2F-OEc42DEriXDT_CajhEn%2F1734768273687lastofus.jpg?alt=media&token=0119a36d-7a17-4e83-b2db-cc1500cacd2a'
+},
     ];
 
+    // Calculate the height of the content to determine when to reset scrolling
+    const [contentHeight, setContentHeight] = useState(0);
+    const [viewportHeight, setViewportHeight] = useState(0);
+    const [scrollPosition, setScrollPosition] = useState(0);
+
+    // Auto-scrolling effect with circular scrolling
+    useEffect(() => {
+        if (!contentHeight || !viewportHeight) return;
+        
+        let animationFrame;
+        const speed = 0.7; // Adjust speed as needed (lower is slower)
+        
+        const autoScroll = () => {
+            if (scrollViewRef.current && scrolling) {
+                let newPosition = scrollPosition + speed;
+                
+                // Circular scrolling logic: when we reach the bottom, start showing top content again
+                if (newPosition >= contentHeight - viewportHeight) {
+                    // Add a small portion of the beginning content to the view
+                    const visiblePortionAtBottom = newPosition - (contentHeight - viewportHeight);
+                    newPosition = visiblePortionAtBottom;
+                }
+                
+                setScrollPosition(newPosition);
+                scrollViewRef.current.scrollTo({ y: newPosition, animated: false });
+                animationFrame = requestAnimationFrame(autoScroll);
+            }
+        };
+        
+        // Start auto-scrolling
+        animationFrame = requestAnimationFrame(autoScroll);
+        
+        // Clean up
+        return () => {
+            cancelAnimationFrame(animationFrame);
+        };
+    }, [scrolling, contentHeight, viewportHeight, scrollPosition]);
+
+    // Handle content size measurement
+    const onContentSizeChange = (_, height) => {
+        setContentHeight(height);
+    };
+
+    // Handle layout to get viewport height
+    const onLayout = (event) => {
+        const { height } = event.nativeEvent.layout;
+        setViewportHeight(height);
+    };
+
+    // Handle touch events to pause/resume scrolling
+    const handleTouchStart = () => {
+        setScrolling(false);
+    };
+    
+    const handleTouchEnd = () => {
+        setScrolling(true);
+    };
+
+    const handleScroll = (event) => {
+        const { y } = event.nativeEvent.contentOffset;
+        setScrollPosition(y);
+    };
+
+    // Colors matching the login page
+    const colors = {
+        red: '#E50914',
+        darkRed: '#8B0000',
+        blue: '#0066B1',
+        darkBlue: '#00284D',
+        darkBackground: '#0A0A0A',
+        gradientStart: '#00284D', // Dark blue shade
+        gradientMiddle: '#141414', // Very dark gray/near black
+        gradientEnd: '#8B0000', // Dark red shade
+        lightText: '#e0e0e0',
+    };
+
+    // Create duplicated content for circular scrolling effect
+    const duplicatedContent = [...gridImages, ...gridImages.slice(0, 8)];
+
     return (
-        <>
-           <StatusBar barStyle="dark-content" backgroundColor="black" />
-           {/* <StatusBar  barStyle="light-content" backgroundColor="black"/> */}
-            <View style={styles.container}>
-                <View style={styles.gridContainer}>
-                    {gridImages.map((item) => (
-                        <TouchableOpacity 
-                            key={item.id} 
-                            style={styles.gridItem}
-                            onPress={() => console.log(`Pressed ${item.name}`)}
-                        >
-                            <Image
-                                source={{ uri: item.url }}
-                                style={styles.image}
-                                resizeMode="cover"
-                            />
-                        </TouchableOpacity>
-                    ))}
-                </View>
-                 {/* Overlay Button */}
-               <View style={styles.buttonContainer}>    
+        <View style={styles.mainContainer}>
+            <StatusBar barStyle="light-content" />
+            
+            {/* Main background gradient */}
+            <LinearGradient
+                colors={[colors.gradientStart, colors.gradientMiddle, colors.gradientEnd]}
+                style={styles.backgroundGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+            />
+            
+            <View style={styles.container} onLayout={onLayout}>
+                <ScrollView 
+                    ref={scrollViewRef}
+                    showsVerticalScrollIndicator={false}
+                    scrollEventThrottle={16}
+                    onTouchStart={handleTouchStart}
+                    onTouchEnd={handleTouchEnd}
+                    onScroll={handleScroll}
+                    onContentSizeChange={onContentSizeChange}
+                >
+                    <View style={styles.gridContainer}>
+                        {duplicatedContent.map((item, index) => (
+                            <TouchableOpacity 
+                                key={`${item.id}-${index}`} 
+                                style={styles.gridItem}
+                                onPress={() => console.log(`Pressed ${item.name}`)}
+                            >
+                                <Image
+                                    source={{ uri: item.url }}
+                                    style={styles.image}
+                                    resizeMode="cover"
+                                />
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </ScrollView>
+                
+                {/* Overlay Button */}
+                <View style={styles.buttonContainer}>    
                     <TouchableOpacity 
                         style={styles.button}
                         onPress={() => router.push('signup')}
@@ -120,18 +240,27 @@ const onboardingGrid = () => {
                     </TouchableOpacity>
                 </View>
             </View>
-        </>
-    )
-}
+        </View>
+    );
+};
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const COLUMN_COUNT = 4;
 const SPACING = 0;
 
 const styles = StyleSheet.create({
+    mainContainer: {
+        flex: 1,
+    },
+    backgroundGradient: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+    },
     container: {
         flex: 1,
-        backgroundColor: 'black',
     },
     gridContainer: {
         flexDirection: 'row',
@@ -149,21 +278,20 @@ const styles = StyleSheet.create({
         borderRadius: 0,
     },
     buttonContainer: {
-      position: 'absolute',
-      top: hp(85),
-      width: '100%',
-      zIndex: 1,
-      alignItems: 'center',
-      paddingHorizontal: 20,
-  },
-  button: {
-      backgroundColor: 'rgba(33, 4, 4, 0.71)',
-      paddingVertical: 9,
+        position: 'absolute',
+        bottom: 40,
+        width: '100%',
+        zIndex: 1,
+        alignItems: 'center',
+        paddingHorizontal: 20,
+    },
+    button: {
+        backgroundColor: 'rgba(229, 9, 20, 0.8)', // Using the red color from login screen
+        paddingVertical: 9,
         paddingHorizontal: 30,
         borderRadius: 25,
         minWidth: 150,
         alignItems: 'center',
-        // Add shadow for better visibility
         shadowColor: '#000',
         shadowOffset: {
             width: 0,
@@ -172,12 +300,15 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
         elevation: 5,
-  },
-  buttonText: {
-      color: 'rgb(201, 201, 207)',
-      fontSize: 16,
-      fontWeight: '600',
-  }
+    },
+    buttonText: {
+        color: '#e0e0e0',
+        fontSize: 16,
+        fontWeight: '600',
+        textShadowColor: 'rgba(0, 0, 0, 0.5)',
+        textShadowOffset: { width: 0.5, height: 0.5 },
+        textShadowRadius: 1,
+    }
 });
 
-export default onboardingGrid
+export default OnboardingGrid;

@@ -86,6 +86,7 @@ import Admin from "./Admin";
 import AddFriend from "./AddFriend";
 import Activity from "./Activity";
 import Resolve from "./Resolve";
+import EyeOff from "./EyeOff";
 
 const icons = {
     home: Home,
@@ -173,7 +174,8 @@ const icons = {
     admin: Admin,
     addfriend: AddFriend,
     activity: Activity,
-    resolve: Resolve
+    resolve: Resolve,
+    eyeoff: EyeOff
 }
 
 const Icon = ({name, ...props}) => {

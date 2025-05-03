@@ -301,8 +301,7 @@ const TwistCard = ({
               </TouchableOpacity>
               
               {/* Only show the Edit option if currentUser.id === item.userId */}
-              {isCurrentUserOwner && (
-                <>
+             
                   <View style={styles.divider} />
                   <TouchableOpacity 
                     style={styles.dropdownItem} 
@@ -311,8 +310,7 @@ const TwistCard = ({
                     <Icon name="edit" size={hp(2)} color={theme.colors.light || '#E0E0E0'} />
                     <Text style={styles.dropdownText}>Edit</Text>
                   </TouchableOpacity>
-                </>
-              )}
+             
             </View>
           )}
         </View>
