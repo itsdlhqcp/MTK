@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
-import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, Text, StyleSheet, PanResponder } from 'react-native';
 import BottomSheet from '@gorhom/bottom-sheet';
 import Svg, { Path, Defs, LinearGradient, Stop, ClipPath, Rect } from 'react-native-svg';
 import { hp, wp } from '../helpers/common';
@@ -21,7 +21,7 @@ const StarIcon = ({ fillPercentage = 0 }) => {
   };
 
   return (
-    <Svg width={46} height={46} viewBox="0 0 24 24">
+    <Svg width={64} height={64} viewBox="0 0 24 24">
       <Defs>
         <LinearGradient id="partialGradient" x1="0" x2="1" y1="0" y2="0">
           <Stop offset="0" stopColor="#FFD700" stopOpacity="1" />
@@ -52,6 +52,11 @@ const StarIcon = ({ fillPercentage = 0 }) => {
 };
 
 const StarRating = ({ rating, onRatingChange }) => {
+  // Refs for component dimensions and star positions
+  const containerRef = useRef(null);
+  const [containerLayout, setContainerLayout] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  
   // Calculate the exact fill percentage for each star (0.0-1.0)
   const getStarFillPercentage = (position) => {
     if (rating >= position) return 1.0; // Full star
@@ -64,10 +69,12 @@ const StarRating = ({ rating, onRatingChange }) => {
 
   // Function to handle star press with 0.1 precision
   const handleStarPress = (event, position) => {
+    // Skip if we're currently dragging to avoid conflicts
+    if (isDragging) return;
+    
     // Get the relative X position within the star (0-1)
-    const star = event.currentTarget;
     const { locationX } = event.nativeEvent;
-    const starWidth = 32; // Width of the star touch area
+    const starWidth = 35; // Width of the star touch area
     
     // Calculate position within the star (0.0 to 1.0)
     let positionInStar = Math.max(0, Math.min(1, locationX / starWidth));
@@ -91,20 +98,108 @@ const StarRating = ({ rating, onRatingChange }) => {
     }
   };
 
+  // Function to calculate rating based on touch position
+  const calculateRatingFromTouchEvent = useCallback((pageX) => {
+    if (!containerLayout) return;
+    
+    // Get position relative to container
+    const touchX = Math.max(0, Math.min(containerLayout.width, pageX - containerLayout.x));
+    
+    // Star width including gap
+    const totalStarWidth = containerLayout.width / 5;
+    
+    // Calculate star position (1-5) and position within star (0-1)
+    const starPosition = Math.ceil(touchX / totalStarWidth);
+    const posWithinStar = (touchX % totalStarWidth) / totalStarWidth;
+    
+    // Calculate the exact rating with 0.1 precision
+    let newRating;
+    
+    if (touchX <= 0) {
+      newRating = 0;
+    } else {
+      // Calculate star number (1-5) and position within that star (0-1)
+      const baseRating = starPosition - 1;
+      const partialRating = Math.round(posWithinStar * 10) / 10;
+      newRating = Math.min(5, Math.max(0, baseRating + partialRating));
+    }
+    
+    onRatingChange(newRating);
+  }, [containerLayout, onRatingChange]);
+
+  // Create a PanResponder for sliding rating functionality
+  const panResponder = useMemo(() => 
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: (evt) => {
+        setIsDragging(true);
+        calculateRatingFromTouchEvent(evt.nativeEvent.pageX);
+      },
+      onPanResponderMove: (evt) => {
+        calculateRatingFromTouchEvent(evt.nativeEvent.pageX);
+      },
+      onPanResponderRelease: () => {
+        // Add a small delay before allowing touches again
+        setTimeout(() => setIsDragging(false), 100);
+      },
+      onPanResponderTerminate: () => {
+        setIsDragging(false);
+      }
+    }),
+    [calculateRatingFromTouchEvent]
+  );
+
+  // Measure container layout after render and when visibility changes
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (containerRef.current) {
+        containerRef.current.measure((x, y, width, height, pageX, pageY) => {
+          setContainerLayout({ x: pageX, y: pageY, width, height });
+        });
+      }
+    }, 100); // Small delay to ensure the component is fully rendered
+    
+    return () => clearTimeout(timeoutId);
+  }, []);
+
   return (
     <View style={{ marginTop: hp(2) }}>
-      <View style={{ flexDirection: 'row', gap: 14 }}>
+      <View 
+        ref={containerRef}
+        {...panResponder.panHandlers}
+        style={{ 
+          flexDirection: 'row', 
+          alignItems: 'center',
+          marginEnd: wp(3),
+          justifyContent: 'space-between',
+          width: '100%', 
+          paddingHorizontal: 40,
+          height: 50 // Make touch area taller for easier sliding
+        }}
+      >
         {[1, 2, 3, 4, 5].map((position) => (
-          <TouchableOpacity
+          <View 
             key={position}
-            onPress={(event) => handleStarPress(event, position)}
             style={{
               width: 35,
               height: 35,
+              alignItems: 'center',
+              justifyContent: 'center'
             }}
           >
-            <StarIcon fillPercentage={getStarFillPercentage(position)} />
-          </TouchableOpacity>
+            <TouchableOpacity
+              onPress={(event) => handleStarPress(event, position)}
+              activeOpacity={0.7}
+              style={{
+                width: 35,
+                height: 35,
+              }}
+              disabled={isDragging}
+            >
+              <StarIcon fillPercentage={getStarFillPercentage(position)} />
+            </TouchableOpacity>
+          </View>
         ))}
       </View>
       <Text style={styles.ratingText}>
@@ -555,7 +650,6 @@ const styles = StyleSheet.create({
   writeReviewContainer: {
     flexDirection: 'row',
     alignItems: 'left',
-   // justifyContent: 'space-between',
     width: '100%',
     paddingVertical: hp(2),
     marginLeft: wp(5),
