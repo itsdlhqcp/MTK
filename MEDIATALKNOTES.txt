@@ -1,3 +1,9 @@
+ADMIN KEYS :-
+
+plotwist.karthik@gmail.com  --  OYB{t1E0CDA8IN[z   - 2c86f44c-fb29-491e-b8c6-399317fec071
+plotwist.adwaith@gmail.com  --  j5@txa06/Gy]RCNEBAL   - 2a54872c-9e20-4b4c-a4dd-88121df88fbd
+plotwist.dilhaque@gmail.com  -- ZD&Vc@;8fN[m'=1dRdHA   - d6095f1d-bb16-4561-a455-7cf6a925efe5
+
 1.5.15   // by don't forcing other getting 88% exec  (1.5.15	1.9.25)
 
 1.5.10	1.9.22  $error
@@ -411,3 +417,129 @@ add at top
 ## run npx expo-doctor which gives the correct check version for all the packages (remove the unwanted context-error )
 
 ## chaged the image into correct format (png) and added the image in the assets folder
+
+befor building android apk :-
+
+eas.json file :-
+
+{
+  "cli": {
+    "version": ">= 16.3.3",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "android": {
+        "buildType": "apk"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "android": {}
+    }
+  }
+}
+
+
+to generate abb file for anfroid:-
+
+{
+  "cli": {
+    "version": ">= 16.3.3",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "android": {
+        "buildType": "app-bundle"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "android": {}
+    }
+  }
+}
+
+get .abb manually :-
+
+eas build --platform android --profile production
+
+to make a direct submission :-
+
+ eas submit --platform android --profile production
+
+
+ PLAY SERVICE KEY :-
+
+ {
+  "type": "service_account",
+  "project_id": "emerald-spring-458903-f6",
+  "private_key_id": "731106cba756f09324f1ccd9a5f9979fe9f8b81f",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC0uvJxCOt1uo8L\nFaQ8h0yJob1slvKv13iAaEMq0dyzMuMTrxGSpNnalr53PioAZ8V15YW68I5ut3ki\nMr4+hh+X8K7I34eJo7rSKxDw/0HP8IIZKH5zSaQb42v9q/jxiBh+feW4CEiIZ/LO\nqOoWTd5j+VYU5d9a9a4NerANCLtWeZ8J5mdabXdD3uvhuRoWiibHLJw0bQKy1C/v\nsI2gvEJyLNnCHxU56BLqFHzqyZ8lkmVG+l9Pl4EnPKbgBxx2WckJsfz9GC85f959\nE48QMuiRiii2BptLd3Ism0rM+IbFFEuTRwPY+hvXKFEK3Op8aLh8odDzd+N1fPJP\nsZGpi2fPAgMBAAECggEAEtzQIOwFZywpcca4dXjJjDPNSWAXxDKA6SX4nKd6mVle\nSdejxeJeummxR1C9oX0zJrLl2jTxKK0Nf3w8TtpAweLk2yI5SyxDe1vzULPTcphv\ne6C2UeIFtsNtqfQg71R8+fa52xNCPrpapScMB3fpFhYX3eaAAUZS/CUp6rJWmxe5\ncv+x31R3PAiBgloTlPcr/Ngi5pZl6pdR7tJZskL+ay6ujYZKkzDlDe8AfP6M3JAx\nl/e6kyBK6XQFMcqiY7Akr9tPba8/JYEyioCJDf0/cNETUINQmvUoz4EnC7H95omI\n+w1GYQ2PY99gYRte2W8DNRome8Y5SU3fLthDOPx9wQKBgQDn1+LkCydQh2vWHMcE\nglgFVzwBMoAa7DroTpK+b0GFJ1iiUXPRFtIKpfS2+23isO1oSQ/dislcAea+bsnF\nu/l52RQTPSFgRxXPB4vCN6n+fIAIOG3Zxdmu69xcPdgplaOrBfY/mLdHfBUzQEw3\nK6Zl5khPIZV7/8yIFkfAQjoEwwKBgQDHj7AX2ynCtniRBXwxKTOXjlNsDA6SGyMk\nEYlHr1uTJJzCgsCFWqW+DhPbCz1s/nxWNigXXpjsMQ2AB0DGeQJHZ7WX+OcO2A2K\nFLRHqUpuy6ncKhx077FiEV1gdHCMLHeIILFslb8R+07XHHbzzzE7YNprvaW7nPGr\nUfx0PRxwBQKBgGTe9ybE+4v7/50e1DBQDb/1HnRe5oHQOikM1qfofBdU8SleSwez\n6Bsd7YUXi83PsNtovnBjjAxt/1jnlv5jNL4hBq0AMd9TzldPLy2HTn0c6g+pjZHs\nlTOYBz5S4hPluVoVs/gjl8qQYCD2XrK6WSGIuflD4Wgb+X9UQk+SAPBFAoGBAML4\nKkYUdIdsuPyOzFhHdcVjYzOT0ASFCN8rVuE3fROUWKddEXT4LCg0HsgKAjhjpdyg\nyqiSXnucLSFhdLKz9TsIIw3YOv5wrUGzmrLMvhDjYA/fALBqofY7Guyqtm7s3teb\ngVyiLOwHiG53u+vWCLaHmL5cqfhTjHUiA7EZJ5h1AoGBAMWrtNm6/Ke/FFDAacJX\nxKJGSmInskrQiEUkdp+dszrpNCUrVT1eCV6oJfL7rgog7V8UstUi0XlWPvE0/o6q\n7p3SsRLx3825oHLNJ2aDNbGOO5SpPin7VtYUWifMviL8QAq5BQxOcValqRUEaavk\nF5xJBABVqZUI7XPFm0wpo3W2\n-----END PRIVATE KEY-----\n",
+  "client_email": "plotwistapi-access@emerald-spring-458903-f6.iam.gserviceaccount.com",
+  "client_id": "117238215619105381583",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/plotwistapi-access%40emerald-spring-458903-f6.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
+
+
+appp mail id :-
+
+plotwistapi-access@emerald-spring-458903-f6.iam.gserviceaccount.com
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

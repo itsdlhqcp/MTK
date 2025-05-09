@@ -3,6 +3,7 @@ import { Text, View, StyleSheet, Pressable, TextInput, Animated } from 'react-na
 import AllReleasesList from '../components/LibraryReleaseList';
 import Icon from '../assets/icons';
 import { hp} from '../helpers/common';
+import ScreenWrapper from '../components/ScreenWrapper';
 
 export class Library extends Component {
   constructor(props) {
@@ -56,10 +57,11 @@ export class Library extends Component {
     });
 
     return (
+      <ScreenWrapper bg="#121212">
       <View style={styles.container}>
         <View style={styles.top}>
           {!isSearchVisible && (
-            <Text style={styles.header}>PlotTwist Library</Text>
+            <Text style={styles.header}>Library</Text>
           )}
           
           <View style={styles.searchContainer}>
@@ -68,7 +70,7 @@ export class Library extends Component {
                 <TextInput
                   ref={(ref) => (this.searchInput = ref)}
                   style={styles.searchInput}
-                  placeholder="Search library... (not functional yet)-UI 👌"
+                  placeholder="Search library..."
                   placeholderTextColor="#999"
                   value={searchQuery}
                   onChangeText={this.handleSearchChange}
@@ -96,6 +98,7 @@ export class Library extends Component {
         
         <AllReleasesList searchQuery={searchQuery} />
       </View>
+      </ScreenWrapper>
     );
   }
 }

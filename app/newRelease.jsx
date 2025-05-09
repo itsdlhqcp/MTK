@@ -362,7 +362,7 @@ const NewRelease = () => {
           )}
 
           <View style={styles.media}>
-            <Text style={styles.addImageText}>Stick Release Poster HERE</Text>
+            <Text style={styles.addImageText}>Landscape poster HERE</Text>
             <View style={styles.mediaIcons}>
               <TouchableOpacity onPress={() => onPick(true)}>
                 <Icon name="crop" size={30} color={theme.colors.dark} />
@@ -395,7 +395,7 @@ const NewRelease = () => {
 
           {/* Added second image picker */}
           <View style={styles.media}>
-            <Text style={styles.addImageText}>Add Digital list poster image</Text>
+            <Text style={styles.addImageText}>Potrait Poster HERE</Text>
             <View style={styles.mediaIcons}>
               <TouchableOpacity onPress={() => onPickSecond(true)}>
                 <Icon name="image" size={30} color={theme.colors.dark} />

@@ -3,6 +3,7 @@ import React, { useRef, useEffect, useState } from 'react'
 import { wp, hp } from '@/helpers/common'
 import { useRouter } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
+import ScreenWrapper from '../components/ScreenWrapper'
 
 const OnboardingGrid = () => {
     const router = useRouter();
@@ -192,6 +193,7 @@ url: 'https://firebasestorage.googleapis.com/v0/b/chat-web-app-46b89.appspot.com
     const duplicatedContent = [...gridImages, ...gridImages.slice(0, 8)];
 
     return (
+       
         <View style={styles.mainContainer}>
             <StatusBar barStyle="light-content" />
             
@@ -241,6 +243,7 @@ url: 'https://firebasestorage.googleapis.com/v0/b/chat-web-app-46b89.appspot.com
                 </View>
             </View>
         </View>
+       
     );
 };
 

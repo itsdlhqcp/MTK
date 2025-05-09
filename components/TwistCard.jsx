@@ -14,6 +14,7 @@ import Avatar from './Avatar';
 import { useFocusEffect } from '@react-navigation/native';
 import AspectRatioImage from './AspectRatioImage';
 import ReportModal from './ReportModel';
+import { adminIds } from '../constants/admin';
 
 const textStyle = {
   color: theme.colors.light || '#E0E0E0', 
@@ -264,6 +265,8 @@ const TwistCard = ({
     );
   };
 
+  const isadmin = adminIds.includes(currentUser?.id);
+
   return (
     <View style={[styles.container, hasShadow && shadowStyle]}>
       {/* Header: User Info + Menu */}
@@ -301,16 +304,18 @@ const TwistCard = ({
               </TouchableOpacity>
               
               {/* Only show the Edit option if currentUser.id === item.userId */}
-             
-                  <View style={styles.divider} />
-                  <TouchableOpacity 
-                    style={styles.dropdownItem} 
-                    onPress={handleEditPress}
-                  >
-                    <Icon name="edit" size={hp(2)} color={theme.colors.light || '#E0E0E0'} />
-                    <Text style={styles.dropdownText}>Edit</Text>
-                  </TouchableOpacity>
-             
+                {isadmin && (
+                  <>
+                    <View style={styles.divider} />
+                       <TouchableOpacity 
+                         style={styles.dropdownItem} 
+                         onPress={handleEditPress}
+                       >
+                         <Icon name="edit" size={hp(2)} color={theme.colors.light || '#E0E0E0'} />
+                         <Text style={styles.dropdownText}>Edit</Text>
+                       </TouchableOpacity>
+                  </>
+                )}
             </View>
           )}
         </View>

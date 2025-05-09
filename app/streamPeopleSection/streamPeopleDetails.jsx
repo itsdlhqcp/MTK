@@ -24,6 +24,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useReview } from "../../contexts/ReviewContext";
 import PeoplesReviewList from "../releasePeopleSection/releasePeopleReview";
 import DigitalReviewTabs from "../../components/DigitalReviewTabs";
+import ScreenWrapper from "../../components/ScreenWrapper";
 
 const MIN_CHARS = 0;
 
@@ -679,7 +680,7 @@ const StreamPeopleDetails = () => {
           // below start the rendering part
     
         return (
-            
+            <ScreenWrapper bg="#121212">
             <GestureHandlerRootView style={{ flex: 1 }}>
             <View style={styles.container}>
                 <ScrollView
@@ -947,7 +948,7 @@ const StreamPeopleDetails = () => {
                     />
             </View>
            </GestureHandlerRootView>
-           
+           </ScreenWrapper>
         );
     };
     

@@ -10,6 +10,7 @@ import { usePost } from '../contexts/PostContext';
 import { useFocusEffect } from 'expo-router';
 import { Image } from 'react-native';
 import { getSupabaseFileUrl } from '../services/imageService';
+import { adminIds } from '../constants/admin';
 
 // Component for generating the poster view
 const PosterView = React.forwardRef(({ item }, ref) => {
@@ -256,6 +257,8 @@ const SpotlightFooter = ({
         quality: 1,
         result: 'file',
       });
+
+      
       
       // Hide the poster view after capture
       setShowPosterView(false);
@@ -278,6 +281,8 @@ const SpotlightFooter = ({
       setIsSharing(false);
     }
   };
+
+  const isadmin = adminIds.includes(currentUser?.id);
   
   return (
     <>
@@ -317,10 +322,11 @@ const SpotlightFooter = ({
               </Animated.View>
             </TouchableOpacity>
           </View>
-          
-          <TouchableOpacity style={styles.actionButton} onPress={onEditPost}>
-            <Icon name='edit' size={hp(2.6)} strokeWidth={2} color={theme.colors.silver} />
-          </TouchableOpacity>
+            {isadmin && (
+                  <TouchableOpacity style={styles.actionButton} onPress={onEditPost}>
+                  <Icon name='edit' size={hp(2.6)} strokeWidth={2} color={theme.colors.silver} />
+                </TouchableOpacity>
+            )}
         </View>
         
         {/* Likes count */}

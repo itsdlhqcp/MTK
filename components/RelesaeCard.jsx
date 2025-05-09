@@ -11,6 +11,8 @@ import Icon from '../assets/icons'
 import DatePicker from '../components/DatePicker' 
 import { updateReleaseEndDate } from '../services/releaseService'
 import { useToast } from '../contexts/ToastContext'
+import { adminIds } from '../constants/admin'
+import { useAuth } from '../contexts/AuthContext'
 
 const ReleaseCard = ({
     item,
@@ -21,6 +23,7 @@ const ReleaseCard = ({
     onEdit = () => {},
     onEndDateUpdated = () => {} // Add callback for when end date is updated
 }) => {
+    const { user: currentUser } = useAuth();
     // State for navigation and dropdown management
     const [isNavigating, setIsNavigating] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
@@ -166,6 +169,8 @@ const ReleaseCard = ({
         }
     }
 
+    const isadmin = adminIds.includes(currentUser?.id);
+
     return (
         <TouchableOpacity
             style={[styles.container, hasShadow && shadowStyle]}
@@ -216,7 +221,7 @@ const ReleaseCard = ({
                         </View>
                         
                         {/* More button */}
-                        {showMoreIcon && (
+                        {showMoreIcon && isadmin && (
                             <TouchableOpacity 
                                 style={styles.moreButton} 
                                 onPress={handleMorePress}
@@ -241,11 +246,13 @@ const ReleaseCard = ({
                                 {createdAt || 'N/A'}
                             </Text>
                             {/* Display End Date if available */}
-                            {item?.endDate && (
-                                <Text style={styles.endDateText}>
-                                    Ends: {endDate}
-                                </Text>
-                            )}
+                            
+                                {item?.endDate && isadmin && (
+                                    <Text style={styles.endDateText}>
+                                        Ends: {endDate}
+                                    </Text>
+                                )}
+                          
                         </View>
                         <View style={styles.emptySpace} />
                     </View>

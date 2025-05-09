@@ -14,6 +14,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { friendRequestService } from '../../services/requestService';
 import TabNavigator from '../../components/ProfileTabs';
 import { NetworkUtils } from '../../utils/network';
+import { adminIds } from '../../constants/admin';
 
 const darkTheme = {
   ...theme,
@@ -388,6 +389,8 @@ const InstagramProfile = React.memo(({ user, router, handleLogout, theme, postCo
     });
   };
 
+  const isadmin = adminIds.includes(user?.id);
+
   return (
     <View style={[styles.profileContainer, { backgroundColor: theme.colors.background }]}>
       {/* Header */}
@@ -422,18 +425,21 @@ const InstagramProfile = React.memo(({ user, router, handleLogout, theme, postCo
           <Icon name="addfriend" color={theme.colors.textDark} />
         </TouchableOpacity>
           {/* admin icon menu */}
-        <TouchableOpacity 
-          style={[styles.logoutButton]} 
-          disabled={isNavigating}
-          onPress={() => {
-            if (!isNavigating) {
-              setIsNavigating(true);
-              router.push('AdminPanel');
-            }
-          }}
-        >
-          <Icon name="admin" color={theme.colors.textDark} />
-        </TouchableOpacity>
+
+          {isadmin && (
+               <TouchableOpacity 
+               style={[styles.logoutButton]} 
+               disabled={isNavigating}
+               onPress={() => {
+                 if (!isNavigating) {
+                   setIsNavigating(true);
+                   router.push('AdminPanel');
+                 }
+               }}
+             >
+               <Icon name="admin" color={theme.colors.textDark} />
+             </TouchableOpacity>
+          )}
          {/* menu icon here */}
         <TouchableOpacity 
           style={[styles.logoutButton]} 

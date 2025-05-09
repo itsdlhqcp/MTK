@@ -16,6 +16,7 @@ import { useFocusEffect } from '@react-navigation/native'
 import { ScrollView, GestureHandlerRootView } from 'react-native-gesture-handler'
 import TwistCard from '../../components/TwistCard'
 import { NetworkUtils } from '../../utils/network';
+import { adminIds } from '../../constants/admin'
 
 // Convert TwistCard to a memoized component for optimized rendering
 const MemoizedTwistCard = memo(({ item, currentUser, router, isVisible }) => {
@@ -76,7 +77,7 @@ onPress={() => router.push('library')}
 
 
 // Lightweight Header component
-const Header = memo(({ username, router, setIsNavigating, isNavigating }) => (
+const Header = memo(({ username, router, setIsNavigating, isNavigating, isadmin }) => (
   <View style={styles.header}>
     <View style={styles.welcomeContainer}>
       <Text style={styles.username}>{username}</Text>
@@ -84,6 +85,17 @@ const Header = memo(({ username, router, setIsNavigating, isNavigating }) => (
 
     <View style={styles.icons}>
    
+    <Pressable 
+          disabled={isNavigating}
+           onPress={() => {
+          if (!isNavigating) {
+            setIsNavigating(true);
+            router.push('/messenger');
+          }
+        }}
+      >
+        <Icon name="notsqr" size={hp(3.5)} color='white' />
+      </Pressable>
        
       <Pressable 
           disabled={isNavigating}
@@ -103,32 +115,19 @@ const Header = memo(({ username, router, setIsNavigating, isNavigating }) => (
               </View>
             )
           } */}
-
-      <Pressable 
-          disabled={isNavigating}
-           onPress={() => {
-          if (!isNavigating) {
-            setIsNavigating(true);
-            router.push('addTwist');
-          }
-        }}
-      >
-        <Icon name="plus" size={hp(3.2)} color='white' />
-      </Pressable>
-
-
-      <Pressable 
-          disabled={isNavigating}
-           onPress={() => {
-          if (!isNavigating) {
-            setIsNavigating(true);
-            router.push('/messenger');
-          }
-        }}
-      >
-        <Icon name="dm" size={hp(3.5)} color='white' />
-      </Pressable>
-     
+          {isadmin && (
+            <Pressable 
+            disabled={isNavigating}
+              onPress={() => {
+            if (!isNavigating) {
+              setIsNavigating(true);
+              router.push('addTwist');
+            }
+          }}
+        >
+          <Icon name="plus" size={hp(3.2)} color='white' />
+        </Pressable>
+          )} 
     </View>
   </View>
 ));
@@ -518,6 +517,8 @@ useEffect(() => {
     },
   }), []);
 
+  const isadmin = adminIds.includes(user?.id);
+
   return (
     <ScreenWrapper bg={"#121212"}>
         {/* Offline Mode Indicator */}
@@ -533,7 +534,9 @@ useEffect(() => {
            username="PlotTwist"
            router={router}
            setIsNavigating={setIsNavigating} // Add this line
-           isNavigating={isNavigating} />
+           isNavigating={isNavigating}
+           isadmin={isadmin}
+          />
 
           {/* Highly optimized FlatList */}
           <FlatList

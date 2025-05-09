@@ -122,6 +122,12 @@ const SpotlightCard = ({
     }
   }
 
+  // Function to capitalize first letter of each tag
+  const capitalizeFirstLetter = (string) => {
+    if (!string) return '';
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  };
+
   const handlePostDelete = () => {
     if (typeof showDelete === 'function') {
       showDelete(item);
@@ -143,67 +149,80 @@ const SpotlightCard = ({
     });
   };
 
-  return (
-    <TouchableOpacity
-      style={styles.container}
-      onPress={openPostDetails}
-      activeOpacity={0.9}>
-      {/* Use AspectRatioImage for images */}
-      {item?.file?.includes('postImage') && (
-        <AspectRatioImage
-          source={getSupabaseFileUrl(item.file)}
-          priority={isVisible}
-        />
-      )}
+  // Function to handle touches on the main content only
+  const handleContentPress = (e) => {
+    // Prevent default behavior
+    e.stopPropagation();
+    openPostDetails();
+  };
 
-      {/* Keep the original Video component */}
-      {item?.file?.includes('postVideo') && (
-        <View style={styles.videoContainer}>
-          <Video
-            ref={videoRef}
-            style={styles.postMedia}
+  return (
+    <View style={styles.container}>
+      {/* Touchable section for images/videos */}
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPress={handleContentPress}>
+        {/* Use AspectRatioImage for images */}
+        {item?.file?.includes('postImage') && (
+          <AspectRatioImage
             source={getSupabaseFileUrl(item.file)}
-            useNativeControls 
-            resizeMode='cover'
-            isLooping={false}
-            onPlaybackStatusUpdate={(status) => {
-              if (status.isLoaded && status.didJustFinish) {
-                setShowReplayButton(true);
-              }
-            }}
-            onFullscreenUpdate={({ fullscreenUpdate }) => {
-              if (fullscreenUpdate === Video.FULLSCREEN_UPDATE_PLAYER_DID_DISMISS) {
-                if (appStateVisible !== 'active') {
-                  videoRef.current?.pauseAsync();
-                }
-              }
-            }}
+            priority={isVisible}
           />
-          {showReplayButton && (
-            <TouchableOpacity 
-              style={styles.replayButton}
-              onPress={() => {
-                if (videoRef.current) {
-                  videoRef.current.replayAsync({
-                    shouldPlay: true,
-                    positionMillis: 0
-                  });
-                  setShowReplayButton(false);
+        )}
+
+        {/* Keep the original Video component */}
+        {item?.file?.includes('postVideo') && (
+          <View style={styles.videoContainer}>
+            <Video
+              ref={videoRef}
+              style={styles.postMedia}
+              source={getSupabaseFileUrl(item.file)}
+              useNativeControls 
+              resizeMode='cover'
+              isLooping={false}
+              onPlaybackStatusUpdate={(status) => {
+                if (status.isLoaded && status.didJustFinish) {
+                  setShowReplayButton(true);
                 }
               }}
-            >
-              <Icon 
-                name='reload'
-                size={hp(1.7)}
-                color="white"
-              />
-            </TouchableOpacity>
-          )}
-        </View>
-      )}
+              onFullscreenUpdate={({ fullscreenUpdate }) => {
+                if (fullscreenUpdate === Video.FULLSCREEN_UPDATE_PLAYER_DID_DISMISS) {
+                  if (appStateVisible !== 'active') {
+                    videoRef.current?.pauseAsync();
+                  }
+                }
+              }}
+            />
+            {showReplayButton && (
+              <TouchableOpacity 
+                style={styles.replayButton}
+                onPress={(e) => {
+                  e.stopPropagation(); // Prevent parent touchable from firing
+                  if (videoRef.current) {
+                    videoRef.current.replayAsync({
+                      shouldPlay: true,
+                      positionMillis: 0
+                    });
+                    setShowReplayButton(false);
+                  }
+                }}
+              >
+                <Icon 
+                  name='reload'
+                  size={hp(1.7)}
+                  color="white"
+                />
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+      </TouchableOpacity>
 
       {/* User header section - Instagram style */}
-      <View style={styles.userHeader}>
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPress={handleContentPress}
+        style={styles.userHeader}>
         <View style={styles.userInfo}>
           <View style={styles.tagsContainer}>
             {Array.isArray(parsedTags) && parsedTags.map((tag, index) => {
@@ -211,19 +230,30 @@ const SpotlightCard = ({
               let tagStyle = {};
               let tagTextStyle = {};
               
-              if (tag.toLowerCase() === 'rumour') {
+              // Convert tag to lowercase for comparison but capitalize for display
+              const tagLowerCase = tag.toLowerCase();
+              
+              // Determine the display text for the tag
+              let displayTag = capitalizeFirstLetter(tag);
+              
+              // Special case: change "kdrama" to "Korean"
+              if (tagLowerCase === 'kdrama') {
+                displayTag = 'Korean';
+              }
+              
+              if (tagLowerCase === 'rumour') {
                 // Red styling for rumor tags
                 tagStyle = { backgroundColor: '#262626', borderColor: '#333333' };
                 tagTextStyle = { color: '#f83a15' };
-              } else if (tag.toLowerCase() === 'official') {
+              } else if (tagLowerCase === 'official') {
                 // Blue styling for official tags
                 tagStyle = { backgroundColor: '#262626', borderColor: '#333333' };
                 tagTextStyle = { color: '#1581f8' };
-              }else if (tag.toLowerCase() === 'kdrama') {
-                // Blue styling for official tags
+              } else if (tagLowerCase === 'kdrama') {
+                // Purple styling for Korean drama tags
                 tagStyle = { backgroundColor: '#262626', borderColor: '#333333' };
                 tagTextStyle = { color: '#993ede' };
-              }  else if (tag.toLowerCase() === 'anime') {
+              } else if (tagLowerCase === 'anime') {
                 // Yellow styling for anime tags
                 tagStyle = { backgroundColor: '#262626', borderColor: '#333333' };
                 tagTextStyle = { color: '#FFC300' };
@@ -241,7 +271,7 @@ const SpotlightCard = ({
                   key={index} 
                   style={[styles.tagPill, tagStyle]}
                 >
-                  <Text style={[styles.tagPillText, tagTextStyle]}>#{tag}</Text>
+                  <Text style={[styles.tagPillText, tagTextStyle]}>#{displayTag}</Text>
                 </View>
               );
             })}
@@ -253,7 +283,9 @@ const SpotlightCard = ({
           {showDelete && currentUser?.id === item?.userId && (
             <TouchableOpacity 
               style={styles.moreButton}
-              onPress={() => {}}
+              onPress={(e) => {
+                e.stopPropagation(); // Prevent parent touchable from firing
+              }}
             >
               <Icon 
                 name='more-vertical'
@@ -263,10 +295,13 @@ const SpotlightCard = ({
             </TouchableOpacity>
           )}
         </View>
-      </View>
+      </TouchableOpacity>
 
       {/* Content section */}
-      <View style={styles.content}>
+      <TouchableOpacity 
+        activeOpacity={0.9}
+        onPress={handleContentPress}
+        style={styles.content}>
         {item?.body && (
           <>
             <RenderHtml
@@ -275,27 +310,31 @@ const SpotlightCard = ({
               tagsStyles={tagsStyles}
             />
             {!isExpanded && item.body.length > 700 && (
-              <TouchableOpacity onPress={openPostDetails}>
-                <Text style={{ color: theme.colors.primary, marginTop: 5 }}>Read More</Text>
-              </TouchableOpacity>
+              <Text style={{ color: theme.colors.primary, marginTop: 5 }}>Read More</Text>
             )}
           </>
         )}
-      </View>
+      </TouchableOpacity>
 
-      <SpotlightFooter
-        item={item}
-        currentUser={currentUser}
-        router={router}
-        showMoreIcon={showMoreIcon}
-      />
+      {/* Footer is now a separate non-touchable component */}
+      <View pointerEvents="box-none">
+        <SpotlightFooter
+          item={item}
+          currentUser={currentUser}
+          router={router}
+          showMoreIcon={showMoreIcon}
+        />
+      </View>
 
       {/* Edit/Delete Modal Buttons (hidden by default) */}
       {showDelete && currentUser?.id === item?.userId && (
         <View style={styles.editOptions}>
           <TouchableOpacity 
             style={styles.editOption}
-            onPress={() => onEdit(item)}
+            onPress={(e) => {
+              e.stopPropagation(); // Prevent parent touchable from firing
+              onEdit(item);
+            }}
           >
             <Icon 
               name='edit'
@@ -307,7 +346,10 @@ const SpotlightCard = ({
           
           <TouchableOpacity 
             style={[styles.editOption, styles.deleteOption]}
-            onPress={handlePostDelete}
+            onPress={(e) => {
+              e.stopPropagation(); // Prevent parent touchable from firing
+              handlePostDelete();
+            }}
           >
             <Icon 
               name='delete'
@@ -321,7 +363,7 @@ const SpotlightCard = ({
       )}
 
       <View style={styles.greenBorderTop} />
-    </TouchableOpacity>
+    </View>
   );
 };
 

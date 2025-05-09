@@ -100,7 +100,7 @@ const CommentSection = ({
           </View>
         ) : (
           <TouchableOpacity style={styles.sendIcon} onPress={onNewComment}>
-            <Icon name="send" size={hp(3)} color={theme.colors.primaryDark} />
+            <Icon name="send" size={hp(2.4)} color={theme.colors.primaryDark} />
           </TouchableOpacity>
         )
       }
@@ -172,7 +172,7 @@ const CommentSection = ({
                       style={styles.replySendIcon}
                       onPress={() => handleSubmitReply(comment.id)}
                     >
-                      <Icon name="send" size={hp(3)} color={theme.colors.primaryDark} />
+                      <Icon name="send" size={hp(1.7)} color={theme.colors.primaryDark} />
                     </TouchableOpacity>
                   )}
                 </View>
@@ -218,20 +218,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 0.8,
     borderColor: theme.colors.primary,
-    borderRadius: theme.radius.lg,
+    borderRadius: theme.radius.xs,
     borderCurve: 'continuous',
-    height: hp(5.8),
-    width: hp(5.8)
+    height: hp(4.4),
+    width: hp(4.4)
   },
   replySendIcon: {
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: theme.colors.primaryDark,
-    borderRadius: theme.radius.sm,
+    borderRadius: theme.radius.xs,
     borderCurve: 'continuous',
-    height: hp(4.8),
-    width: hp(4.8)
+    height: hp(3.4),
+    width: hp(3.4)
   },
   replyContainer: {
     marginLeft: 50,

@@ -87,6 +87,13 @@ import AddFriend from "./AddFriend";
 import Activity from "./Activity";
 import Resolve from "./Resolve";
 import EyeOff from "./EyeOff";
+import NotSqr from "./NotSqr";
+import Help from "./Help";
+import Policy from "./Policy";
+import AcctStat from "./AccountStat"
+import Community from "./Community"
+import LgOut from "./Lgout";
+import RstPass from "./RstPass";
 
 const icons = {
     home: Home,
@@ -175,7 +182,15 @@ const icons = {
     addfriend: AddFriend,
     activity: Activity,
     resolve: Resolve,
-    eyeoff: EyeOff
+    eyeoff: EyeOff,
+    notsqr: NotSqr,
+    help: Help,
+    policy: Policy,
+    acctstat: AcctStat,
+    community: Community,
+    lgout: LgOut,
+    rstpass: RstPass
+
 }
 
 const Icon = ({name, ...props}) => {

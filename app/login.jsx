@@ -9,10 +9,10 @@ import theme from '@/constants/theme'
 import Icon from '@/assets/icons'
 import Input from "../components/Input"
 import Button from '@/components/Button'
-import { Alert } from 'react-native'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { LinearGradient } from 'expo-linear-gradient'
+import { useToast } from '../contexts/ToastContext'
 
 const Login = () => {
   const router = useRouter();
@@ -25,6 +25,7 @@ const Login = () => {
   });
   const { checkUserStatus } = useAuth();
   const [loading, setLoading] = useState(false);
+  const { showToast } = useToast();
 
   // Colors matching the welcome page
   const colors = {
@@ -101,6 +102,9 @@ const Login = () => {
       // Add delay before navigation
       await delay(200);
       
+      // Show success toast
+      showToast('success', 'Login successful!');
+      
       // Navigate based on user status
       if (isNew) {
           router.replace('/auth/newuserscreens/userpreferences');
@@ -108,7 +112,7 @@ const Login = () => {
           router.replace('/home');
       }
     } catch (error) {
-        Alert.alert('Login', error.message);
+        showToast('error', error.message);
     } finally {
         setLoading(false);
     }
@@ -207,7 +211,7 @@ const Login = () => {
           </View>
           
           <Text style={styles.forgotPassword} onPress={() => router.push('/auth/forgot')}>
-            try hassle-free login &gt;&gt;</Text>
+             Forgot password?</Text>
           
           {/* button */}
           <Button 
@@ -265,7 +269,7 @@ const styles = StyleSheet.create({
     flex: 1, 
     gap: 45, 
     paddingHorizontal: wp(5),
-    paddingTop: RNStatusBar.currentHeight || 20,
+    paddingTop:  80,
   },
   welcomeText: {
     fontSize: hp(4),

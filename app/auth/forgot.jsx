@@ -79,6 +79,7 @@ export default function ForgotPasswordScreen() {
   };
 
   return (
+    
     <View style={styles.mainContainer}>
       <StatusBar style="light" />
       
@@ -193,7 +194,7 @@ const styles = StyleSheet.create({
     flex: 1, 
     gap: 45, 
     paddingHorizontal: wp(5),
-    paddingTop: RNStatusBar.currentHeight || 20,
+    paddingTop:  70,
   },
   welcomeText: {
     fontSize: hp(4),

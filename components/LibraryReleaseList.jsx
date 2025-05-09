@@ -386,7 +386,7 @@ const AllReleasesList = ({ searchQuery = '' }) => {
       <View style={styles.emptyContainer}>
         <Text style={styles.noMoreText}>
           {loading ? "Loading..." : 
-          searchQuery ? "No matching releases found" : "No releases found!"}
+          searchQuery ? "This serarch engine under maitainance" : "No releases found!"}
         </Text>
       </View>
     );

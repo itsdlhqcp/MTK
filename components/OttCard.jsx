@@ -12,6 +12,8 @@ import Icon from '../assets/icons'
 import DatePicker from '../components/DatePicker'
 import { updateStreamEndDate } from '../services/ottService'
 import { useToast } from '../contexts/ToastContext'
+import { adminIds } from '../constants/admin'
+import { useAuth } from '../contexts/AuthContext'
 
 const OttCard = ({
     item,
@@ -21,6 +23,7 @@ const OttCard = ({
     onEdit = () => {},
     onEndDateUpdated = () => {} // Add callback for when end date is updated
 }) => {
+    const { user: currentUser } = useAuth();
     const [userRating, setUserRating] = useState(0);
     const [clickCount, setClickCount] = useState(0);
     const [isNavigating, setIsNavigating] = useState(false);
@@ -142,7 +145,7 @@ const OttCard = ({
                         </Text>
                     );
                 })}
-                <Text style={[styles.ratingValue, { color: theme.colors.primaryDark }]}>
+                <Text style={[styles.ratingValue, { color: '#FFFFFF' }]}>
                     {rating.toFixed(1)}/5
                 </Text>
             </View>
@@ -163,6 +166,8 @@ const OttCard = ({
             fontWeight: 'bold'
         }
     }
+
+    const isadmin = adminIds.includes(currentUser?.id);
 
     return (
         <TouchableOpacity 
@@ -218,7 +223,7 @@ const OttCard = ({
                             </View>
                             
                             {/* More button */}
-                            {showMoreIcon && (
+                            {showMoreIcon && isadmin && (
                                 <TouchableOpacity 
                                     style={styles.moreButton} 
                                     onPress={handleMorePress}
@@ -244,7 +249,7 @@ const OttCard = ({
                                 {rDate}
                             </Text>
                             {/* Display End Date if available */}
-                            {item?.endDate && (
+                            {item?.endDate && isadmin && (
                                 <Text style={styles.endDateText}>
                                     Ends: {endDate}
                                 </Text>

@@ -242,7 +242,7 @@ const CommentItem = ({
                   name="commentlike"
                   size={hp(2.5)} 
                   color={cmtreplyliked ? "#0066ff" : "#CCCCCC"} 
-                  fill={cmtreplyliked ? theme.colors.rose : 'transparent'}
+                  fill={cmtreplyliked ? 'transparent' : 'transparent'}
                 />
                 <Text style={styles.count}>
                   {cmtreplylikes.length}
@@ -260,7 +260,7 @@ const CommentItem = ({
                   name="commentlike"
                   size={hp(2.5)} 
                   color={cmtliked ? "#0066ff" : "#CCCCCC"} 
-                  fill={cmtliked ? theme.colors.rose : 'transparent'}
+                  fill={cmtliked ? 'transparent' : 'transparent'}
                 />
                 <Text style={styles.count}>
                   {cmtlikes.length}
@@ -280,7 +280,7 @@ const CommentItem = ({
                   name="commentunlike"
                   size={hp(2.5)} 
                   color={cmtunliked ? "#0066ff" : "#CCCCCC"} 
-                  fill={cmtunliked ? theme.colors.rose : 'transparent'}
+                  fill={cmtunliked ? 'transparent' : 'transparent'}
                 />
                 <Text style={styles.count}>
                   {cmtunlikes.length}

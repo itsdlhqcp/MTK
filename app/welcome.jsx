@@ -42,13 +42,15 @@ const Welcome = () => {
           />
         </View>
         <View style={{ gap: 20 }}>
-           <Text style={styles.title}>
-             <Text style={{color: colors.red}}>Plo</Text>
-             <Text style={{color: colors.blue}}>Twist</Text>
-           </Text>
-           <Text style={styles.punchline}>Stay Ahead of the Plot
-           Twist your movie Experience</Text>
+        <Text style={styles.title}>
+          <Text style={{color: colors.red}}>Plot</Text>
+          <Text style={{color: colors.blue}}>Twist</Text>
+        </Text>
+        <View style={{ flexDirection: 'column' }}>
+          <Text style={styles.punchline}>Stay Ahead of the Plot</Text>
+          <Text style={styles.punchline}>Twist your movie Experience</Text>
         </View>
+      </View>
 
         {/* footer */}
         <View style={styles.footer}>

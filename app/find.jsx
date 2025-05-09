@@ -7,6 +7,7 @@ import Avatar from '../components/Avatar';
 import { friendRequestService } from '../services/requestService';
 import { supabase } from '../lib/supabase';
 import { useFocusEffect } from '@react-navigation/native';
+import ScreenWrapper from '../components/ScreenWrapper';
 
 const instaTheme = {
   ...theme,
@@ -177,6 +178,7 @@ const UserSearchTab = () => {
   };
 
   return (
+    <ScreenWrapper bg="#121212">
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000000" />
       
@@ -226,8 +228,8 @@ const UserSearchTab = () => {
         </View>
       ) : loading ? (
         <View style={styles.emptyContainer}>
-          <ActivityIndicator size="large" color={instaTheme.colors.primary} />
-          <Text style={styles.emptyText}>Searching...</Text>
+          {/* <ActivityIndicator size="large" color={instaTheme.colors.primary} /> */}
+          <Text style={styles.emptyText}>Searching user...</Text>
         </View>
       ) : (
         <FlatList
@@ -238,6 +240,7 @@ const UserSearchTab = () => {
         />
       )}
     </View>
+    </ScreenWrapper>
   );
 };
 

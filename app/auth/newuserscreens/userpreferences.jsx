@@ -197,7 +197,7 @@ const UserPreferences = () => {
         throw new Error(response.msg);
       }
       
-      router.replace('/home');
+      router.replace('/auth/newuserscreens/animefan');
     } catch (error) {
       Alert.alert('Error', error.message);
     } finally {
@@ -237,7 +237,7 @@ const UserPreferences = () => {
               </Text>
               <Text style={styles.welcomeSmallText}>Preferences</Text>
               <Text style={styles.subtitle}>
-                Customize your experience by selecting genres and languages
+              Customize your experience to match your personal interests
               </Text>
             </View>
             
@@ -248,7 +248,7 @@ const UserPreferences = () => {
                   {selectedGenres.length}/2 minimum
                 </Text> */}
               </View>
-              <Text style={styles.sectionSubtitle}>Choose the types of content you enjoy watching</Text>
+              <Text style={styles.sectionSubtitle}>Tell us what you love to watch</Text>
               
               <Animated.Text 
                 style={[
@@ -279,7 +279,7 @@ const UserPreferences = () => {
                   {selectedLanguages.length}/2 minimum
                 </Text> */}
               </View>
-              <Text style={styles.sectionSubtitle}>Select languages you're comfortable with</Text>
+              <Text style={styles.sectionSubtitle}>Your preferred watch languages</Text>
               
               <Animated.Text 
                 style={[
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: wp(5),
-    paddingTop: RNStatusBar.currentHeight || 20,
+    paddingTop: 32,
   },
   content: {
     paddingTop: hp(6),

@@ -14,6 +14,7 @@ import CommentsSection from '../components/postComponents/commentsSection'
 import { supabase } from '../lib/supabase'
 import { createNotifications } from '../services/notificationService'
 import ProfilePopup from '../components/profilePopup'
+import ScreenWrapper from '../components/ScreenWrapper'
 
 const PostDetails = () => {
     const [selectedUser, setSelectedUser] = useState(null);
@@ -27,7 +28,7 @@ const PostDetails = () => {
     const inputRef = useRef(null);
     const commentRef = useRef('');
     const [loading, setLoading] = useState(false);
-
+    
     useEffect(() => {
         getPostDetails()
     }, [])
@@ -263,6 +264,7 @@ const PostDetails = () => {
 
     return (
         <>
+        <ScreenWrapper bg="#121212">
             <Stack.Screen 
                 options={{
                     headerShown: false,
@@ -324,6 +326,7 @@ const PostDetails = () => {
                     router={router}
                 />
             </View>
+            </ScreenWrapper>
         </>
     )
 }

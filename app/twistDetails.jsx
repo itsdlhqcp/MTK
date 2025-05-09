@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router'
 import {fetchPostDetails, createComment, removeComment, removePost, createReply, fetchCommentReplies  } from '../services/homeService'
 import { hp, wp } from '../helpers/common'
+import ScreenWrapper from '../components/ScreenWrapper';
 import theme from '../constants/theme'
 import { useAuth } from '../contexts/AuthContext'
 import TwistDetailCard from '../components/TwistDetailCrad'
@@ -251,6 +252,7 @@ const twistDetails = () => {
 
     return (
         <>
+        <ScreenWrapper bg="#121212">
             <Stack.Screen 
                 options={{
                     headerShown: false,
@@ -312,6 +314,7 @@ const twistDetails = () => {
                     router={router}
                 />
             </View>
+            </ScreenWrapper>
         </>
     )
 }

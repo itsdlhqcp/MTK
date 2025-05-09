@@ -484,12 +484,12 @@ const NewOtt = () => {
               </View>
             </View>
             <View style={styles.switchContainer}>
-              <Text style={styles.switchLabel}>Direct Release</Text>
+              <Text style={styles.switchLabel}>Direct Release 🛠️</Text>
               <Switch
                 trackColor={{ false: "#767577", true: theme.colors.primary }}
                 thumbColor={directRelease ? "#ffffff" : "#f4f3f4"}
                 ios_backgroundColor="#3e3e3e"
-                onValueChange={toggleDirectRelease}
+               // onValueChange={toggleDirectRelease} // on maintenace
                 value={directRelease}
               />
             </View>
@@ -530,7 +530,7 @@ const NewOtt = () => {
           )}
 
           <View style={styles.media}>
-            <Text style={styles.addImageText}>Stick Digital Tile Post HERE</Text>
+            <Text style={styles.addImageText}>Landscape poster HERE</Text>
             <View style={styles.mediaIcons}>
               {/* This button will open the picker with allowsEditing: false */}
               <TouchableOpacity onPress={() => onPick(true)}>
@@ -565,7 +565,7 @@ const NewOtt = () => {
 
           {/* Added second image picker */}
           <View style={styles.media}>
-            <Text style={styles.addImageText}>Add Digital list poster image</Text>
+            <Text style={styles.addImageText}>Potrait poster HERE</Text>
             <View style={styles.mediaIcons}>
               <TouchableOpacity onPress={() => onPickSecond(true)}>
                 <Icon name="image" size={30} color={theme.colors.dark} />

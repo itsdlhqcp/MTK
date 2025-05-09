@@ -26,84 +26,134 @@ export const createOrUpdatePost = async (post) => {
   }
 };
 
-export const fetchPosts = async (limit=10,userId) => {
-    try {
-     
-      if(userId){
-        const { data, error } = await supabase
+export const fetchPosts = async (limit = 10, userId) => {
+  try {
+    if (userId) {
+      const { data, error } = await supabase
         .from('posts')
-        .select(`*,user: users (id, name, image),
-          postLikes (*),
+        .select(`
+          *,
+          user: users (id, name, image),
+          postLikes(*),
           comments(count)
-          `,
-        )
+        `)
         .order('created_at', { ascending: false })
         .eq('userId', userId)
         .limit(limit);
+      
       if (error) {
         return { success: false, msg: 'Could not fetch the posts' };
       }
       return { success: true, data };
-      }else{
-        const { data, error } = await supabase
+    } else {
+      const { data, error } = await supabase
         .from('posts')
-        .select(`*,user: users (id, name, image),
-          postLikes (*),
-          comments  (count)
-          `,
-          
-        )
+        .select(`
+          *,
+          user: users (id, name, image),
+          postLikes(*),
+          comments(count)
+        `)
         .order('created_at', { ascending: false })
         .limit(limit);
+      
       if (error) {
         return { success: false, msg: 'Could not fetch the posts' };
       }
       return { success: true, data };
-      }
-    } catch (error) {
-      return { success: false, msg: 'Could not fetch the posts due to an exception' };
     }
-  };
+  } catch (error) {
+    return { success: false, msg: 'Could not fetch the posts due to an exception' };
+  }
+};
 
   // Like service
+// export const createPostLike = async (postLike) => {
+//   try {
+//     // First check if like already exists
+//     const { data: existingLike } = await supabase
+//       .from('postLikes')
+//       .select()
+//       .match({ userId: postLike.userId, postId: postLike.postId })
+//       .single();
+
+//     if (existingLike) {
+//       // Unlike if already liked
+//       const { error } = await supabase
+//         .from('postLikes')
+//         .delete()
+//         .match({ userId: postLike.userId, postId: postLike.postId });
+
+//       if (error) throw error;
+//       return { success: true, data: null, action: 'unliked' };
+//     }
+
+//     // Create new like if not exists
+//     const { data, error } = await supabase
+//       .from('postLikes')
+//       .insert(postLike)
+//       .select()
+//       .single();
+
+//     if (error) throw error;
+//     return { success: true, data, action: 'liked' };
+
+//   } catch (error) {
+//     console.log('postLike error: ', error);
+//     return { 
+//       success: false, 
+//       msg: 'Could not process like action' 
+//     };
+//   }
+// };
+
 export const createPostLike = async (postLike) => {
   try {
+    console.log('Incoming postLike:', postLike);
+
     // First check if like already exists
-    const { data: existingLike } = await supabase
+    const { data: existingLike, error: checkError } = await supabase
       .from('postLikes')
       .select()
       .match({ userId: postLike.userId, postId: postLike.postId })
       .single();
 
+    console.log('Existing like check:', { existingLike, checkError });
+
     if (existingLike) {
       // Unlike if already liked
-      const { error } = await supabase
+      const { error: deleteError } = await supabase
         .from('postLikes')
         .delete()
         .match({ userId: postLike.userId, postId: postLike.postId });
 
-      if (error) throw error;
+      console.log('Unlike operation result:', { deleteError });
+
+      if (deleteError) throw deleteError;
       return { success: true, data: null, action: 'unliked' };
     }
 
     // Create new like if not exists
-    const { data, error } = await supabase
+    const { data, error: insertError } = await supabase
       .from('postLikes')
       .insert(postLike)
       .select()
       .single();
 
-    if (error) throw error;
+    console.log('Insert like result:', { data, insertError });
+
+    if (insertError) throw insertError;
     return { success: true, data, action: 'liked' };
 
   } catch (error) {
     console.log('postLike error: ', error);
-    return { 
-      success: false, 
-      msg: 'Could not process like action' 
+    return {
+      success: false,
+      msg: 'Could not process like action'
     };
   }
 };
+
 
   
   export const removePostLike = async (postId, userId) => {
@@ -128,8 +178,8 @@ export const createPostLike = async (postLike) => {
       const { data, error } = await supabase
         .from('posts')
         .select(`*,user: users (id, name, image),
-          postLikes(*),
-          comments(*,
+           postLikes(count),
+           comments(*,
            user: users(id, name, image),
            reply(*),
            commentLikes(*),

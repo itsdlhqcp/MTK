@@ -319,7 +319,7 @@ const PeoplesReviewItem = ({
                 <Text style={styles.count}>{downvotes?.length || 0}</Text>
 
                 <TouchableOpacity 
-                  onPress={handleReplyPress} 
+                   onPress={() => onReplyReviewPress(item.id)}  
                   style={styles.replyIcon}
                 >
                   <Icon name="bubbleChatReply" size={hp(2.5)} color={theme.colors.primary} />

@@ -23,6 +23,8 @@ import { useReview } from '../../contexts/ReviewContext';
 import { useRoute } from "@react-navigation/native";
 import { fetchPeoplesStreamDetailsx } from "../../services/ottService";
 import TheatreReviewTabs from "../../components/TheatreReviewTabs";
+import { adminIds } from "../../constants/admin";
+import ScreenWrapper from "../../components/ScreenWrapper";
 
 const MIN_CHARS = 0;
 
@@ -597,7 +599,8 @@ useEffect(() => {
                </View>
             </View>
           );    
-            const isadmin =  user?.id === "a4424502-53de-4814-8882-7a4b5c09a76c"
+            // const isadmin =  user?.id === "a4424502-53de-4814-8882-7a4b5c09a76c"
+            const isadmin = false;
 
             // on submit admin review 
 
@@ -661,7 +664,7 @@ useEffect(() => {
                       
     
         return (
-
+<ScreenWrapper bg="#121212">
     <GestureHandlerRootView style={{ flex: 1 }}>
             <View style={styles.container}>
                 <ScrollView 
@@ -694,7 +697,7 @@ useEffect(() => {
                                         placeholderTextColor={theme.colors.textLight}
                                         containerStyle={styles.input} 
                                         value={adminReviewText}
-                                        onChangeText={ahandleTextChange}
+                                       // onChangeText={ahandleTextChange}
                                         multiline={true}
                                         textAlignVertical="top"
                                     />
@@ -880,6 +883,7 @@ useEffect(() => {
                         />              
                 </View>
             </GestureHandlerRootView>
+            </ScreenWrapper>
         );
     };
     

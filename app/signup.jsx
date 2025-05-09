@@ -1,6 +1,5 @@
-import { View, StyleSheet, Text, Pressable, StatusBar as RNStatusBar, TouchableOpacity, Alert, ScrollView } from 'react-native'
+import { View, StyleSheet, Text, Pressable, TouchableOpacity, ScrollView } from 'react-native'
 import React, { useState } from 'react'
-import ScreenWrapper from '@/components/ScreenWrapper'
 import { StatusBar } from 'expo-status-bar'
 import BackButton from '../components/BackButton'
 import { useRouter } from 'expo-router'
@@ -11,9 +10,11 @@ import Input from "../components/Input"
 import Button from '@/components/Button'
 import { supabase } from '@/lib/supabase'
 import { LinearGradient } from 'expo-linear-gradient'
+import { useToast } from '../contexts/ToastContext'
 
 const SignUp = () => {
   const router = useRouter(); 
+  const { showToast } = useToast();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -25,7 +26,8 @@ const SignUp = () => {
     name: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    server: '' // Added server error field for API-related errors
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -83,16 +85,14 @@ const SignUp = () => {
   // Handle input changes with validation
   const handleNameChange = (value) => {
     setName(value);
-    if (errors.name) {
-      setErrors(prev => ({...prev, name: ''}));
-    }
+    // Clear name and server errors when user starts typing again
+    setErrors(prev => ({...prev, name: '', server: ''}));
   };
 
   const handleEmailChange = (value) => {
     setEmail(value);
-    if (errors.email) {
-      setErrors(prev => ({...prev, email: ''}));
-    }
+    // Clear email and server errors when user starts typing again
+    setErrors(prev => ({...prev, email: '', server: ''}));
   };
 
   const handlePasswordChange = (value) => {
@@ -134,21 +134,25 @@ const SignUp = () => {
       name: nameError,
       email: emailError,
       password: passwordError,
-      confirmPassword: confirmPasswordError
+      confirmPassword: confirmPasswordError,
+      server: '' // Clear any server errors when validating the form
     });
 
     return !nameError && !emailError && !passwordError && !confirmPasswordError;
   };
 
   const onSubmit = async () => {
+    // Clear any previous server errors
+    setErrors(prev => ({...prev, server: ''}));
+    
     if (!validateForm()) {
       return;
     }
-
+  
     setLoading(true);
-
+  
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const {data: {session}, error} = await supabase.auth.signUp({
         email: email.trim(), 
         password: password.trim(),
         options: {
@@ -159,17 +163,49 @@ const SignUp = () => {
       });
       
       if (error) {
-        Alert.alert('SignUp Error', error.message);
+        // Check if error message contains indication of duplicate/existing user
+        if (error.message.includes("Database error saving new user") || 
+            error.message.toLowerCase().includes("already exists") ||
+            error.message.toLowerCase().includes("duplicate")) {
+          // Set email validation error instead of showing Alert
+          setErrors(prev => ({
+            ...prev, 
+            email: 'The username cant be registered under this email',
+            server: 'An account with this username already exists. Please use a different username or try logging in'
+          }));
+        } else {
+          // For other errors, display them in the server error field
+          setErrors(prev => ({...prev, server: error.message}));
+          showToast('error', error.message);
+        }
       } else {
-        Alert.alert(
-          "Sign Up Successful",
-          "Your account has been created successfully. Please verify your email if required.",
-          [{ text: "Go to Login", onPress: () => router.replace('/login') }]
-        );
+        // Success case - show toast and redirect
+        showToast('success', 'Your account has been created successfully!!');
+        setTimeout(() => {
+          router.replace('/login');
+        }, 1500); // Give the toast time to be seen before navigation
       }
     } catch (error) {
-      Alert.alert('SignUp Error', 'An unexpected error occurred. Please try again later.');
-      console.error(error);
+      if (error && typeof error === 'object' && 'message' in error) {
+        if (error.message.includes("Database error saving new user") ||
+            error.message.toLowerCase().includes("already exists") ||
+            error.message.toLowerCase().includes("duplicate")) {
+          // Set email validation error instead of showing Alert
+          setErrors(prev => ({
+            ...prev, 
+            email: 'This email is already registered',
+            server: 'An account with this email already exists. Please use a different email or try logging in.'
+          }));
+          showToast('error', 'This email is already registered');
+        } else {
+          // For other errors, display them in the server error field
+          setErrors(prev => ({...prev, server: error.message}));
+          showToast('error', error.message);
+        }
+      } else {
+        setErrors(prev => ({...prev, server: 'An unexpected error occurred. Please try again later.'}));
+        showToast('error', 'An unexpected error occurred. Please try again later.');
+      }
     } finally {
       setLoading(false);
     }
@@ -205,11 +241,18 @@ const SignUp = () => {
               Please fill the details to create an account
             </Text>
             
+            {/* Server error message - displays any API or server-related errors */}
+            {errors.server ? (
+              <View style={styles.serverErrorContainer}>
+                <Text style={styles.serverErrorText}>{errors.server}</Text>
+              </View>
+            ) : null}
+            
             {/* Name Input */}
             <View>
               <Input
                 icon={<Icon name="user" size={26} strokeWidth={1.6} color={colors.lightText} />}
-                placeholder="Enter your name"
+                placeholder="Enter username"
                 value={name}
                 onChangeText={handleNameChange}
                 inputStyle={styles.inputStyle}
@@ -382,7 +425,7 @@ const styles = StyleSheet.create({
     flex: 1, 
     gap: 30, 
     paddingHorizontal: wp(5),
-    paddingTop: RNStatusBar.currentHeight || 20,
+    paddingTop: 55,
     paddingBottom: hp(3),
   },
   welcomeText: {
@@ -408,6 +451,9 @@ const styles = StyleSheet.create({
     borderWidth: 0,
     borderRadius: 10,
   },
+  inputWithIconContainer: {
+    position: 'relative',
+  },
   inputStyle: {
     color: '#e0e0e0',
   },
@@ -415,11 +461,31 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E50914',
   },
+  inputSuccess: {
+    borderWidth: 1,
+    borderColor: '#4BB543',
+  },
   errorText: {
     color: '#E50914',
     fontSize: hp(1.4),
     marginTop: 5,
     marginLeft: 10,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0.5, height: 0.5 },
+    textShadowRadius: 1,
+  },
+  serverErrorContainer: {
+    backgroundColor: 'rgba(229, 9, 20, 0.1)',
+    borderWidth: 1,
+    borderColor: '#E50914',
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 5,
+  },
+  serverErrorText: {
+    color: '#E50914',
+    fontSize: hp(1.4),
+    textAlign: 'center',
     textShadowColor: 'rgba(0, 0, 0, 0.5)',
     textShadowOffset: { width: 0.5, height: 0.5 },
     textShadowRadius: 1,
@@ -431,6 +497,15 @@ const styles = StyleSheet.create({
     paddingRight: 50,
   },
   eyeIcon: {
+    position: 'absolute',
+    right: 15,
+    top: 0,
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  statusIcon: {
     position: 'absolute',
     right: 15,
     top: 0,

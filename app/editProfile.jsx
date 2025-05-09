@@ -1,6 +1,3 @@
-
-
-
 import React, { useEffect, useState, useRef } from 'react';
 import {
   Image,
@@ -27,116 +24,276 @@ import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import PhoneVerification from '../components/MobileVerification';
 
-// TagInput Component/ TagInput Component
+// Pre-defined tags that users can select from
+const PREDEFINED_TAGS = [
+  // Must be first
+  "Film Critic",
+  "Reviewer",
+  "Content Creator",
+  "Video Editor", 
+  "YouTuber",
+  // Creative Roles
+  "Scriptwriter",
+  "Director",
+  "Cinematographer",
+  "Actor/Actress",
+  "Voice Artist",
+  "Producer",
+  "Music Composer",
+  "Makeup Artist",
+  "Costume Designer",
+  "Set Designer",
+  "Stunt Coordinator",
+  "Film Student",
+  "Indie Filmmaker",
+  "Short Film Maker",
+  "Storyboard Artist",
+  "Casting Director",
+  "Choreographer",
+  "Art Director",
+  "Production Designer",
+
+  // Technical Roles
+  "VFX Artist",
+  "Sound Designer",
+  "Trailer Editor",
+  "Colorist",
+  "Lighting Technician",
+  "Camera Operator",
+  "Post-production Supervisor",
+  "Production Assistant",
+  "Editor",
+  "Animation Artist",
+  "Drone Operator",
+  "Foley Artist",
+  "Grip",
+  "Gaffer",
+  "Line Producer",
+  "Technical Director",
+  "Visual Designer",
+  "Motion Graphics Artist",
+
+  // Analytical, Academic, & Media
+  "Box Office Analyst",
+  "Trailer Analyst",
+  "Film Historian",
+  "Festival Curator",
+  "Interviewer",
+  "Podcaster",
+  "Movie Blogger",
+  "Film Researcher",
+  "Awards Analyst",
+  "Media Journalist",
+  "Public Speaker",
+  "Academic Researcher",
+  "Cinema Studies Scholar",
+  "Script Analyst",
+  "Film Theorist",
+  "Cultural Critic",
+  "Film Archivist",
+  "Press Kit Writer",
+
+  // Marketing & Business
+  "Social Media Manager",
+  "Influencer",
+  "Marketing Strategist",
+  "PR Manager",
+  "Brand Collaborator",
+  "Film Promoter",
+  "Audience Engagement Specialist",
+  "Movie Meme Creator",
+  "Community Manager",
+  "Media Buyer",
+  "Campaign Manager",
+  "Creative Director",
+  "Showrunner",
+  "Event Organizer",
+  "Digital Marketer",
+  "Talent Manager",
+  "Distribution Agent",
+  "Film Financier",
+  "Sponsorship Coordinator",
+
+  // Fans & Hobbyists
+  "Film Enthusiast",
+  "Movie Buff",
+  "Indie Film Supporter",
+  "Aspiring Filmmaker",
+  "Cinema Club Member",
+  "Behind-the-Scenes Blogger",
+  "Fan Fiction Writer",
+  "Cosplayer",
+  "Scene Recreator",
+  "Movie Collector",
+  "Cult Film Fan",
+  "Documentary Maker",
+  "Reel Curator",
+  "Silent Film Enthusiast",
+  "Foreign Film Fan",
+  "Festival Attendee",
+  "YouTube Reviewer",
+  "Cinema Tour Guide",
+  "Streaming Critic",
+  "OTT Curator"
+];
+
+
+// TagInput Component
 const TagInput = ({ tags = [], setTags }) => { 
-    console.log("TagInput received tags:", tags); // Add default value for tags
     const [inputValue, setInputValue] = useState('');
     const [error, setError] = useState('');
     const inputRef = useRef();
-    const MAX_TAGS = 3;
-    const MAX_TAG_LENGTH = 7;
+    const MAX_TAGS = 2;
+    const MAX_TAG_LENGTH = 15; // Increased length to accommodate predefined tags
   
     const handleAddTag = () => {
         setError('');
-      const cleanedTag = inputValue.trim().toLowerCase();
-      if (!cleanedTag) {
-        Alert.alert('Invalid Tag', 'Tag cannot be empty.');
-        return;
-      }
-      // Ensure tags is an array before checking includes
-      const currentTags = Array.isArray(tags) ? tags : [];
-       // Validation checks
-       if (!cleanedTag) {
-        setError('Add your first tag');
-        return;
-      }
+        const cleanedTag = inputValue.trim().toLowerCase();
+        if (!cleanedTag) {
+          setError('Tag cannot be empty');
+          return;
+        }
+        // Ensure tags is an array before checking includes
+        const currentTags = Array.isArray(tags) ? tags : [];
+        
+        // Validation checks
+        if (currentTags.length >= MAX_TAGS) {
+          setError(`Maximum ${MAX_TAGS} tags allowed.`);
+          return;
+        }
 
-      if (currentTags.length >= MAX_TAGS) {
-        setError(`Maximum ${MAX_TAGS} tags allowed.`);
-        return;
-      }
-
-      if (currentTags.includes(cleanedTag)) {
-        Alert.alert('Duplicate Tag', 'This tag already exists.');
-        return;
-      }
-      if (cleanedTag.length > MAX_TAG_LENGTH) {
-        setError(`Tag must be less than ${MAX_TAG_LENGTH} characters.`);
-        return;
-      }
-      setTags([...currentTags, cleanedTag]);
-      setInputValue('');
-      inputRef.current?.focus();
+        if (currentTags.includes(cleanedTag)) {
+          setError('This tag already exists.');
+          return;
+        }
+        if (cleanedTag.length > MAX_TAG_LENGTH) {
+          setError(`Tag must be less than ${MAX_TAG_LENGTH} characters.`);
+          return;
+        }
+        setTags([...currentTags, cleanedTag]);
+        setInputValue('');
+        inputRef.current?.focus();
     };
   
     const removeTag = (tagToRemove) => {
         setError('');
-      // Ensure tags is an array before filtering
-      const currentTags = Array.isArray(tags) ? tags : [];
-      setTags(currentTags.filter((tag) => tag !== tagToRemove));
-      
+        // Ensure tags is an array before filtering
+        const currentTags = Array.isArray(tags) ? tags : [];
+        setTags(currentTags.filter((tag) => tag !== tagToRemove));
     };
 
-      // Add character limit handler
-      const handleInputChange = (text) => {
-        setError(''); // Clear error when typing
-        if (text.length <= MAX_TAG_LENGTH) {
-          setInputValue(text);
-        }
+    // Add character limit handler
+    const handleInputChange = (text) => {
+      setError(''); // Clear error when typing
+      if (text.length <= MAX_TAG_LENGTH) {
+        setInputValue(text);
       }
+    }
+    
+    // Add a predefined tag when clicked
+    const handlePredefinedTagClick = (predefinedTag) => {
+      setError('');
+      const cleanedTag = predefinedTag.toLowerCase();
+      
+      // Ensure tags is an array before checking includes
+      const currentTags = Array.isArray(tags) ? tags : [];
+      
+      if (currentTags.length >= MAX_TAGS) {
+        setError(`Maximum ${MAX_TAGS} tags allowed.`);
+        return;
+      }
+      
+      if (currentTags.includes(cleanedTag)) {
+        setError('This tag already exists.');
+        return;
+      }
+      
+      setTags([...currentTags, cleanedTag]);
+    };
 
-      return (
-        <View style={styles.tagContainer}>
-          <View style={styles.tagsRow}>
-            {Array.isArray(tags) && tags.map((tag, index) => (
-              <View key={index} style={styles.tag}>
-                <Text style={styles.tagText}>{tag}</Text>
-                <TouchableOpacity 
-                  onPress={() => removeTag(tag)} 
-                  style={styles.removeTag}
-                  hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+    return (
+      <View style={styles.tagContainer}>
+        <View style={styles.tagsRow}>
+          {Array.isArray(tags) && tags.map((tag, index) => (
+            <View key={index} style={styles.tag}>
+              <Text style={styles.tagText}>{tag}</Text>
+              <TouchableOpacity 
+                onPress={() => removeTag(tag)} 
+                style={styles.removeTag}
+                hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+              >
+                <Text style={styles.removeTagText}>×</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+          <TextInput
+            ref={inputRef}
+            value={inputValue}
+            onChangeText={handleInputChange}
+            style={styles.tagInput}
+            placeholder={tags.length >= MAX_TAGS ? "" : "Add a tag"}
+            placeholderTextColor="#888"
+            returnKeyType="done"
+            onSubmitEditing={handleAddTag}
+            maxLength={MAX_TAG_LENGTH}
+            editable={tags.length < MAX_TAGS}
+          />
+          <TouchableOpacity 
+            onPress={handleAddTag} 
+            style={[
+              styles.addButton,
+              (!inputValue.trim() || tags.length >= MAX_TAGS) && styles.addButtonDisabled
+            ]}
+            disabled={!inputValue.trim() || tags.length >= MAX_TAGS}
+          >
+            <Text style={styles.addButtonText}>Add</Text>
+          </TouchableOpacity>
+        </View>
+        {error ? (
+          <Text style={styles.errorText}>{error}</Text>
+        ) : (
+          <Text style={styles.helperText}>
+            {`${MAX_TAGS - (tags?.length || 0)} tags remaining (max ${MAX_TAG_LENGTH} chars each)`}
+          </Text>
+        )}
+        
+        {/* Predefined Tags Section */}
+        <View style={styles.predefinedTagsContainer}>
+          <Text style={styles.predefinedTagsTitle}>Suggested Tags:</Text>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.predefinedTagsScroll}
+          >
+            {PREDEFINED_TAGS.map((predefinedTag, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.predefinedTag,
+                  tags.includes(predefinedTag.toLowerCase()) && styles.predefinedTagSelected
+                ]}
+                onPress={() => handlePredefinedTagClick(predefinedTag)}
+                disabled={tags.includes(predefinedTag.toLowerCase()) || tags.length >= MAX_TAGS}
+              >
+                <Text 
+                  style={[
+                    styles.predefinedTagText,
+                    tags.includes(predefinedTag.toLowerCase()) && styles.predefinedTagTextSelected
+                  ]}
                 >
-                  <Text style={styles.removeTagText}>×</Text>
-                </TouchableOpacity>
-              </View>
+                  {predefinedTag}
+                </Text>
+              </TouchableOpacity>
             ))}
-            <TextInput
-              ref={inputRef}
-              value={inputValue}
-              onChangeText={handleInputChange}
-              style={styles.tagInput}
-              placeholder={tags.length >= MAX_TAGS ? "" : "Add a tag"}
-              returnKeyType="done"
-              onSubmitEditing={handleAddTag}
-              maxLength={MAX_TAG_LENGTH}
-              editable={tags.length < MAX_TAGS}
-            />
-            <TouchableOpacity 
-              onPress={handleAddTag} 
-              style={[
-                styles.addButton,
-                tags.length >= MAX_TAGS && styles.addButtonDisabled
-              ]}
-              disabled={tags.length >= MAX_TAGS}
-            >
-              <Text style={styles.addButtonText}>Add</Text>
-            </TouchableOpacity>
-          </View>
-          {error ? (
-            <Text style={styles.errorText}>{error}</Text>
-          ) : (
-            <Text style={styles.helperText}>
-              {`${MAX_TAGS - (tags?.length || 0)} tags remaining (max ${MAX_TAG_LENGTH} chars each)`}
-            </Text>
-          )}
-        </View> 
-      );
-  };
+          </ScrollView>
+        </View>
+      </View> 
+    );
+};
   
-
 // EditProfile Component
 const EditProfile = () => {
-    const { user: currentUser , updateUserContext } = useAuth();
+    const { user: currentUser, updateUserContext } = useAuth();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
     const [user, setUser] = useState({
@@ -147,8 +304,16 @@ const EditProfile = () => {
       bio: '',
       tags: [],
     });
-
     
+    // Form validation state
+    const [errors, setErrors] = useState({
+      name: '',
+      address: '',
+      bio: '',
+      image: '',
+      tags: '',
+    });
+
     useEffect(() => {
         if (currentUser) {
             // Parse tags if they're stored as a string
@@ -163,8 +328,6 @@ const EditProfile = () => {
             } else if (!Array.isArray(userTags)) {
                 userTags = [];
             }
-    
-            console.log("Setting user with tags:", userTags); // Debug log
             
             setUser({
                 name: currentUser.name || '',
@@ -177,45 +340,102 @@ const EditProfile = () => {
         }
     }, [currentUser]);
 
-    const onPickImage = async () => {
+    const validateForm = () => {
+      let isValid = true;
+      const newErrors = {
+        name: '',
+        address: '',
+        bio: '',
+        image: '',
+        tags: '',
+      };
 
-        let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ['images', 'videos'],
-            allowsEditing: true,
-            aspect: [4, 3],
-            quality: 0.7,
-        })
-        if (!result.canceled) {
-            setUser({...user, image: result.assets[0]});
+      // Name validation
+      if (!user.name.trim()) {
+        newErrors.name = 'Name is required';
+        isValid = false;
+      } else if (user.name.trim().length < 2) {
+        newErrors.name = 'Name must be at least 2 characters';
+        isValid = false;
+      }
+
+      // Address validation
+      if (!user.address.trim()) {
+        newErrors.address = 'Address is required';
+        isValid = false;
+      }
+
+      // Bio validation
+      if (!user.bio.trim()) {
+        newErrors.bio = 'Bio is required';
+        isValid = false;
+      } else if (user.bio.trim().length < 10) {
+        newErrors.bio = 'Bio must be at least 10 characters';
+        isValid = false;
+      }
+
+      // Image validation
+      if (!user.image) {
+        newErrors.image = 'Profile image is required';
+        isValid = false;
+      }
+
+      // Tags validation
+      if (!Array.isArray(user.tags) || user.tags.length === 0) {
+        newErrors.tags = 'At least one tag is required';
+        isValid = false;
+      }
+
+      setErrors(newErrors);
+      return isValid;
+    };
+
+    const onPickImage = async () => {
+        try {
+          let result = await ImagePicker.launchImageLibraryAsync({
+              mediaTypes: ImagePicker.MediaTypeOptions.Images,
+              allowsEditing: true,
+              aspect: [4, 3],
+              quality: 0.7,
+          });
+          
+          if (!result.canceled) {
+              setUser({...user, image: result.assets[0]});
+              // Clear image error if it exists
+              if (errors.image) {
+                setErrors({...errors, image: ''});
+              }
+          }
+        } catch (error) {
+          Alert.alert('Error', 'Failed to pick image');
         }
-    }
+    };
       
     const onSubmit = async () => {
-        const { name, phoneNumber, address, bio, tags, image } = user;
-        if (!name || !phoneNumber || !bio || !address || !tags || !image) {
-          Alert.alert('Profile', 'Please fill all the fields');
+        // Validate all fields
+        if (!validateForm()) {
+          Alert.alert('Validation Error', 'Please fix the errors before submitting');
           return;
         }
         
         try {
           setLoading(true);
           const updatedUserData = {
-            name,
-            phoneNumber,
-            address,
-            bio,
-            tags,
+            name: user.name,
+            phoneNumber: user.phoneNumber,
+            address: user.address,
+            bio: user.bio,
+            tags: user.tags,
             image: user.image
           };
       
-          if (typeof image === 'object') {
+          if (typeof user.image === 'object') {
             // update the image
-            let imageRes = await uploadProfileImage('profiles', true, image?.uri);
+            let imageRes = await uploadProfileImage('profiles', true, user.image?.uri);
             if (imageRes.success) {
               updatedUserData.image = imageRes.data;
             } else {
-              Alert.alert('Error', 'Failed to upload image');
-              return;
+              throw new Error('Failed to upload image');
             }
           }
       
@@ -236,63 +456,103 @@ const EditProfile = () => {
         }
       };
    
-const imageSource = user.image 
-    ? (typeof user.image === 'object' && user.image.uri 
-        ? { uri: user.image.uri }  // Local image
-        : getImageSrc(user.image)) // Remote or default image
-    : require('../assets/images/defaultUser.png');  // Fallback
+    const imageSource = user.image 
+        ? (typeof user.image === 'object' && user.image.uri 
+            ? { uri: user.image.uri }  // Local image
+            : getImageSrc(user.image)) // Remote or default image
+        : require('../assets/images/defaultUser.png');  // Fallback
 
-  return (
-    <ScreenWrapper bg="white">
-        <Header title="Edit Profile" showBackButton={true} />
-      <View style={styles.container}>
-        <ScrollView 
-           style={{ flex: 1 }}
-           showsVerticalScrollIndicator={false}
-           >
-          <View style={styles.form}>
-            <View style={styles.avatarContainer}>
-              <Image source={imageSource} style={styles.avatar} />
-              <Pressable style={styles.cameraIcon} onPress={onPickImage}>
-                <Icon name="camera" strokeWidth={2.5} size={hp(3)} color={theme.colors.text} />
-              </Pressable>
+    // Input change handler with validation
+    const handleInputChange = (field, value) => {
+      setUser({...user, [field]: value});
+      
+      // Clear error when typing
+      if (errors[field]) {
+        setErrors({...errors, [field]: ''});
+      }
+    };
+
+    return (
+      <ScreenWrapper bg="#121212"> {/* Dark background */}
+          <Header title="Edit Profile" showBackButton={true} titleStyle={{color: "#fff"}} />
+        <View style={styles.container}>
+          <ScrollView 
+             style={{ flex: 1 }}
+             showsVerticalScrollIndicator={false}
+             >
+            <View style={styles.form}>
+              <View style={styles.avatarContainer}>
+                <Image source={imageSource} style={styles.avatar} />
+                <Pressable style={styles.cameraIcon} onPress={onPickImage}>
+                  <Icon name="camera" strokeWidth={2.5} size={hp(3)} color={theme.colors.text} />
+                </Pressable>
+              </View>
+              {errors.image ? (
+                <Text style={styles.errorText}>{errors.image}</Text>
+              ) : null}
+              <Text style={styles.formHeading}>
+                Please fill your profile details
+              </Text>
+              <Input
+                icon={<Icon name="user" color="#fff" />}
+                placeholder="Enter your name"
+                value={user.name}
+                onChangeText={(value) => handleInputChange('name', value)}
+                inputStyle={errors.name ? styles.inputError : null}
+              />
+              {errors.name ? (
+                <Text style={styles.errorText}>{errors.name}</Text>
+              ) : null}
+              
+              {/* <PhoneVerification /> */}
+              
+              <Input
+                icon={<Icon name="location" color="#fff" />}
+                placeholder="Enter your Home Town"
+                value={user.address}
+                onChangeText={(value) => handleInputChange('address', value)}
+                inputStyle={errors.address ? styles.inputError : null}
+              />
+              {errors.address ? (
+                <Text style={styles.errorText}>{errors.address}</Text>
+              ) : null}
+              
+              <Input
+                placeholder="Write your bio ..... "
+                value={user.bio}
+                multiline={true}
+                containerStyle={styles.bio}
+                inputStyle={errors.bio ? styles.inputError : null}
+                onChangeText={(value) => handleInputChange('bio', value)}
+              />
+              {errors.bio ? (
+                <Text style={styles.errorText}>{errors.bio}</Text>
+              ) : null}
+              
+              <TagInput 
+                tags={user.tags} 
+                setTags={(newTags) => {
+                  setUser({ ...user, tags: newTags });
+                  if (errors.tags && newTags.length > 0) {
+                    setErrors({...errors, tags: ''});
+                  }
+                }} 
+              />
+              {errors.tags ? (
+                <Text style={styles.errorText}>{errors.tags}</Text>
+              ) : null}
+              
+              <Button 
+                title="Update" 
+                loading={loading} 
+                onPress={onSubmit} 
+                style={styles.updateButton}
+              />
             </View>
-            <Text style={{ fontSize: hp(1.5), color: theme.colors.text }}>
-              Please fill your profile details
-            </Text>
-            <Input
-              icon={<Icon name="user" />}
-              placeholder="Enter your name"
-              value={user.name}
-              onChangeText={(value) => setUser({ ...user, name: value })}
-            />
-            {/* <Input
-              icon={<Icon name="call" />}
-              placeholder="Enter your Contact (Optional)"
-              value={user.phoneNumber}
-              onChangeText={(value) => setUser({ ...user, phoneNumber: value })}
-            /> */}
-            <PhoneVerification/>
-             <Input
-              icon={<Icon name="location" />}
-              placeholder="Enter your Home Town (Optional)"
-              value={user.address}
-              onChangeText={(value) => setUser({ ...user, address: value })}
-            />
-            <Input
-              placeholder="Write your bio ..... "
-              value={user.bio}
-              multiline={true}
-              containerStyle={styles.bio}
-              onChangeText={(value) => setUser({ ...user, bio: value })}
-            />
-            <TagInput tags={user.tags} setTags={(newTags) => setUser({ ...user, tags: newTags })} />
-            <Button title="Update" loading={loading} onPress={onSubmit} />
-          </View>
-        </ScrollView>
-      </View>
-    </ScreenWrapper>
-  );
+          </ScrollView>
+        </View>
+      </ScreenWrapper>
+    );
 };
 
 export default EditProfile;
@@ -301,6 +561,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: wp(4),
+    backgroundColor: '#121212', // Dark background
+    color: '#fff',
   },
   avatarContainer: {
     height: hp(14),
@@ -312,7 +574,7 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: theme.radius.xxl * 1.8,
     borderWidth: 1,
-    borderColor: theme.colors.darkLight,
+    borderColor: '#444', // Darker border for dark theme
   },
   cameraIcon: {
     position: 'absolute',
@@ -320,22 +582,33 @@ const styles = StyleSheet.create({
     right: -10,
     padding: 8,
     borderRadius: 50,
-    backgroundColor: 'white',
-    shadowColor: theme.colors.textLight,
+    backgroundColor: '#333', // Darker icon background
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 1,
+    shadowOpacity: 0.3,
     shadowRadius: 5,
     elevation: 7,
   },
   form: {
-    gap: 18,
+    gap: 12,
     marginTop: 20,
+    paddingBottom: 40,
   },
   bio: {
     flexDirection: 'row',
     height: hp(15),
     alignItems: 'flex-start',
     paddingVertical: 15,
+    backgroundColor: '#1E1E1E', // Darker input background
+    borderColor: '#444',
+    borderWidth: 0.4,
+    borderRadius: theme.radius.xxl,
+  },
+  formHeading: {
+    fontSize: hp(1.5),
+    color: '#E0E0E0', // Light text for dark theme
+    marginBottom: 10,
+    textAlign: 'center',
   },
   tagContainer: {
     marginVertical: 10,
@@ -346,14 +619,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     minHeight: 40,
     borderWidth: 1,
-    borderColor: theme.colors.darkLight,
+    borderColor: '#444', // Darker border
     borderRadius: theme.radius.sm,
-    padding: 5,
+    padding: 8,
+    backgroundColor: '#1E1E1E', // Darker background
   },
   tag: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#e8f0fe',
+    backgroundColor: '#2C3E50', // Darker tag background
     borderRadius: 4,
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -362,13 +636,13 @@ const styles = StyleSheet.create({
   },
   tagText: {
     fontSize: 14,
-    color: '#1a73e8',
+    color: '#E0E0E0', // Light text
   },
   removeTag: {
     marginLeft: 4,
   },
   removeTagText: {
-    color: '#666',
+    color: '#AAA', // Lighter icon color
     fontSize: 16,
     marginTop: -2,
   },
@@ -378,9 +652,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     padding: 0,
     marginLeft: 5,
+    color: '#E0E0E0', // Light text
   },
   addButton: {
-    backgroundColor: '#1a73e8',
+    backgroundColor: '#3498DB', // Blue button
     paddingVertical: 6,
     paddingHorizontal: 10,
     borderRadius: 4,
@@ -394,19 +669,61 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   errorText: {
-    color: theme.colors.error || 'red',
+    color: '#ff6b6b', // Bright red for errors
     fontSize: 12,
-    marginTop: 4,
+    marginTop: -8,
+    marginBottom: 4,
     marginLeft: 4,
   },
   helperText: {
-    color: theme.colors.textLight,
+    color: '#888', // Lighter text
     fontSize: 12,
     marginTop: 4,
     marginLeft: 4,
   },
   addButtonDisabled: {
-    backgroundColor: theme.colors.darkLight,
+    backgroundColor: '#555', // Darker disabled button
     opacity: 0.5,
   },
+  inputError: {
+    borderColor: '#ff6b6b', // Error border color
+    borderWidth: 1,
+  },
+  updateButton: {
+    backgroundColor: '#3498DB', // Blue button
+    marginTop: 10,
+  },
+  // New styles for predefined tags
+  predefinedTagsContainer: {
+    marginTop: 15,
+  },
+  predefinedTagsTitle: {
+    fontSize: 14,
+    color: '#E0E0E0',
+    marginBottom: 8,
+  },
+  predefinedTagsScroll: {
+    paddingBottom: 5,
+  },
+  predefinedTag: {
+    backgroundColor: '#2A3A4A',
+    borderRadius: 15,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: '#3E5167',
+  },
+  predefinedTagSelected: {
+    backgroundColor: '#3498DB',
+    opacity: 0.6,
+    borderColor: '#2980B9',
+  },
+  predefinedTagText: {
+    color: '#E0E0E0',
+    fontSize: 13,
+  },
+  predefinedTagTextSelected: {
+    color: '#D0D0D0',
+  }
 });

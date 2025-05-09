@@ -20,18 +20,18 @@ const MemoizedPostCard = memo(({ item, currentUser, router, isVisible }) => {
   // Use useMemo for expensive calculations inside the component
   const postData = useMemo(() => {
     return {
-      id: item.id,
-      body: item.body,
-      file: item.file,
-      userId: item.userId,
-      created_at: item.created_at,
-      tags: item.tags,
-      name: item.user.name,
-      profile: item.user.image,
-      comments: item?.comments?.[0]?.count
-      // Add other needed properties here SpotlightCard
+      id: item?.id,
+      body: item?.body,
+      file: item?.file,
+      userId: item?.userId,
+      created_at: item?.created_at,
+      tags: item?.tags,
+      name: item?.user?.name,
+      profile: item?.user?.image,
+      comments: item?.comments?.[0]?.count,
+      postLikes: item?.postLikes
     };
-  }, [item.id, item.body, item.file, item.userId, item.created_at, item.tags, item.user.name, item.user.image]);
+  }, [item?.id, item?.body, item?.file, item?.userId, item?.created_at, item?.tags, item?.user?.name, item?.user?.image]);
   
   return (
     <SpotlightCard
@@ -84,7 +84,7 @@ const Header = memo(({ title, notificationCount, setNotificationCount, router })
     <View style={styles.header}>
       <Text style={styles.title}>{title}</Text>
       
-      <View style={styles.icons}>
+      {/* <View style={styles.icons}>
         <Pressable onPress={() => {
           setNotificationCount(0);
           router.push('notifications');
@@ -103,7 +103,7 @@ const Header = memo(({ title, notificationCount, setNotificationCount, router })
                   <Icon name="save" size={hp(3)} color="white" />
                 </Pressable>
         
-      </View>
+      </View> */}
     </View>
   );
 });
@@ -141,7 +141,6 @@ const Home = () => {
     const [isConnected, setIsConnected] = useState(true);
     const [initialCheckDone, setInitialCheckDone] = useState(false);
     const ITEMS_PER_PAGE = 12;
-
     // Check network status on mount
     useEffect(() => {
       const checkNetworkStatus = async () => {

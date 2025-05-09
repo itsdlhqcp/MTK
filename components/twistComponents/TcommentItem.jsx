@@ -8,7 +8,7 @@ import moment from 'moment'
 import { getUserData } from '../../services/userServices';
 import { router } from 'expo-router'
 import { userService } from '../../services/helperService'
-import { createCommentLike, removeCommentLike ,createCommentUnlike, removeCommentUnlike, createCommentReplylike, removeCommentReplyunlike } from '../../services/homeService'
+import { createCommentLike, removeCommentLike, createCommentUnlike, removeCommentUnlike, createCommentReplylike, removeCommentReplyunlike } from '../../services/homeService'
   
 import { useAuth } from '../../contexts/AuthContext'
 
@@ -90,73 +90,104 @@ const TcommentItem = ({
     );
   }
 
-  // Code for comment likes
+  // Code for comment likes and unlikes
   const [cmtlikes, setCmtlikes] = useState([]);
+  const [cmtunlikes, setCmtunlikes] = useState([]);
+  const [cmtreplylikes, setCmtreplylikes] = useState([]);
   
   useEffect(() => {
     setCmtlikes(item?.ctwistLikes || []);
-  }, [])
+    setCmtunlikes(item?.ctwistUnlikes || []);
+    setCmtreplylikes(item?.treplyLikes || []);
+  }, [item])
   
+  const cmtliked = cmtlikes?.filter(cmtlike => cmtlike?.userId === user?.id)[0] ? true : false;
+  const cmtunliked = cmtunlikes?.filter(cmtunlike => cmtunlike?.userId === user?.id)[0] ? true : false;
+  const cmtreplyliked = cmtreplylikes?.filter(cmtreplylike => cmtreplylike?.userId === user?.id)[0] ? true : false;
+
+  // Updated function to handle comment like with mutual exclusivity
   const handleCommentLike = async () => {
+    // If already liked, just remove the like
     if(cmtliked) {
       let updatedCmtLikes = cmtlikes?.filter(upvote => upvote.userId !== user?.id);
       setCmtlikes([...updatedCmtLikes]);
       const res = await removeCommentLike(item?.id, user?.id);
       if(!res.success){
         Alert.alert('Error', res.msg || 'Something went wrong');
+        // Revert state if API fails
+        setCmtlikes(cmtlikes);
       }
     } else {
+      // If not liked yet, add like and remove unlike if exists
       let data = {
         userId: user?.id,
         tcommentId: item?.id
       }
+      
+      // Add like
       setCmtlikes([...cmtlikes, data]);
+      
+      // Remove unlike if exists
+      if(cmtunliked) {
+        let updatedCmtUnlikes = cmtunlikes?.filter(unlike => unlike.userId !== user?.id);
+        setCmtunlikes([...updatedCmtUnlikes]);
+        await removeCommentUnlike(item?.id, user?.id);
+      }
+      
       const res = await createCommentLike(data);
       if(!res.success){
         Alert.alert('Error', res.msg || 'Something went wrong');
+        // Revert state if API fails
+        setCmtlikes(cmtlikes);
+        if(cmtunliked) {
+          setCmtunlikes(cmtunlikes);
+        }
       }
     }
   }
   
-  const cmtliked = cmtlikes?.filter(cmtlike => cmtlike?.userId === user?.id)[0] ? true : false;
-
-  // Code for comment unlikes
-  const [cmtunlikes, setCmtunlikes] = useState([]);
-  
-  useEffect(() => {
-    setCmtunlikes(item?.ctwistUnlikes || []);
-  }, [])
-  
+  // Updated function to handle comment unlike with mutual exclusivity
   const handleCommentUnlike = async () => {
+    // If already unliked, just remove the unlike
     if(cmtunliked) {
       let updatedCmtUnlikes = cmtunlikes?.filter(unlike => unlike.userId !== user?.id);
       setCmtunlikes([...updatedCmtUnlikes]);
       const res = await removeCommentUnlike(item?.id, user?.id);
       if(!res.success){
         Alert.alert('Error', res.msg || 'Something went wrong');
+        // Revert state if API fails
+        setCmtunlikes(cmtunlikes);
       }
     } else {
+      // If not unliked yet, add unlike and remove like if exists
       let data = {
         userId: user?.id,
         tcommentId: item?.id
       }
+      
+      // Add unlike
       setCmtunlikes([...cmtunlikes, data]);
+      
+      // Remove like if exists
+      if(cmtliked) {
+        let updatedCmtLikes = cmtlikes?.filter(like => like.userId !== user?.id);
+        setCmtlikes([...updatedCmtLikes]);
+        await removeCommentLike(item?.id, user?.id);
+      }
+      
       const res = await createCommentUnlike(data);
       if(!res.success){
         Alert.alert('Error', res.msg || 'Something went wrong');
+        // Revert state if API fails
+        setCmtunlikes(cmtunlikes);
+        if(cmtliked) {
+          setCmtlikes(cmtlikes);
+        }
       }
     }
   }
   
-  const cmtunliked = cmtunlikes?.filter(cmtunlike => cmtunlike?.userId === user?.id)[0] ? true : false;
-
-  // Code for comment reply likes
-  const [cmtreplylikes, setCmtreplylikes] = useState([]);
-  
-  useEffect(() => {
-    setCmtreplylikes(item?.treplyLikes || []); 
-  }, [])
-  
+  // Updated function to handle comment reply like
   const handleCommentReplylike = async () => {
     if(cmtreplyliked) {
       let updatedCmtReplylikes = cmtreplylikes?.filter(replylike => replylike.userId !== user?.id);
@@ -164,6 +195,8 @@ const TcommentItem = ({
       const res = await removeCommentReplyunlike(item?.id, user?.id);
       if(!res.success){
         Alert.alert('Error', res.msg || 'Something went wrong');
+        // Revert state if API fails
+        setCmtreplylikes(cmtreplylikes);
       }
     } else {
       let data = {
@@ -174,15 +207,15 @@ const TcommentItem = ({
       const res = await createCommentReplylike(data);
       if(!res.success){
         Alert.alert('Error', res.msg || 'Something went wrong');
+        // Revert state if API fails
+        setCmtreplylikes(cmtreplylikes);
       }
     }
   }
-  
-  const cmtreplyliked = cmtreplylikes?.filter(cmtreplylike => cmtreplylike?.userId === user?.id)[0] ? true : false;
 
   // Determine if the item is a comment or reply
   const isReply = Boolean(item?.treply);
-//  console.log('usernae##??', item);
+
   return (
     <View style={styles.container}>
       <TouchableOpacity onPress={handleUsernamePress}>
@@ -239,7 +272,7 @@ const TcommentItem = ({
               </TouchableOpacity>
             </>
           ) : (
-            // Comment like button
+            // Comment like/unlike buttons
             <>
               <TouchableOpacity 
                 onPress={handleCommentLike}
@@ -249,18 +282,13 @@ const TcommentItem = ({
                   name="commentlike"
                   size={hp(2.5)} 
                   color={cmtliked ? "#0066ff" : "#CCCCCC"} 
-                  fill={cmtliked ? theme.colors.rose : 'transparent'}
+                  fill={cmtliked ? 'Transparent' : 'transparent'}
                 />
                 <Text style={styles.count}>
                   {cmtlikes.length}  
                 </Text>
               </TouchableOpacity>
-            </>
-          )}
-
-          {/* Only render unlike button for comments, not replies */}
-          {isReply && (
-            <>
+              
               <TouchableOpacity 
                 onPress={handleCommentUnlike}
                 style={styles.iconButton}
@@ -269,7 +297,7 @@ const TcommentItem = ({
                   name="commentunlike"
                   size={hp(2.5)} 
                   color={cmtunliked ? "#0066ff" : "#CCCCCC"} 
-                  fill={cmtunliked ? theme.colors.rose : 'transparent'}
+                  fill={cmtunliked ? 'Transparent' : 'transparent'}
                 />
                 <Text style={styles.count}>
                   {cmtunlikes.length}
