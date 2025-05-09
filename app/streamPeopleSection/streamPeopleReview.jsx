@@ -41,22 +41,6 @@ const PeoplesPreviewList = ({
     }
   };
 
-  // const toggleReplyBox = (reviewId, username = null) => {
-  //   setOpenReplyBox(prev => prev === reviewId ? null : reviewId);
-
-  //    // Initialize with mention if username is provided
-  //     if (username) {
-  //       const mentionText = `@${username} `;
-  //       handleReplyInputChange(reviewId, mentionText);
-  //     } else if (!reviewReplies[reviewId]) {
-  //       fetchRepliesForReview(reviewId);
-  //     }
-
-  //   if (!reviewReplies[reviewId]) {
-  //     fetchRepliesForReview(reviewId);
-  //   }
-  // };
-
   // In PeoplesReviewList.js - modify the toggleReplyBox function
 const toggleReplyBox = (reviewId, username = null) => {
   // Always open the reply box if a username is provided (don't toggle closed)
@@ -220,9 +204,9 @@ const toggleReplyBox = (reviewId, username = null) => {
             {openReplyBox === dpeoplesReview.id && (
               <View style={styles.replyInputContainer}>
                 <Input
-                  placeholder={`Reply to @${dpeoplesReview.user.name}...`}
+                  placeholder={`Reply to @${dpeoplesReview?.user?.name}...`}
                   onChangeText={value => handleReplyInputChange(dpeoplesReview.id, value)}
-                  value={replyInputValues[dpeoplesReview.id] || ''}
+                  value={replyInputValues[dpeoplesReview?.id] || ''}
                   placeholderTextColor={theme.colors.textLight}
                   containerStyle={{
                     flex: 1,
@@ -231,14 +215,14 @@ const toggleReplyBox = (reviewId, username = null) => {
                   }}
                 />
 
-                {replyLoading[dpeoplesReview.id] ? (
+                {replyLoading[dpeoplesReview?.id] ? (
                   <View style={styles.loading}>
                     <FeedLoader size="small" color={theme.colors.primaryDark} />
                   </View>
                 ) : (
                   <TouchableOpacity
                     style={styles.replySendIcon}
-                    onPress={() => onSubmitReply(dpeoplesReview.id)}
+                    onPress={() => onSubmitReply(dpeoplesReview?.id)}
                   >
                     <Icon name="send" size={hp(2)} color={theme.colors.primaryDark} />
                   </TouchableOpacity>

@@ -37,7 +37,8 @@ const ReleaseDateHeader = ({ date, viewMode, onToggleView, isFirstHeader }) => (
 const ReleaseGridCard = ({ item, router }) => {
   const handleCardPress = () => {
     if (!item?.id) return null;
-    router.push({ pathname: 'releasePeopleSection/releasePeopleDetails', params: { releaseId: item.id } });
+   // router.push({ pathname: 'releasePeopleSection/releasePeopleDetails', params: { releaseId: item.id } });
+   router.push({ pathname: 'releaseInfo', params: { releaseId: item.id }});
   };
 
   // Format the date as requested

@@ -36,7 +36,7 @@ const ReleaseDateHeader = ({ date, viewMode, onToggleView, isFirstHeader }) => (
 const OttGridCard = ({ item, router }) => {
   const handleCardPress = () => {
     if (!item?.id) return null;
-    router.push({ pathname: 'streamPeopleSection/streamPeopleDetails', params: { streamId: item.id } });
+    router.push({ pathname: 'streamInfo', params: { streamId: item.id } });
   };
 
   return (

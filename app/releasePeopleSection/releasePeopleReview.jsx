@@ -202,7 +202,7 @@ const toggleReplyBox = (reviewId, username = null) => {
             {openReplyBox === peoplesReview.id && (
               <View style={styles.replyInputContainer}>
                 <Input
-                  placeholder={`Reply to @${peoplesReview.user.name}...`}
+                  placeholder={`Reply to @${peoplesReview?.user?.name}...`}
                   onChangeText={value => handleReplyInputChange(peoplesReview.id, value)}
                   value={replyInputValues[peoplesReview.id] || ''}
                   placeholderTextColor={theme.colors.textLight}
