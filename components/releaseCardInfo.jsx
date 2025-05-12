@@ -115,9 +115,9 @@ const ReleaseCardInfo = ({
             <View style={styles.ratingContainer}>
                 {stars}
                 <Text style={styles.ratingText}>{Number(rating.toFixed(1))}/5</Text>
-                <Text style={{color: 'white', marginStart: wp(2)}}>
+                {/* <Text style={{color: 'white', marginStart: wp(2)}}>
             👤
-        </Text>
+        </Text> */}
             </View>
         );
     }
@@ -324,7 +324,7 @@ const ReleaseCardInfo = ({
             </View>
 
             {/* User Rating - Enhanced UI with Animation */}
-            {renderUserRating()}
+            {/* {renderUserRating()} */}
 
             {/* Film Details Section - Only show if there are valid details */}
             {hasValidFilmDetails && (

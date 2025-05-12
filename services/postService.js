@@ -140,8 +140,6 @@ export const createPostLike = async (postLike) => {
       .select()
       .single();
 
-    console.log('Insert like result:', { data, insertError });
-
     if (insertError) throw insertError;
     return { success: true, data, action: 'liked' };
 

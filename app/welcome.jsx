@@ -38,7 +38,7 @@ const Welcome = () => {
           <Image
             style={styles.welcomeImage}
             resizeMode="contain"
-            source={require('../assets/images/welcome.png')}
+            source={require('../assets/images/trans_ximg.png')}
           />
         </View>
         <View style={{ gap: 20 }}>

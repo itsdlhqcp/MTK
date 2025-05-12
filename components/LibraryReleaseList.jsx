@@ -15,7 +15,7 @@ import { getSupabaseFileUrl } from '../services/imageService';
 import theme from '../constants/theme';
 import PratingStars from './pRatingStars';
 
-const ITEMS_PER_PAGE = 8;
+const ITEMS_PER_PAGE = 12;
 
 // Month Header component with toggle button
 const MonthHeader = ({ monthYear}) => (
@@ -385,7 +385,7 @@ const AllReleasesList = ({ searchQuery = '' }) => {
     return (
       <View style={styles.emptyContainer}>
         <Text style={styles.noMoreText}>
-          {loading ? "Loading..." : 
+          {loading ? "" : 
           searchQuery ? "This serarch engine under maitainance" : "No releases found!"}
         </Text>
       </View>

@@ -26,23 +26,6 @@ const ReleaseInfo = () => {
         getReleaseDetails();
     }, []);
 
-    // const getReleaseDetails = async () => {
-    //     setLoading(true);
-    //     try {
-    //         let res = await fetchPeoplesReleaseDetails(streamId);
-    //         if (res.success) {
-    //             setRelease(res.data);
-    //         } else {
-    //             Alert.alert('Error', res.msg || 'Failed to fetch release details');
-    //         }
-    //     } catch (error) {
-    //         console.error('Error fetching release details:', error);
-    //         Alert.alert('Error', 'Something went wrong while fetching release details');
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
-
     const getReleaseDetails = async () => {
         setLoading(true);
         try {
@@ -138,6 +121,7 @@ const ReleaseInfo = () => {
                   peoplesReviewCount={peoplesReviewCount}
                 />
         </View>
+        
         {/* <BannerAd
                 unitId={adUnitId}
                 size={BannerAdSize.BANNER}

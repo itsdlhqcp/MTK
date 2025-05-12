@@ -56,7 +56,7 @@ export const ToastProvider = ({ children }) => {
   const getBackgroundColor = () => {
     switch (toast.type) {
       case 'success':
-        return theme.colors.success || '#4CAF50';
+        return '#121212';
       case 'error':
         return theme.colors.error || '#F44336';
       case 'warning':

@@ -258,7 +258,7 @@ const AnimeFanPage = () => {
           
           {showAnimeTags && (
             <Animated.View style={[styles.animeTagsSection, animeShakeStyle]}>
-              <Text style={styles.animeTagsTitle}>Select your favorite anime:</Text>
+              <Text style={styles.animeTagsTitle}>Select your favourite anime:</Text>
               
               <Animated.Text 
                 style={[
