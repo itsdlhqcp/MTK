@@ -36,11 +36,11 @@ const MonthHeader = ({ month, viewMode, onToggleView, isFirstHeader }) => (
   </View>
 );
 
-const UserPostsComponent = ({ navigation }) => {
+const UserPostsComponent = ({ navigation, userId }) => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [viewMode, setViewMode] = useState('list'); // Default to grid view
+  const [viewMode, setViewMode] = useState('list'); // Default to grid view    
   const { user } = useAuth();
   const [isConnected, setIsConnected] = useState(true);
   const [initialCheckDone, setInitialCheckDone] = useState(false);
@@ -96,8 +96,8 @@ const UserPostsComponent = ({ navigation }) => {
       }
       
       const currentLimit = isInitialLoad ? 10 : limit + 10;
-      
-      let res = await fetchTwists(currentLimit, user.id);
+      const targetUserId = userId || user?.id;
+      let res = await fetchTwists(currentLimit, targetUserId);
       
       if (res.success) {
         setPosts(res.data);
@@ -459,11 +459,8 @@ const UserPostsComponent = ({ navigation }) => {
   );
 };
 
-// Calculate item width for grid view (3 items per row)
-const screenWidth = Dimensions.get('window').width;
-const itemWidth = (screenWidth - (wp(4) * 2 + wp(2) * 2)) / 3;
+export default UserPostsComponent;
 
-// Styles for the component
 const styles = {
   container: {
     flex: 1,
@@ -516,9 +513,8 @@ const styles = {
     marginBottom: hp(2),
   },
   gridItem: {
-    width: itemWidth,
-    height: itemWidth * 1.5,
-   // borderRadius: 8,
+    width: wp(30),
+    height: hp(20),
     overflow: 'hidden',
     backgroundColor: '#121212',
   },
@@ -666,4 +662,3 @@ const titleTagsStyles = {
   }
 };
 
-export default UserPostsComponent;

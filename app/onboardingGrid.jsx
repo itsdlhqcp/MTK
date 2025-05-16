@@ -238,7 +238,7 @@ url: 'https://firebasestorage.googleapis.com/v0/b/chat-web-app-46b89.appspot.com
                         style={styles.button}
                         onPress={() => router.push('signup')}
                     >
-                        <Text style={styles.buttonText}>Let's Go &gt;&gt;&gt;</Text>
+                        <Text style={styles.buttonText}>Unfold PlotTwist &gt;&gt;&gt;</Text>
                     </TouchableOpacity>
                 </View>
             </View>

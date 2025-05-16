@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StyleSheet, TouchableOpacity, Alert, Animated, RefreshControl, Easing } from "react-native";
 import Input from '../../components/Input';
-import { createReleaseReview, createPeopleReleaseReview, fetchPeoplesReleaseDetails, removePeopleReview , removeReplyPeopleReview, fetchReleaseDetailsx, fetchReviewReplies, createReviewReply, hasUserPostedAnyReview} from "../../services/releaseService";
+import { createReleaseReview, createPeopleReleaseReview, fetchPeoplesReleaseDetails, removePeopleReview , removeReplyPeopleReview, fetchReleaseDetailsx, fetchReviewReplies, createReviewReply, hasUserPostedAnyReview, fetchAverageRating} from "../../services/releaseService";
 import { View } from "react-native";
 import { createNotifications } from '../../services/notificationService'
 import ReviewItem from "../../components/PreviewItem";
@@ -25,11 +25,15 @@ import { fetchPeoplesStreamDetailsx } from "../../services/ottService";
 import TheatreReviewTabs from "../../components/TheatreReviewTabs";
 import { adminIds } from "../../constants/admin";
 import ScreenWrapper from "../../components/ScreenWrapper";
+import moment from "moment";
 
 const MIN_CHARS = 0;
 
 const ReleasePeopleDetails = () => {
-    const { releaseId, reviewId } = useLocalSearchParams();
+    const params = useLocalSearchParams();
+    const releaseId = params.releaseId;
+    const reviewId = params.reviewId;
+    const lib = params.lib === 'true' || params.lib === true;
     const { user } = useAuth();
     const router = useRouter();
     const [startLoading, setStartLoading] = useState(false);
@@ -176,7 +180,7 @@ useEffect(() => {
                 }
                 
                 try {
-                    let res = await fetchPeoplesStreamDetailsx(release.sconnectedId);
+                    let res = await fetchPeoplesStreamDetailsx(release?.sconnectedId);
                     if (res.success) setThReview(res.data);
                 } catch (error) {
                     console.error("Error fetching people's release details:", error);
@@ -658,10 +662,8 @@ useEffect(() => {
                         }
                     }
 
-                 
-                        
-                        // Call this function in useEffect, after getting the release details
-                      
+                    const releaseAt = release?.rDate ? moment(release?.rDate).format('MMM D') : '';
+                    const show = releaseAt && moment(release?.rDate).isSameOrBefore(moment(), 'day');  
     
         return (
 <ScreenWrapper bg="#121212">
@@ -851,7 +853,7 @@ useEffect(() => {
                    </ScrollView>
                  {/* Adding the floating button */}
 
-                 { !hasUserPostedReview && (
+                 {!lib && !hasUserPostedReview && show &&(
                         <Animated.View
                             style={{
                             position: 'absolute',

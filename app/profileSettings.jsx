@@ -7,6 +7,7 @@ import {
   Alert,
   ScrollView,
   DevSettings,
+  Linking,
 } from 'react-native';
 import ScreenWrapper from '../components/ScreenWrapper';
 import { useAuth } from '../contexts/AuthContext';
@@ -54,6 +55,34 @@ const ProfileSettings = () => {
   const { logout, user } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+
+  // WhatsApp group links
+  const COMMUNITY_WHATSAPP_LINK = "https://chat.whatsapp.com/FBWhvCMDwMDBp2EV7ZKfHQ";
+  const HELP_WHATSAPP_LINK = "https://chat.whatsapp.com/KlRsYEmS6qyIRGQ46pHQZA";
+
+  // Function to open WhatsApp links
+  const openWhatsAppLink = async (url) => {
+    try {
+      const supported = await Linking.canOpenURL(url);
+      
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert(
+          "Error",
+          "WhatsApp is not installed on your device or the link is invalid.",
+          [{ text: "OK" }]
+        );
+      }
+    } catch (error) {
+      console.error("Error opening WhatsApp link:", error);
+      Alert.alert(
+        "Error",
+        "Could not open WhatsApp. Please try again later.",
+        [{ text: "OK" }]
+      );
+    }
+  };
 
   const onLogout = async () => {
     Alert.alert('Confirm', 'Are you sure you want to logout?', [
@@ -107,7 +136,7 @@ const ProfileSettings = () => {
         <SettingItem
           icon="community"
           title="Join the community"
-          onPress={() => router.push('/orders')}
+          onPress={() => openWhatsAppLink(COMMUNITY_WHATSAPP_LINK)}
         />
 
         {/* More Info Section */}
@@ -116,22 +145,22 @@ const ProfileSettings = () => {
           <SettingItem
             icon="help"
             title="Help"
-            onPress={() => router.push('/help')}
+            onPress={() => openWhatsAppLink(HELP_WHATSAPP_LINK)}
           />
           <SettingItem
             icon="policy"
             title="Privacy Center"
-            onPress={() => router.push('/privacy')}
+            onPress={() => {}}
           />
           <SettingItem
             icon="acctstat"
             title="Account Status"
-            onPress={() => router.push('/account-status')}
+            onPress={() => {}}
           />
           <SettingItem
             icon="community"
             title="About"
-            onPress={() => router.push('/about')}
+            onPress={() => {}}
           />
         </View>
 
@@ -154,6 +183,8 @@ const ProfileSettings = () => {
     </ScreenWrapper>
   );
 };
+
+export default ProfileSettings;
 
 const styles = StyleSheet.create({
   container: {
@@ -191,5 +222,3 @@ const styles = StyleSheet.create({
     color: instagramTheme.colors.text,
   },
 });
-
-export default ProfileSettings;

@@ -6,8 +6,9 @@ import Icon from '@/assets/icons';
 import Avatar from '../components/Avatar';
 import { friendRequestService } from '../services/requestService';
 import { supabase } from '../lib/supabase';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import ScreenWrapper from '../components/ScreenWrapper';
+import { useAuth } from '../contexts/AuthContext';
 
 const instaTheme = {
   ...theme,
@@ -29,6 +30,9 @@ const UserSearchTab = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [friendships, setFriendships] = useState({});
   const [debounceTimeout, setDebounceTimeout] = useState(null);
+  const [isNavigating, setIsNavigating] = useState(false);
+  const navigation = useNavigation();
+  const { user: currentUser } = useAuth();
 
   useFocusEffect(
     useCallback(() => {
@@ -122,6 +126,18 @@ const UserSearchTab = () => {
     }
   };
 
+  const handleUsernamePress = (userId) => {
+    if (!isNavigating && navigation) {
+      const isCurrentUser = currentUser && userId === currentUser.id;
+      setIsNavigating(true);
+      navigation.navigate(
+        isCurrentUser ? 'Profile' : 'xprofile',
+        { userId: userId }
+      );
+      setIsNavigating(false);
+    }
+  };
+
   const renderUserItem = ({ item }) => {
     // Determine button state based on friendship status
     let buttonText = 'Follow';
@@ -151,7 +167,10 @@ const UserSearchTab = () => {
     
     return (
       <View style={styles.userCard}>
-        <View style={styles.userInfoContainer}>
+        <TouchableOpacity 
+          style={styles.userInfoContainer}
+          onPress={() => handleUsernamePress(item.id)}
+        >
           <Avatar
             uri={item.image}
             size={hp(7)}
@@ -165,7 +184,7 @@ const UserSearchTab = () => {
               </Text>
             )}
           </View>
-        </View>
+        </TouchableOpacity>
         <TouchableOpacity 
           style={[styles.actionButton, buttonStyle]}
           onPress={() => handleSendRequest(item.id)}
@@ -243,6 +262,8 @@ const UserSearchTab = () => {
     </ScreenWrapper>
   );
 };
+
+export default UserSearchTab;
 
 const styles = StyleSheet.create({
   container: {
@@ -355,4 +376,3 @@ const styles = StyleSheet.create({
   },
 });
 
-export default UserSearchTab;

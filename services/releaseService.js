@@ -693,24 +693,77 @@ export const removePeopleReviewUpvote = async (peoplesReviewId, userId) => {
         }
       };
 
-      export const fetchAverageRating = async (releaseId) => {
+      // export const fetchAverageRating = async (releaseId) => {
+      //   try {
+      //     const { data, error } = await supabase
+      //       .from('peoplesReview')
+      //       .select('userRating')
+      //       .eq('releaseId', releaseId);
+      
+      //     if (error) {
+      //       console.error('Error fetching avg user ratings:', error);
+      //       return { success: false, msg: 'Could not fetch avg user ratings' };
+      //     }
+      
+      //     const ratings = data.map((item) => item.userRating).filter((r) => typeof r === 'number');
+      
+      //     const average =
+      //       ratings.length > 0
+      //         ? parseFloat((ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1))
+      //         : 0.0;
+      
+      //     return { success: true, average };
+      //   } catch (error) {
+      //     console.error('Server error during average rating fetch:', error);
+      //     return { success: false, msg: 'Server error' };
+      //   }
+      // };
+
+      export const fetchAverageRating = async (releaseId, sconnectedId) => {
         try {
-          const { data, error } = await supabase
+          // Fetch ratings from peoplesReview table
+          const { data: peopleReviewData, error: peopleReviewError } = await supabase
             .from('peoplesReview')
             .select('userRating')
             .eq('releaseId', releaseId);
       
-          if (error) {
-            console.error('Error fetching avg user ratings:', error);
-            return { success: false, msg: 'Could not fetch avg user ratings' };
+          if (peopleReviewError) {
+            console.error('Error fetching people review ratings:', peopleReviewError);
+            return { success: false, msg: 'Could not fetch user ratings from peoplesReview' };
           }
       
-          const ratings = data.map((item) => item.userRating).filter(Boolean);
+          // Initialize allRatings with ratings from peoplesReview
+          const peopleReviewRatings = peopleReviewData
+            .map((item) => item.userRating)
+            .filter((r) => typeof r === 'number');
+          
+          let allRatings = [...peopleReviewRatings];
+          
+          // If sconnectedId exists, fetch ratings from dpeopreviews table
+          if (sconnectedId) {
+            const { data: dPeopleReviewData, error: dPeopleReviewError } = await supabase
+              .from('dpeopreviews')
+              .select('userRating')
+              .eq('releaseId', sconnectedId);
       
+            if (dPeopleReviewError) {
+              console.error('Error fetching dpeopreviews ratings:', dPeopleReviewError);
+              // Continue with only peoplesReview ratings rather than failing completely
+            } else if (dPeopleReviewData) {
+              // Add dpeopreviews ratings to allRatings
+              const dPeopleReviewRatings = dPeopleReviewData
+                .map((item) => item.userRating)
+                .filter((r) => typeof r === 'number');
+              
+              allRatings = [...allRatings, ...dPeopleReviewRatings];
+            }
+          }
+      
+          // Calculate average from all collected ratings
           const average =
-            ratings.length > 0
-              ? ratings.reduce((a, b) => a + b, 0) / ratings.length
-              : null;
+            allRatings.length > 0
+              ? parseFloat((allRatings.reduce((a, b) => a + b, 0) / allRatings.length).toFixed(1))
+              : 0.0;
       
           return { success: true, average };
         } catch (error) {
@@ -718,8 +771,7 @@ export const removePeopleReviewUpvote = async (peoplesReviewId, userId) => {
           return { success: false, msg: 'Server error' };
         }
       };
-
-
+      
       // user checking if a user has posted a review on a theatre or digital stream
       export const hasUserPostedAnyReview = async (userId, releaseId, streamId) => {
         console.log("Trying the process to get user review");
@@ -826,4 +878,112 @@ export const updateReleaseEndDate = async (releaseId, endDate) => {
     };
   }
 }
-      
+
+/// here the functon  for direct release 
+export const hasUserPostedAnyReviewInDirect = async (userId, streamId) => {
+  console.log("Checking if user has posted direct review");
+  
+  try {
+    if (!userId || !streamId) {
+      return { 
+        success: false, 
+        msg: 'User ID and Stream ID are required' 
+      };
+    }
+
+    const { data: dPeopleReviewData, error: dPeopleReviewError } = await supabase
+      .from('dpeopreviews')
+      .select('id')
+      .eq('userId', userId)
+      .eq('releaseId', streamId)
+      .limit(1)
+      .maybeSingle();
+
+    if (dPeopleReviewError) {
+      return { 
+        success: false, 
+        msg: 'Error checking for direct review' 
+      };
+    }
+
+    return { 
+      success: true, 
+      hasPostedReview: !!dPeopleReviewData 
+    };
+
+  } catch (error) {
+    console.error(error);
+    return { 
+      success: false, 
+      msg: 'Could not process direct review check' 
+    };
+  }
+};
+
+// BELOW USES RATING CAL FOR DIRECT RELEASE 
+
+export const fetchAverageRatingDirect = async (releaseId) => {
+  try {
+    if (!releaseId) {
+      return { success: false, msg: 'Release ID is required' };
+    }
+    
+    // Fetch ratings only from dpeopreviews table
+    const { data: dPeopleReviewData, error: dPeopleReviewError } = await supabase
+      .from('dpeopreviews')
+      .select('userRating')
+      .eq('releaseId', releaseId);
+    
+    if (dPeopleReviewError) {
+      console.error('Error fetching dpeopreviews ratings:', dPeopleReviewError);
+      return { success: false, msg: 'Could not fetch user ratings from dpeopreviews' };
+    }
+    
+    // Filter out any non-numeric ratings
+    const validRatings = dPeopleReviewData
+      .map((item) => item.userRating)
+      .filter((r) => typeof r === 'number');
+    
+    // Calculate average from collected ratings
+    const average =
+      validRatings.length > 0
+        ? parseFloat((validRatings.reduce((a, b) => a + b, 0) / validRatings.length).toFixed(1))
+        : 0.0;
+    
+    return { 
+      success: true, 
+      average,
+      totalRatings: validRatings.length 
+    };
+  } catch (error) {
+    console.error('Server error during direct average rating fetch:', error);
+    return { success: false, msg: 'Server error' };
+  }
+};
+
+// Add this function to your releaseService.js file
+export const searchReleases = async (searchQuery, limit = 50) => {
+  try {
+    if (!searchQuery || searchQuery.trim() === '') {
+      return { success: false, data: [], message: 'Search query is required' };
+    }
+
+    // Create search query using ilike for case-insensitive search across multiple columns
+    const { data, error } = await supabase
+      .from('releases')
+      .select('*')
+      .or(`body.ilike.%${searchQuery}%,director.ilike.%${searchQuery}%,genre.ilike.%${searchQuery}%,cast.ilike.%${searchQuery}%,lang.ilike.%${searchQuery}%,writer.ilike.%${searchQuery}%,dop.ilike.%${searchQuery}%,music.ilike.%${searchQuery}%,edit.ilike.%${searchQuery}%,type.ilike.%${searchQuery}%`)
+      .order('rDate', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error('Error searching releases:', error);
+      return { success: false, data: [], message: error.message };
+    }
+
+    return { success: true, data: data || [] };
+  } catch (error) {
+    console.error('Exception while searching releases:', error);
+    return { success: false, data: [], message: error.message };
+  }
+};

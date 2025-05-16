@@ -383,7 +383,7 @@ const NewOtt = () => {
   );
 
   const onSubmit = async () => {
-    if (!selectedDate && !connectedId && !tags.length && !rating && !selectedEndate && !lang && !genre && !duration && !director && !writer && !music && !dop && !edit && !cast) {
+    if (!selectedDate && !connectedId && !tags.length && !selectedEndate && !duration) {
       Alert.alert('Error', 'Enter Title, post img and release date, platforms');
       return;
     }
@@ -463,7 +463,7 @@ const NewOtt = () => {
 
   return (
     <ScreenWrapper bg="white">
-      <Header title={post?.id ? "Edit Ott Stream" : "Create Ott Stream"}
+      <Header title={post?.id ? "Edit Ott Stream" : "Create Digital Stream"}
          showBackButton={true} />
       <View style={styles.container}>
         <ScrollView contentContainerStyle={{ gap: 20 }} showsVerticalScrollIndicator={false}>
@@ -484,12 +484,12 @@ const NewOtt = () => {
               </View>
             </View>
             <View style={styles.switchContainer}>
-              <Text style={styles.switchLabel}>Direct Release 🛠️</Text>
+              <Text style={styles.switchLabel}>Direct Release </Text>
               <Switch
                 trackColor={{ false: "#767577", true: theme.colors.primary }}
                 thumbColor={directRelease ? "#ffffff" : "#f4f3f4"}
                 ios_backgroundColor="#3e3e3e"
-               // onValueChange={toggleDirectRelease} // on maintenace
+                onValueChange={toggleDirectRelease} 
                 value={directRelease}
               />
             </View>
@@ -565,7 +565,7 @@ const NewOtt = () => {
 
           {/* Added second image picker */}
           <View style={styles.media}>
-            <Text style={styles.addImageText}>Potrait poster HERE</Text>
+            <Text style={styles.addImageText}>Portrait poster HERE</Text>
             <View style={styles.mediaIcons}>
               <TouchableOpacity onPress={() => onPickSecond(true)}>
                 <Icon name="image" size={30} color={theme.colors.dark} />
@@ -718,7 +718,7 @@ const NewOtt = () => {
             <>
                {/* Duration Field */}
           <View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>Duration</Text>
+          <Text style={styles.inputLabel}>Duration (must include HH:MM:SS ✔️)</Text>
           <TextInput
             style={styles.input}
             value={duration}

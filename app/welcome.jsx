@@ -55,7 +55,7 @@ const Welcome = () => {
         {/* footer */}
         <View style={styles.footer}>
           <Button
-          title='Getting Started'
+          title='Get Started'
           buttonStyle={{
             marginHorizontal: wp(3),
             backgroundColor: colors.red,

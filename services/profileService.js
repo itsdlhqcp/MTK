@@ -1,5 +1,4 @@
 import { supabase } from '../lib/supabase';
-
 export const profileService = {
   // Get profile data for a specific user
   getProfileData: async (userId) => {
@@ -50,11 +49,42 @@ export const profileService = {
         // Continue with other data even if friends count fails
       }
       
+      // Fetch review count from dpeopreviews table
+      let reviewCount = 0;
+      try {
+        // Count reviews in dpeopreviews table where user is the author
+        const { count: dpeoReviewCount, error: dpeoReviewError } = await supabase
+          .from('dpeopreviews')
+          .select('id', { count: 'exact' })
+          .eq('userId', userId);
+          
+        if (dpeoReviewError) {
+          console.error('Error counting dpeopreviews:', dpeoReviewError);
+        }
+        
+        // Count reviews in reviews table where user is the author
+        const { count: normalReviewCount, error: normalReviewError } = await supabase
+          .from('reviews')
+          .select('id', { count: 'exact' })
+          .eq('userId', userId);
+          
+        if (normalReviewError) {
+          console.error('Error counting reviews:', normalReviewError);
+        }
+        
+        // Sum both review counts
+        reviewCount = (dpeoReviewCount || 0) + (normalReviewCount || 0);
+      } catch (reviewError) {
+        console.error('Error counting reviews:', reviewError);
+        // Continue with other data even if review count fails
+      }
+      
       return { 
         success: true, 
         userData, 
         postCount, 
-        friendsCount 
+        friendsCount,
+        reviewCount
       };
     } catch (error) {
       console.error('Error in getProfileData:', error);

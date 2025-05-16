@@ -1,6 +1,6 @@
-import { View, Text, StyleSheet } from 'react-native';
-import React from 'react';
-import { hp } from '@/helpers/common';
+import { View, Text, StyleSheet, Share, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { hp, wp } from '@/helpers/common';
 import theme from '../constants/theme';
 import moment from 'moment/moment';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -8,9 +8,25 @@ import { Image } from 'react-native';
 import { getSupabaseFileUrl } from '../services/userProfileImage';
 
 // Component for generating the poster view
-const PosterReview = React.forwardRef(({ item }, ref) => {
+const PosterReview = React.forwardRef(({ item, avgRating }, ref) => {
     const createdAt = item?.rDate ? moment(item.rDate).format('MMM D YYYY') : '';
     const extractYear = item?.rDate ? moment(item.rDate).format('YYYY') : '';
+    
+    // Function to handle sharing
+    const handleShare = async () => {
+        // Only share if we have a valid rating
+        if (avgRating?.average) {
+            try {
+                const title = item?.body ? item.body.replace(/<[^>]*>?/gm, '') : "Movie";
+                await Share.share({
+                    message: `Check out ${title} on PlotTwist! Users rated it ${avgRating?.average}/5.0 with ${item?.peoplesReview?.length || 0} reviews.`,
+                    title: `PlotTwist - ${title}`
+                });
+            } catch (error) {
+                console.error("Error sharing:", error);
+            }
+        }
+    };
     
     return (
         <View ref={ref} style={styles.container}>
@@ -36,33 +52,35 @@ const PosterReview = React.forwardRef(({ item }, ref) => {
                     </Text>
                     <View style={styles.divider} />
                     
-                    {/* Our Rating */}
-                    <View style={styles.ratingRow}>
-                        <Text style={styles.ratingLabel}>our</Text>
-                        <View style={styles.starsContainer}>
-                            {Array(5).fill(0).map((_, index) => (
-                                <Text key={`our-${index}`} style={styles.star}>
-                                    {index < Math.floor(item?.defRating || 0) ? '★' : '☆'}
-                                </Text>
-                            ))}
-                        </View>
-                    </View>
-                    
                     {/* User Rating */}
                     <View style={styles.ratingRow}>
-                        <Text style={styles.ratingLabel}>user Rating</Text>
+                        <Text style={styles.ratingLabel}>Rating</Text>
                         <View style={styles.starsContainer}>
                             {Array(5).fill(0).map((_, index) => (
                                 <Text key={`user-${index}`} style={styles.star}>
-                                    {index < Math.floor(item?.averageRating || 0) ? '★' : '☆'}
+                                    {index < avgRating?.average ? '★' : '☆'}
                                 </Text>
                             ))}
                         </View>
+                        <Text style={styles.ratingValue}>
+                            {avgRating?.average}/5.0
+                        </Text>
                     </View>
                     
                     <Text style={styles.reviewCount}>
                         {item?.peoplesReview?.length || 0} Reviews
                     </Text>
+                    
+                    {/* Share button - only enabled when rating is available */}
+                    {/* {avgRating?.average > 0 && (
+                        <TouchableOpacity 
+                            style={styles.shareButton} 
+                            onPress={handleShare}
+                            disabled={!avgRating?.average}
+                        >
+                            <Text style={styles.shareButtonText}>Share</Text>
+                        </TouchableOpacity>
+                    )} */}
                 </View>
             </View>
             
@@ -74,6 +92,8 @@ const PosterReview = React.forwardRef(({ item }, ref) => {
         </View>
     );
 });
+
+export default PosterReview;
 
 const styles = StyleSheet.create({
     container: {
@@ -133,20 +153,40 @@ const styles = StyleSheet.create({
         fontSize: hp(2),
         color: '#FFFFFF',
         opacity: 0.9,
+        marginRight: wp(3), 
     },
     starsContainer: {
         flexDirection: 'row',
+        marginRight: wp(3), 
     },
     star: {
         color: theme.colors.star,
         fontSize: hp(2.2),
-        marginRight: 2,
+        marginRight: 1,
+    },
+    ratingValue: {
+        fontSize: hp(1.8),
+        color: '#FFFFFF',
+        opacity: 0.9,
     },
     reviewCount: {
         fontSize: hp(2),
         color: '#FFFFFF',
         opacity: 0.8,
         marginTop: 8,
+    },
+    shareButton: {
+        backgroundColor: theme.colors.blue,
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 6,
+        marginTop: 16,
+        alignSelf: 'flex-start',
+    },
+    shareButtonText: {
+        color: '#FFFFFF',
+        fontSize: hp(2),
+        fontWeight: '600',
     },
     footer: {
         flexDirection: 'row',
@@ -166,5 +206,3 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
     }
 });
-
-export default PosterReview;

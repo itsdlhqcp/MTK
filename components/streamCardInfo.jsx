@@ -12,8 +12,9 @@ import { captureRef } from 'react-native-view-shot'
 import PosterReview from '../components/PosterReview'
 import ScreenWrapper from './ScreenWrapper'
 import { fetchAverageRating } from '@/services/releaseService'
+import { fetchAverageRatingDirect } from '../services/releaseService'
 
-const ReleaseCardInfo = ({
+const StreamCardInfo = ({
     item,
     handlePeopleReadReviews,
     handleReadReviews,
@@ -43,12 +44,20 @@ const ReleaseCardInfo = ({
     const extractYear = item?.rDate ? moment(item.rDate).format('YYYY') : '';
 
     useEffect(() => {
-        // Fetch the average rating when component mounts
-        const getAverageRating = async () => {
+        if (!item?.directRelease) {
+            getAverageRating();
+        }else{
+            getAverageRatingOfDirect();
+        }
+
+    }, [item?.connectedId, item?.id]);
+
+           // Fetch the average rating when component mounts
+           const getAverageRating = async () => {
             try {
                 if (!item?.id) return;
                 setIsLoading(true);
-                const avgRes = await fetchAverageRating(item?.id, item?.sconnectedId);
+                const avgRes = await fetchAverageRating(item?.connectedId, item?.id);
                 setAvgRating(avgRes || 0);
             } catch (error) {
                 console.error("Error fetching average rating:", error);
@@ -57,8 +66,19 @@ const ReleaseCardInfo = ({
             }
         };
 
-        getAverageRating();
-    }, [item?.id, item?.sconnectedId]);
+          // Fetch the average rating of direct release
+               const getAverageRatingOfDirect = async () => {
+                try {
+                  if (!item?.id) return;
+                  setIsLoading(true);
+                  const avgRes = await fetchAverageRatingDirect(item?.id);
+                  setAvgRating(avgRes || 0);
+                } catch (error) {
+                  console.error("Error fetching average rating:", error);
+                } finally {
+                  setIsLoading(false);
+                }
+              };
 
     // Animate the rating bar when average rating changes
     useEffect(() => {
@@ -229,12 +249,9 @@ const ReleaseCardInfo = ({
     // Check if there are any valid film details to show
     const hasValidFilmDetails = validFilmDetails.length > 0;
 
-    // const releaseAt = item?.rDate ? moment(item.rDate).format('MMM D') : '';
-    // const show = releaseAt && moment(item.rDate).isSameOrBefore(moment(), 'day');
-    const releaseAt = item?.rDate ? moment(item.rDate).format('MMM D') : '';
-    const show = releaseAt && moment(item.rDate).isSameOrBefore(moment(), 'day');
-    const isEnded = item?.endDate && moment(item.endDate).isBefore(moment(), 'day');
-    const waitingForDigital = isEnded && !item?.sconnectedId;
+    const parsedTags = item.tags ? JSON.parse(item.tags) : [];
+
+const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1);
 
     return (
         <ScreenWrapper bg="#121212">
@@ -242,7 +259,7 @@ const ReleaseCardInfo = ({
             {/* Hidden poster view for sharing */}
             {showPosterView && (
                 <View style={styles.hiddenContainer}>
-                    <PosterReview ref={posterRef} item={item} avgRating={avgRating} />
+                    <PosterReview  ref={posterRef} item={item} avgRating={avgRating}/>
                 </View>
             )}
             
@@ -268,12 +285,7 @@ const ReleaseCardInfo = ({
                 {/* Content Overlay */}
                 <View style={styles.overlay}>
                     {/* Rating Stars - Top Left - Now using avgRating */}
-                    {show ? (
-                        renderRating()
-                        ) : (
-                            <Text style={styles.statusTextx}>
-                        </Text>
-                        )}
+                    {renderRating()}
                     
                     {/* Bottom Content */}
                     <View style={styles.bottomContent}>
@@ -292,35 +304,18 @@ const ReleaseCardInfo = ({
                         <Text style={styles.releaseInfo}>
                             Release: {createdAt || 'N/A'}
                         </Text>
-
-                        {/* {show ? (
-                            <Text style={styles.statusText}>
-                            Status: {item.sconnectedId ? 'Now Streaming' : 'In Cinemas'}
-                        </Text>
-                        ) : (
-                            <Text style={styles.statusText}>
-                            Status: Coming Soon In Cinemas 
-                        </Text>
-                        )} */}
-
-                    <Text style={styles.statusText}>
-                    Status: {
-                        waitingForDigital
-                        ? 'Waiting for Digital Release'
-                        : show
-                            ? item?.sconnectedId
-                            ? 'Now Streaming'
-                            : 'In Cinemas'
-                            : 'Coming Soon In Cinemas'
-                    }
-                    </Text>
                         
                         {/* Status */}
-                        {/* <Text style={styles.statusText}>
-                            Status: {item.sconnectedId ? 'Now Streaming' : 'Now Showing on Theatres'}
-                        </Text> */}
-
-                       
+                        <Text style={styles.statusText}>
+                {parsedTags.length > 0
+                    ? `Status: Now Streaming on ${
+                        parsedTags.length === 1
+                        ? capitalize(parsedTags[0])
+                        : parsedTags.map(capitalize).join(' and ')
+                    }`
+                    : 'Status: Now Streaming'}
+                </Text>
+                        
                         {/* Action Buttons */}
                         {showReviewButton && (
                             <View style={styles.actionButtons}>
@@ -385,7 +380,7 @@ const ReleaseCardInfo = ({
     )
 }
 
-export default ReleaseCardInfo
+export default StreamCardInfo
 
 const styles = StyleSheet.create({
     mainContainer: {
@@ -470,12 +465,6 @@ const styles = StyleSheet.create({
     statusText: {
         color: 'white',
         fontSize: hp(1.8),
-        marginBottom: 16,
-        fontWeight: '500',
-    },
-    statusTextx: {
-        color: 'white',
-        fontSize: hp(2),
         marginBottom: 16,
         fontWeight: '500',
     },

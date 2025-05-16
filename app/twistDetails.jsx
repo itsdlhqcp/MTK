@@ -12,6 +12,7 @@ import TcommentSection from '../components/twistComponents/tcommentsSection'
 import { supabase } from '../lib/supabase'
 import { createNotifications } from '../services/notificationService'
 import ProfilePopup from '../components/profilePopup'
+import Header from '../components/Header'
 
 const twistDetails = () => {
     const [selectedUser, setSelectedUser] = useState(null);
@@ -220,7 +221,12 @@ const twistDetails = () => {
                 showsVerticalScrollIndicator={false} 
                 contentContainerStyle={styles.list}
             >
-                <TwistDetailCard
+                     <Header
+                            title={"Comments"}
+                            showBackButton={true}
+                            style={styles.header}
+                        /> 
+                {/* <TwistDetailCard
                     item={{...post, comments: [{count: post?.tcomments?.length}]}}
                     currentUser={user}
                     router={router}
@@ -228,7 +234,7 @@ const twistDetails = () => {
                     showMoreIcon={false}
                     showDelete={onDeletePost}
                     onEdit={onEditPost}
-                />
+                /> */}
 
                 {/* Using our new CommentSection component */}
                 <TcommentSection

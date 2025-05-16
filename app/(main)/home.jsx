@@ -7,7 +7,7 @@ import ScreenWrapper from '@/components/ScreenWrapper'
 import { supabase } from '../../lib/supabase'
 import { wp, hp } from '@/helpers/common'
 import Avatar from '../../components/Avatar'
-import { fetchPosts } from '../../services/homeService'
+import { fetchPosts, searchTwists } from '../../services/homeService'
 import { getUserData } from '../../services/userServices'
 import Icon from '@/assets/icons'
 import MLoading from '../../components/MaterialLoader'
@@ -55,26 +55,15 @@ const FooterComponent = memo(({ loading, hasMore, postsLength }) => {
 });
 
 // Create lightweight EmptyList component
-const EmptyListComponent = memo(({ loading }) => {
+const EmptyListComponent = memo(({ loading, isSearching }) => {
   return (
     <View style={styles.loadingContainer}>
       <Text style={styles.noPosts}>
-        {loading ? <MLoading /> : "No feeds found!!"}
+        {loading ? <MLoading /> : isSearching ? "No results found" : "No feeds found!!"}
       </Text>
     </View>
   );
 });
-
-
-{/* <Pressable 
-style={styles.libraryButton}
-onPress={() => router.push('library')}  
-> */}
-{/* <Text style={styles.buttonTextTop}>PloTwist</Text> */}
-{/* <Text style={styles.buttonTextBottom}>Library</Text>
-</Pressable> */}
-
-
 
 // Lightweight Header component
 const Header = memo(({ username, router, setIsNavigating, isNavigating, isadmin }) => (
@@ -94,7 +83,7 @@ const Header = memo(({ username, router, setIsNavigating, isNavigating, isadmin 
           }
         }}
       >
-        <Icon name="notsqr" size={hp(3.5)} color='white' />
+        <Icon name="notsqr" size={hp(3.3)} color='white' />
       </Pressable>
        
       <Pressable 
@@ -108,13 +97,6 @@ const Header = memo(({ username, router, setIsNavigating, isNavigating, isadmin 
           >
             <Icon name="library" size={hp(3.2)} color='white' />
       </Pressable>
-          {/* {
-            notificationCount > 0 && (
-              <View style={styles.pill}>
-                <Text style={styles.pillText}>{notificationCount}</Text>
-              </View>
-            )
-          } */}
           {isadmin && (
             <Pressable 
             disabled={isNavigating}
@@ -132,22 +114,43 @@ const Header = memo(({ username, router, setIsNavigating, isNavigating, isadmin 
   </View>
 ));
 
-const SearchBar = memo(({ searchQuery, setSearchQuery }) => {
+const SearchBar = memo(({ searchQuery, setSearchQuery, onClearSearch, isSearching }) => {
+  const inputRef = useRef(null);
   const [localSearch, setLocalSearch] = useState(searchQuery);
+
+  // Handle back button press from search
+  const handleBackPress = () => {
+    if (localSearch || isSearching) {
+      setLocalSearch('');
+      onClearSearch();
+      return;
+    }
+  };
 
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
-      setSearchQuery(localSearch);
-    }, 2000); // Adds a debounce of 300ms
+      if (localSearch !== searchQuery) {
+        setSearchQuery(localSearch);
+      }
+    }, 500); // Reduced debounce time for better UX
 
     return () => clearTimeout(delayDebounce);
   }, [localSearch]);
 
   return (
     <View style={styles.searchContainer}>
+      {(isSearching || localSearch) && (
+        <Pressable onPress={handleBackPress} style={styles.backButton}>
+          <Icon name="arrowLeft" size={hp(2.5)} color="white" />
+        </Pressable>
+      )}
       <TextInput
-        style={styles.searchInput}
-        placeholder="Search twists..."
+        ref={inputRef}
+        style={[
+          styles.searchInput,
+          (isSearching || localSearch) && styles.searchInputActive
+        ]}
+        placeholder="Search plots..."
         placeholderTextColor="#888"
         value={localSearch}
         onChangeText={setLocalSearch}
@@ -158,7 +161,6 @@ const SearchBar = memo(({ searchQuery, setSearchQuery }) => {
     </View>
   );
 });
-
 
 // Lightweight TrendingItem component
 const TrendingItem = memo(({ post, router }) => (
@@ -263,6 +265,8 @@ const Feeds = () => {
   const [page, setPage] = useState(1);
   const [notificatuionCount, setNotificationCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
   const [isConnected, setIsConnected] = useState(true);
   const [initialCheckDone, setInitialCheckDone] = useState(false);
   const ITEMS_PER_PAGE = 6; // Increased from 4 to reduce the number of pagination events
@@ -281,23 +285,61 @@ const Feeds = () => {
   }, [posts]);
 
   // Check network status on mount
-useEffect(() => {
-  const checkNetworkStatus = async () => {
-    const connected = await NetworkUtils.isConnected();
-    setIsConnected(connected);
-    setInitialCheckDone(true);
-  };
-  
-  checkNetworkStatus();
-  
-  // Set up network listener
-  const unsubscribe = NetworkUtils.initNetworkListener((connected) => {
-    setIsConnected(connected);
-    setInitialCheckDone(true);
-  });
-  
-  return () => unsubscribe();
-}, []);
+  useEffect(() => {
+    const checkNetworkStatus = async () => {
+      const connected = await NetworkUtils.isConnected();
+      setIsConnected(connected);
+      setInitialCheckDone(true);
+    };
+    
+    checkNetworkStatus();
+    
+    // Set up network listener
+    const unsubscribe = NetworkUtils.initNetworkListener((connected) => {
+      setIsConnected(connected);
+      setInitialCheckDone(true);
+    });
+    
+    return () => unsubscribe();
+  }, []);
+
+  // Handle search query changes
+  useEffect(() => {
+    const performSearch = async () => {
+      if (searchQuery.trim() === '') {
+        setIsSearching(false);
+        setSearchResults([]);
+        return;
+      }
+      
+      setIsSearching(true);
+      setLoading(true);
+      
+      try {
+        const result = await searchTwists(searchQuery);
+        if (result.success) {
+          setSearchResults(result.data);
+        } else {
+          console.error('Search failed:', result.msg);
+          setSearchResults([]);
+        }
+      } catch (error) {
+        console.error('Error searching twists:', error);
+        setSearchResults([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    performSearch();
+  }, [searchQuery]);
+
+  // Clear search handler
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery('');
+    setIsSearching(false);
+    setSearchResults([]);
+  }, []);
 
   // Handle real-time post updates with optimized functions
   const handlePostEvent = useCallback(async (payload) => {
@@ -385,11 +427,11 @@ useEffect(() => {
 
   // Fetch trending posts with loading state management
   const getTrendingPosts = useCallback(async () => {
-      // Skip fetching if offline
-      if (!isConnected) {
-        console.log('Skipping trending posts fetch - device is offline');
-        return;
-      }
+    // Skip fetching if offline
+    if (!isConnected) {
+      console.log('Skipping trending posts fetch - device is offline');
+      return;
+    }
     try {
       setLoading(true);
       const res = await fetchPosts(4);
@@ -408,11 +450,11 @@ useEffect(() => {
   const getPosts = useCallback(async () => {
     if (loading || !hasMore) return;
 
-     // Skip fetching if offline
-  if (!isConnected) {
-    console.log('Skipping fetch - device is offline');
-    return;
-  }
+    // Skip fetching if offline
+    if (!isConnected) {
+      console.log('Skipping fetch - device is offline');
+      return;
+    }
 
     try {
       setLoading(true);
@@ -447,12 +489,16 @@ useEffect(() => {
 
   // Handle pull-to-refresh
   const handleRefresh = useCallback(() => {
+    if (isSearching) {
+      handleClearSearch();
+    }
+    
     setRefreshing(true);
     setPage(1);
     setPosts([]);
     setHasMore(true);
     getPosts();
-  }, [getPosts]);
+  }, [getPosts, isSearching, handleClearSearch]);
 
   // Optimized renderItem for FlatList
   const renderItem = useCallback(({ item }) => (
@@ -469,40 +515,42 @@ useEffect(() => {
   // Optimized end reached handler with debounce behavior
   const lastFetchTime = useRef(Date.now());
   const handleEndReached = useCallback(() => {
+    // Don't load more if in search mode
+    if (isSearching) return;
+    
     const now = Date.now();
     if (hasMore && !loading && now - lastFetchTime.current > 500 && isConnected) {
       lastFetchTime.current = now;
       getPosts();
     }
-  }, [hasMore, loading, getPosts, isConnected]);
+  }, [hasMore, loading, getPosts, isConnected, isSearching]);
 
-  // Filter posts based on search query - optimized to prevent unnecessary filtering
-  const filteredPosts = useMemo(() => {
-    if (!searchQuery) return posts;
-    
-    const lowerQuery = searchQuery.toLowerCase();
-    return posts.filter(post =>
-      post.body?.toLowerCase().includes(lowerQuery) ||
-      post.user?.userName?.toLowerCase().includes(lowerQuery)
-    );
-  }, [searchQuery, posts]);
+  // Get the current posts to display (search results or all posts)
+  const displayPosts = useMemo(() => {
+    return isSearching ? searchResults : posts;
+  }, [isSearching, searchResults, posts]);
 
   // Memoize components to prevent unnecessary recreations
   const memoizedFooter = useMemo(() => (
     <FooterComponent
       loading={loading}
-      hasMore={hasMore}
-      postsLength={filteredPosts.length}
+      hasMore={!isSearching && hasMore}
+      postsLength={displayPosts.length}
     />
-  ), [loading, hasMore, filteredPosts.length]);
+  ), [loading, hasMore, displayPosts.length, isSearching]);
 
   const memoizedEmptyComponent = useMemo(() => (
-    <EmptyListComponent loading={loading} />
-  ), [loading]);
+    <EmptyListComponent loading={loading} isSearching={isSearching} />
+  ), [loading, isSearching]);
 
   const ListHeaderComponent = useCallback(() => (
-    <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
-  ), [searchQuery]);
+    <SearchBar 
+      searchQuery={searchQuery} 
+      setSearchQuery={setSearchQuery} 
+      onClearSearch={handleClearSearch}
+      isSearching={isSearching}
+    />
+  ), [searchQuery, handleClearSearch, isSearching]);
 
   // Optimized FlatList props
   const listProps = useMemo(() => ({
@@ -533,14 +581,14 @@ useEffect(() => {
           <Header
            username="PlotTwist"
            router={router}
-           setIsNavigating={setIsNavigating} // Add this line
+           setIsNavigating={setIsNavigating}
            isNavigating={isNavigating}
            isadmin={isadmin}
           />
 
           {/* Highly optimized FlatList */}
           <FlatList
-            data={filteredPosts}
+            data={displayPosts}
             extraData={visibleItems}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.listStyle}
@@ -578,7 +626,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: wp(4),
     paddingVertical: hp(1.2),
-    backgroundColor: 'rgb(21, 23, 24)',
+    backgroundColor: 'rgb(19, 21, 22)',
   },
   welcomeContainer: {
     flexDirection: 'column',
@@ -597,7 +645,7 @@ const styles = StyleSheet.create({
     marginHorizontal: wp(0.4),
     marginVertical: hp(0.7),
     backgroundColor: '#222',
-    borderRadius: 4,
+    borderRadius: 24,
     alignItems: 'center',
   },
   searchInput: {

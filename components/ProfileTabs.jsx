@@ -8,7 +8,8 @@ import UserPostsComponent from './UserPostComponent';
 const TabNavigator = ({ 
   theme: activeTheme,
   navigation,
-  hasPostsAvailable = false // New prop to determine if posts are available
+  hasPostsAvailable = false, // Prop to determine if posts are available
+  userId // Add userId as a prop
 }) => {
   // Set default active tab to 'reviews' if posts are not available
   const [activeTab, setActiveTab] = useState(hasPostsAvailable ? 'reviews' : 'reviews');
@@ -19,14 +20,14 @@ const TabNavigator = ({
         return (
           <View style={styles.reviewsContainer}>
             <View style={styles.reviewContent}>
-              <UserReviewsComponent navigation={navigation} />
+              <UserReviewsComponent navigation={navigation} userId={userId} />
             </View>
           </View>
         );
       case 'plots':
         return (
           <View style={styles.reviewContent}>
-            <UserPostsComponent navigation={navigation} />
+            <UserPostsComponent navigation={navigation} userId={userId} />
           </View>
         );
       default:
@@ -40,7 +41,7 @@ const TabNavigator = ({
       <View style={styles.container}>
         <View style={styles.reviewsContainer}>
           <View style={styles.reviewContent}>
-            <UserReviewsComponent navigation={navigation} />
+            <UserReviewsComponent navigation={navigation} userId={userId} />
           </View>
         </View>
       </View>
@@ -99,7 +100,7 @@ const TabNavigator = ({
               },
             ]}
           >
-            Posts
+           Studio
           </Text>
         </TouchableOpacity>
       </View>

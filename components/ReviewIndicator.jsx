@@ -61,7 +61,7 @@ const ReviewIndicators = ({ item }) => {
   
   // Get the appropriate color theme based on indicator type
   const getColorTheme = (indicator) => {
-    return indicator.isPositive ? theme.colors.primary : theme.colors.red;
+    return indicator.isPositive ? theme.colors.ourgn : theme.colors.red;
   };
 
   const currentColor = getColorTheme(currentIndicator);

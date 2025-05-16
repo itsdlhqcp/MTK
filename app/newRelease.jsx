@@ -49,7 +49,7 @@ const NewRelease = () => {
 
   // Available platform options
   const platformOptions = [
-    'mlFilm', 'tmlFilm', 'cndFilm', 'hindiFilm', 'anime', 'kdrama'
+    'malayalam', 'tamil', 'canada', 'hindi', 'anime', 'kdrama'
   ];
 
   const handleDateSelect = (date) => {
@@ -395,7 +395,7 @@ const NewRelease = () => {
 
           {/* Added second image picker */}
           <View style={styles.media}>
-            <Text style={styles.addImageText}>Potrait Poster HERE</Text>
+            <Text style={styles.addImageText}>Portrait Poster HERE</Text>
             <View style={styles.mediaIcons}>
               <TouchableOpacity onPress={() => onPickSecond(true)}>
                 <Icon name="image" size={30} color={theme.colors.dark} />

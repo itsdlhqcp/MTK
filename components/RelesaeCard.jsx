@@ -1,5 +1,5 @@
 import { Image, StyleSheet, Text, TouchableOpacity, View, Modal } from 'react-native'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { wp, hp } from '@/helpers/common'
 import theme from '../constants/theme'
 import { getSupabaseFileUrl } from '../services/userProfileImage'
@@ -9,7 +9,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { useFocusEffect } from 'expo-router'
 import Icon from '../assets/icons'
 import DatePicker from '../components/DatePicker' 
-import { updateReleaseEndDate } from '../services/releaseService'
+import { fetchAverageRating, updateReleaseEndDate } from '../services/releaseService'
 import { useToast } from '../contexts/ToastContext'
 import { adminIds } from '../constants/admin'
 import { useAuth } from '../contexts/AuthContext'
@@ -36,6 +36,27 @@ const ReleaseCard = ({
     const [selectedEndDate, setSelectedEndDate] = useState(
         item?.endDate ? new Date(item.endDate) : null
     );
+    // State for average rating
+    const [avgRating, setAvgRating] = useState(0);
+    const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        // Fetch the average rating when component mounts
+        const getAverageRating = async () => {
+            try {
+                if (!item?.id) return;
+                setIsLoading(true);
+                const avgRes = await fetchAverageRating(item?.id, item?.sconnectedId);
+                setAvgRating(avgRes || 0);
+            } catch (error) {
+                console.error("Error fetching average rating:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        getAverageRating();
+    }, [item?.id, item?.sconnectedId]);
     
     const shadowStyle = {
         shadowOffset: {
@@ -128,8 +149,8 @@ const ReleaseCard = ({
     };
 
     const renderRating = () => {
-        const rating = item?.defRating || 0;
-        const filledStars = Math.floor(rating);
+        // const rating = item?.defRating || 0;
+        const filledStars = avgRating?.average || 0;
         
         return (
             <View style={styles.ratingContainer}>
@@ -148,7 +169,7 @@ const ReleaseCard = ({
                     );
                 })}
                 <Text style={styles.ratingText}>
-                    {rating.toFixed(1)}/5
+                    {avgRating?.average}/5
                 </Text>
             </View>
         );
@@ -170,6 +191,9 @@ const ReleaseCard = ({
     }
 
     const isadmin = adminIds.includes(currentUser?.id);
+
+    const releaseAt = item?.rDate ? moment(item.rDate).format('MMM D') : '';
+    const show = releaseAt && moment(item.rDate).isSameOrBefore(moment(), 'day');
 
     return (
         <TouchableOpacity
@@ -216,9 +240,21 @@ const ReleaseCard = ({
                 <View style={styles.overlay}>
                     {/* Top section with rating and more button */}
                     <View style={styles.topContainer}>
-                        <View style={styles.ratingSection}>
+                        {/* {show &&(
+                            <View style={styles.ratingSection}>
                             {renderRating()}
                         </View>
+                        )} */}
+
+
+                       {show ? (
+                            <View style={styles.ratingSection}>
+                            {renderRating()}
+                        </View>
+                        ) : (
+                            <Text style={styles.statusText}> 
+                        </Text>
+                        )}
                         
                         {/* More button */}
                         {showMoreIcon && isadmin && (
@@ -526,7 +562,13 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         fontSize: hp(1.8),
         color: 'white',
-    }
+    },
+    statusText: {
+        color: '#C0C0C0',
+        fontSize: hp(1.8),
+        marginBottom: 16,
+        fontWeight: '500',
+    },
 })
 
 // import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'

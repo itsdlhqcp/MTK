@@ -7,7 +7,7 @@ import NotificationsTab from '../components/NotificationTab';
 import ScreenWrapper from '../components/ScreenWrapper';
 
 const MessengerScreen = () => {
-  const [activeTab, setActiveTab] = useState('requests');
+  const [activeTab, setActiveTab] = useState('notifications');
   
   const TabButton = ({ title, isActive, onPress, count }) => (
     <TouchableOpacity 
@@ -25,21 +25,21 @@ const MessengerScreen = () => {
     <View style={styles.container}>
       <View style={styles.tabBar}>
         <TabButton 
-          title="Requests" 
-          isActive={activeTab === 'requests'} 
-          onPress={() => setActiveTab('requests')}
-        />
-        <TabButton 
           title="Notifications" 
           isActive={activeTab === 'notifications'} 
           onPress={() => setActiveTab('notifications')}
         />
+        <TabButton 
+          title="Requests" 
+          isActive={activeTab === 'requests'} 
+          onPress={() => setActiveTab('requests')}
+        />
       </View>
       
-      {activeTab === 'requests' ? (
-        <RequestTab />
-      ) : (
+      {activeTab === 'notifications' ? (
         <NotificationsTab />
+      ) : (
+        <RequestTab />
       )}
     </View>
     </ScreenWrapper>

@@ -5,7 +5,7 @@ import { hp } from '../helpers/common';
 
 const DigitalReviewTabs = ({ children }) => {
   const [activeTab, setActiveTab] = useState(0);
-  const tabs = ['Reviews', 'TH Reviews'];
+  const tabs = ['Digital', 'Theatre'];
 
   return (
     <View style={styles.tabContainer}>

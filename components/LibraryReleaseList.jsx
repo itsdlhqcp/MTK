@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList, Alert, Image, TouchableOpacity, Dimensions } from 'react-native';
-import { fetchReleases } from '../services/releaseService';
+import { View, Text, StyleSheet, FlatList, Alert, Image, TouchableOpacity, Dimensions, ActivityIndicator } from 'react-native';
+import { fetchAverageRating, fetchReleases, searchReleases } from '../services/releaseService';
 import FeedLoader from '../components/FeedLoader';
 import { hp, wp } from '../helpers/common';
 import { useAuth } from '../contexts/AuthContext';
@@ -42,10 +42,15 @@ const AllReleasesList = ({ searchQuery = '' }) => {
   const router = useRouter();
   const [releases, setReleases] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false); // Add search loading state
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
   const [isConnected, setIsConnected] = useState(true);
   const [initialCheckDone, setInitialCheckDone] = useState(false);
+  const [releaseRatings, setReleaseRatings] = useState({}); // Store ratings by release ID
+  const [loadingRatings, setLoadingRatings] = useState({}); // Track loading state for each rating
+  const [searchResults, setSearchResults] = useState([]); // Store search results separately
+  const [isSearching, setIsSearching] = useState(false); // Track if we're in search mode
   
   // Check network status on mount
   useEffect(() => {
@@ -86,6 +91,22 @@ const AllReleasesList = ({ searchQuery = '' }) => {
       };
     }
   }, [initialCheckDone, isConnected]); 
+
+  // Handle search query changes
+  useEffect(() => {
+    // Reset states when search query changes
+    if (searchQuery !== '') {
+      setPage(1);
+      setIsSearching(true);
+      performSearch(searchQuery);
+    } else {
+      setIsSearching(false);
+      // If exiting search, make sure we have regular data
+      if (releases.length === 0) {
+        getAllReleases();
+      }
+    }
+  }, [searchQuery]);
   
   // Handle real-time release updates
   const handleReleaseEvent = (payload) => {
@@ -120,11 +141,41 @@ const AllReleasesList = ({ searchQuery = '' }) => {
     }
   };
 
-  useEffect(() => {
-    if (searchQuery !== '') {
-      setPage(1);
+  // New function to perform search
+  const performSearch = async (query) => {
+    if (!isConnected) {
+      Alert.alert('Offline', 'Search is only available when online');
+      return;
     }
-  }, [searchQuery]);
+    
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    
+    try {
+      setSearchLoading(true);
+      const res = await searchReleases(query);
+      
+      if (res.success) {
+        setSearchResults(res.data);
+        
+        // Fetch ratings for search results
+        res.data.forEach(release => {
+          fetchRatingForRelease(release);
+        });
+      } else {
+        console.error('Search error:', res.message);
+        setSearchResults([]);
+      }
+    } catch (error) {
+      console.error('Error during search:', error);
+      Alert.alert('Search Error', 'Failed to perform search');
+      setSearchResults([]);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
 
   const getAllReleases = async () => {
     if (!isConnected || loading || !hasMore) return;
@@ -147,6 +198,12 @@ const AllReleasesList = ({ searchQuery = '' }) => {
               existingRelease => existingRelease.id === newRelease.id
             )
           );
+          
+          // Fetch average ratings for new releases
+          newReleases.forEach(release => {
+            fetchRatingForRelease(release);
+          });
+          
           return [...prevReleases, ...newReleases];
         });
         
@@ -162,22 +219,34 @@ const AllReleasesList = ({ searchQuery = '' }) => {
     }
   };
 
-  const filteredReleases = useMemo(() => {
-    if (!searchQuery) return releases;
+  // Function to fetch the average rating for a single release
+  const fetchRatingForRelease = async (release) => {
+    if (!release?.id) return;
     
-    const lowerQuery = searchQuery.toLowerCase();
-    return releases.filter(release => 
-      (release.title && release.title.toLowerCase().includes(lowerQuery)) ||
-      (release.description && release.description.toLowerCase().includes(lowerQuery)) ||
-      (release.artist && release.artist.toLowerCase().includes(lowerQuery))
-    );
-  }, [releases, searchQuery]);
+    // Don't fetch if already loading or if we already have the rating
+    if (loadingRatings[release.id]) return;
+    
+    try {
+      setLoadingRatings(prev => ({ ...prev, [release.id]: true }));
+      const avgRating = await fetchAverageRating(release.id, release.sconnectedId);
+      setReleaseRatings(prev => ({ ...prev, [release.id]: avgRating || 0 }));
+    } catch (error) {
+      console.error(`Error fetching rating for release ${release.id}:`, error);
+    } finally {
+      setLoadingRatings(prev => ({ ...prev, [release.id]: false }));
+    }
+  };
+
+  // Use the appropriate data source based on whether we're searching or not
+  const displayData = useMemo(() => {
+    return isSearching ? searchResults : releases;
+  }, [isSearching, searchResults, releases]);
 
   // Group releases by month-year - useMemo for performance
   const groupedReleases = useMemo(() => {
     const grouped = {};
     
-    filteredReleases.forEach(release => {
+    displayData.forEach(release => {
       // Use rDate or created_at for grouping
       const date = release.rDate || release.created_at;
       const monthYear = moment(date).format('MMMM YYYY');
@@ -199,26 +268,44 @@ const AllReleasesList = ({ searchQuery = '' }) => {
         monthYear,
         data: items
       }));
-  }, [filteredReleases]);
+  }, [displayData]);
 
   // Handle card press
   const handleCardPress = (item) => {
     if (!item?.id) return null;
-    router.push({ pathname: 'releaseInfo', params: { releaseId: item.id } });
+    router.push({ 
+      pathname: 'releaseInfo', 
+      params: { 
+        releaseId: item.id,
+        lib: true  // Always set to true when coming from AllReleasesList
+      } 
+    });
   };
 
   // Render rating stars
   const renderRating = (item) => {
-    if (!item?.defRating || item.defRating <= 0) return null;
+    // Use the fetched average rating if available, otherwise fall back to defRating
+    const avgRating = releaseRatings[item?.id] !== undefined ? releaseRatings[item.id] : (item?.defRating || 0);
+    const releaseAt = item?.rDate ? moment(item.rDate).format('MMM D') : '';
+    const show = releaseAt && moment(item.rDate).isSameOrBefore(moment(), 'day');
+    
+    if (avgRating <= 0) return null;
     
     return (
       <View style={styles.gridRatingContainer}>
-        <PratingStars 
-          rating={item?.defRating} 
-          showRatingText={false} 
-          starSize={hp(1.6)}
-        />
-        <Text style={styles.gridRatingText}>{item?.defRating}/5</Text>
+        
+
+         {show ? ( 
+                    <> <PratingStars 
+                    rating={avgRating?.average} 
+                    showRatingText={false} 
+                    starSize={hp(1.6)}
+                  />
+                  <Text style={styles.gridRatingText}>{avgRating?.average}/5</Text></>
+                           
+                        ) : (
+                          <Text style={styles.gridRatingText}></Text>
+                )}
       </View>
     );
   };
@@ -289,10 +376,9 @@ const AllReleasesList = ({ searchQuery = '' }) => {
 
           <View style={styles.overlay}>
             {/* Top section with rating */}
-           {/* Top section with rating */}
-          <View style={styles.topContainer}>
-            {renderRating(item)}
-          </View>
+            <View style={styles.topContainer}>
+              {renderRating(item)}
+            </View>
 
             {/* Bottom section with title and date */}
             <View style={styles.bottomContainer}>
@@ -304,9 +390,9 @@ const AllReleasesList = ({ searchQuery = '' }) => {
                     tagsStyles={titleTagsStyles}
                   />
                 )}
-                <Text style={styles.releaseDate}>
+                {/* <Text style={styles.releaseDate}>
                   {createdAt || 'N/A'}
-                </Text>
+                </Text> */}
               </View>
             </View>
           </View>
@@ -365,7 +451,7 @@ const AllReleasesList = ({ searchQuery = '' }) => {
   // Empty component - handles offline state
   const renderEmptyComponent = () => {
     // When offline with no cached data
-    if (!isConnected && filteredReleases.length === 0) {
+    if (!isConnected && displayData.length === 0) {
       return (
         <View style={styles.offlineContainer}>
           <Icon
@@ -381,26 +467,52 @@ const AllReleasesList = ({ searchQuery = '' }) => {
       );
     }
     
+    // Search is loading
+    if (isSearching && searchLoading) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#FFFFFF" />
+          <Text style={styles.loadingText}>Searching...</Text>
+        </View>
+      );
+    }
+    
+    // No search results
+    if (isSearching && !searchLoading && searchResults.length === 0) {
+      return (
+        <View style={styles.emptyContainer}>
+          <Icon
+            name="search"
+            size={hp(8)} 
+            color="#666" 
+          />
+          <Text style={styles.noMoreText}>
+            No results found for "{searchQuery}"
+          </Text>
+        </View>
+      );
+    }
+    
     // Regular empty state
     return (
       <View style={styles.emptyContainer}>
         <Text style={styles.noMoreText}>
-          {loading ? "" : 
-          searchQuery ? "This serarch engine under maitainance" : "No releases found!"}
+          {loading ? "" : "No releases found!"}
         </Text>
       </View>
     );
   };
 
   const renderFooter = () => {
-    // if (filteredReleases.length === 0) return null;
+    if (displayData.length === 0) return null;
 
     return (
       <View style={{ marginVertical: 0, paddingBottom: hp(14) }}>
-        {loading && hasMore && isConnected && <FeedLoader />}
-        {(!loading || !hasMore || !isConnected) && (
+        {loading && hasMore && isConnected && !isSearching && <FeedLoader />}
+        {(!loading || !hasMore || !isConnected || isSearching) && (
           <Text style={styles.noMoreText}>
             {!isConnected ? "You're offline" : 
+             isSearching ? "End of search results" :
              hasMore ? "" : "End of library"}
           </Text>
         )}
@@ -409,31 +521,27 @@ const AllReleasesList = ({ searchQuery = '' }) => {
   };
 
   const handleEndReached = async () => {
-    if (loading || !hasMore) return;
+    if (loading || !hasMore || isSearching) return;
     const connected = await NetworkUtils.isConnected();
-    if (connected && !searchQuery) {
+    if (connected) {
       getAllReleases();
     }
   };
 
   return (
     <View style={styles.container}>
-      {/* <Text style={styles.sectionTitle}>All Releases</Text> */}
-      
-      {(isConnected || filteredReleases.length > 0) ? (
+      {(isConnected || displayData.length > 0) ? (
         <FlatList
           data={groupedReleases}
           renderItem={renderGridSection}
           keyExtractor={(item) => `month-section-${item.monthYear}`}
-           onEndReached={isConnected ? handleEndReached : null}
-        //  onEndReached={getAllReleases}
+          onEndReached={isConnected && !isSearching ? handleEndReached : null}
           onEndReachedThreshold={0.01}
           ListFooterComponent={renderFooter}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listContainer}
           ListEmptyComponent={renderEmptyComponent}
-         // onRefresh={isConnected ? getAllReleases : null}
-          refreshing={loading}
+          refreshing={loading || searchLoading}
         />
       ) : (
         renderEmptyComponent()
@@ -578,6 +686,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
+    paddingBottom: hp(0.1),
   },
   titleDateContainer: {
     flex: 1,
@@ -628,6 +737,17 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#00ac62',
     marginLeft: wp(1),
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: hp(10),
+  },
+  loadingText: {
+    color: 'white',
+    fontSize: hp(2),
+    marginTop: hp(2),
   },
 });
 

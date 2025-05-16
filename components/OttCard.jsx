@@ -1,5 +1,5 @@
 import { Image, StyleSheet, Text, TouchableOpacity, View, Modal } from 'react-native'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { wp, hp } from '@/helpers/common'
 import theme from '../constants/theme'
 import moment from 'moment/moment'
@@ -14,6 +14,7 @@ import { updateStreamEndDate } from '../services/ottService'
 import { useToast } from '../contexts/ToastContext'
 import { adminIds } from '../constants/admin'
 import { useAuth } from '../contexts/AuthContext'
+import { fetchAverageRating, fetchAverageRatingDirect } from '../services/releaseService'
 
 const OttCard = ({
     item,
@@ -25,6 +26,8 @@ const OttCard = ({
 }) => {
     const { user: currentUser } = useAuth();
     const [userRating, setUserRating] = useState(0);
+    const [avgRating, setAvgRating] = useState(0);
+    const [isLoading, setIsLoading] = useState(false);
     const [clickCount, setClickCount] = useState(0);
     const [isNavigating, setIsNavigating] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
@@ -37,6 +40,43 @@ const OttCard = ({
     const [selectedEndDate, setSelectedEndDate] = useState(
         item?.endDate ? new Date(item.endDate) : null
     );
+
+    // Fetch the average rating when component mounts
+    useEffect(() => {
+        if (!item?.directRelease) {
+            getAverageRating();
+        }else{
+            getAverageRatingOfDirect();
+        }
+    }, [item?.id]);
+
+
+    const getAverageRating = async () => {
+        try {
+            if (!item?.id) return;
+            setIsLoading(true);
+            const avgRes = await fetchAverageRating(item?.connectedId, item?.id);
+            setAvgRating(avgRes || 0);
+        } catch (error) {
+            console.error("Error fetching average rating:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+         // Fetch the average rating of direct release
+           const getAverageRatingOfDirect = async () => {
+            try {
+              if (!item?.id) return;
+              setIsLoading(true);
+              const avgRes = await fetchAverageRatingDirect(item?.id);
+              setAvgRating(avgRes || 0);
+            } catch (error) {
+              console.error("Error fetching average rating:", error);
+            } finally {
+              setIsLoading(false);
+            }
+          };
 
     // which reset on coming the page 
     useFocusEffect(
@@ -126,8 +166,8 @@ const OttCard = ({
     const endDate = item?.endDate ? moment(item.endDate).format('MMM D, YYYY') : 'No end date';
 
     const renderRating = () => {
-        const rating = userRating || item?.defRating || 0;
-        const filledStars = Math.floor(rating);
+        // Using avgRating instead of item?.defRating
+        const filledStars = avgRating?.average || 0;
         
         return (
             <View style={styles.ratingContainer}>
@@ -146,7 +186,7 @@ const OttCard = ({
                     );
                 })}
                 <Text style={[styles.ratingValue, { color: '#FFFFFF' }]}>
-                    {rating.toFixed(1)}/5
+                    {avgRating?.average}/5
                 </Text>
             </View>
         );
@@ -264,8 +304,7 @@ const OttCard = ({
                     <View style={styles.dropdown}>
                         <TouchableOpacity 
                             style={styles.dropdownItem} 
-   ///  onEditDigital(item)
-   onPress={handleEditPress}
+                            onPress={handleEditPress}
                         >
                             <Icon name="edit" size={hp(2)} color={theme.colors.light || '#E0E0E0'} />
                             <Text style={styles.dropdownText}>Details</Text>

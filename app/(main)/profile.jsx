@@ -32,9 +32,9 @@ const darkTheme = {
   }
 };
 
-const ITEMS_PER_PAGE = 4;
+const ITEMS_PER_PAGE = 5;
 // Set cache timeout (in milliseconds)
-const CACHE_TIMEOUT = 44 * 60 * 60 * 1000; // 12 hrs
+const CACHE_TIMEOUT = 88 * 60 * 60 * 1000; // 12 hrs
 
 const Profile = () => {
   const { user, navigationGuard } = useAuth();
@@ -47,6 +47,7 @@ const Profile = () => {
   const [profileStats, setProfileStats] = useState({
     postCount: 0,
     friendsCount: 0,
+    reviewCount: 0
   });
   const activeTheme = colorScheme === 'dark' ? darkTheme : darkTheme;
   const params = useLocalSearchParams();
@@ -201,10 +202,26 @@ const precacheImages = useCallback(async (userData, postsData) => {
       // Fetch friends count
       const friendsCountResult = await friendRequestService.getFriendsCount();
       
-      if (!error) {
+      // Fetch reviews count from dpeopreviews table
+      const { count: dpeopreviewsCount, error: dpeopreviewsError } = await supabase
+        .from('dpeopreviews')
+        .select('id', { count: 'exact' })
+        .eq('userId', userId);
+      
+      // Fetch reviews count from reviews table
+      const { count: reviewsCount, error: reviewsError } = await supabase
+        .from('reviews')
+        .select('id', { count: 'exact' })
+        .eq('userId', userId);
+      
+      if (!error && !dpeopreviewsError && !reviewsError) {
+        // Calculate total reviews count
+        const totalReviewsCount = (dpeopreviewsCount || 0) + (reviewsCount || 0);
+        
         const newStats = {
           postCount: count || 0,
-          friendsCount: friendsCountResult.success ? friendsCountResult.count : 0
+          friendsCount: friendsCountResult.success ? friendsCountResult.count : 0,
+          reviewCount: totalReviewsCount
         };
         
         setProfileStats(newStats);
@@ -321,6 +338,7 @@ const precacheImages = useCallback(async (userData, postsData) => {
           theme={activeTheme}
           postCount={profileStats.postCount}
           friendsCount={profileStats.friendsCount}
+          reviewCount={profileStats.reviewCount}
           isLoading={profileLoading}
           lastUpdated={profileDataTimestamp ? new Date(profileDataTimestamp).toLocaleTimeString() : null}
           offlineMode={offlineMode}
@@ -355,7 +373,7 @@ const StatsItem = ({ label, value, theme, isLoading }) => (
   </View>
 );
 
-const InstagramProfile = React.memo(({ user, router, handleLogout, theme, postCount, friendsCount, isLoading, offlineMode }) => {
+const InstagramProfile = React.memo(({ user, router, handleLogout, theme, postCount, friendsCount, reviewCount, isLoading, offlineMode }) => {
   // below is useeffect which record the naviagtion
  const [isNavigating, setIsNavigating] = useState(false);
 
@@ -484,11 +502,19 @@ const InstagramProfile = React.memo(({ user, router, handleLogout, theme, postCo
 
         <View style={styles.statsContainer}>
           <StatsItem 
-            value={postCount?.toString() || "0"} 
-            label="Posts" 
+            value={reviewCount?.toString() || "0"} 
+            label="Reviews" 
             theme={theme} 
             isLoading={isLoading}
           />
+           {postCount > 1 && (
+            <StatsItem 
+              value={postCount?.toString() || "0"} 
+              label="Posts" 
+              theme={theme} 
+              isLoading={isLoading}
+            />
+          )}
           <StatsItem 
             value={friendsCount?.toString() || "0"} 
             label="Friends" 

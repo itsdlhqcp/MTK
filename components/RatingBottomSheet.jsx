@@ -16,7 +16,7 @@ const StarIcon = ({ fillPercentage = 0 }) => {
   // Create a gradient fill based on the exact percentage (0.0 to 1.0)
   const getFillColor = () => {
     if (fillPercentage <= 0) return "none";
-    if (fillPercentage >= 1) return "#FFD700";
+    if (fillPercentage >= 1) return theme.colors.star;
     return "url(#partialGradient)";
   };
 
@@ -24,8 +24,8 @@ const StarIcon = ({ fillPercentage = 0 }) => {
     <Svg width={64} height={64} viewBox="0 0 24 24">
       <Defs>
         <LinearGradient id="partialGradient" x1="0" x2="1" y1="0" y2="0">
-          <Stop offset="0" stopColor="#FFD700" stopOpacity="1" />
-          <Stop offset={fillPercentage} stopColor="#FFD700" stopOpacity="1" />
+          <Stop offset="0" stopColor= {theme.colors.star} stopOpacity="1" />
+          <Stop offset={fillPercentage} stopColor={theme.colors.star} stopOpacity="1" />
           <Stop offset={fillPercentage} stopColor="transparent" stopOpacity="0" />
           <Stop offset="1" stopColor="transparent" stopOpacity="0" />
         </LinearGradient>

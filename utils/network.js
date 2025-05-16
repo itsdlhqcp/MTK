@@ -16,5 +16,11 @@ export const NetworkUtils = {
   isConnected: async () => {
     const state = await NetInfo.fetch();
     return state.isConnected && state.isInternetReachable;
+  },
+
+  // Check if search is available (only when online)
+  isSearchAvailable: async () => {
+    const connected = await NetworkUtils.isConnected();
+    return connected;
   }
 };

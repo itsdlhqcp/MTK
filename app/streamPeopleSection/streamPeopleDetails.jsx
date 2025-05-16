@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StyleSheet, TouchableOpacity, Alert, Animated, RefreshControl, Easing } from "react-native";
 import Input from '../../components/Input';
-import { fetchPeopleReviewReplies, removeReplyPeopleReview, fetchPeoplesReleaseDetailsx, hasUserPostedAnyReview, fetchReleaseDetailsx } from "../../services/releaseService";
+import { fetchPeopleReviewReplies, removeReplyPeopleReview, fetchPeoplesReleaseDetailsx, hasUserPostedAnyReview, fetchReleaseDetailsx, hasUserPostedAnyReviewInDirect } from "../../services/releaseService";
 import { createReviewReply, removeReview, fetchReviewReplies, fetchReleaseDetails, createReleaseReview, fetchPeoplesReleaseDetails, createPeopleReleaseReview, removePeopleReview, createPeopleReviewReply } from "../../services/ottService"
 import { View } from "react-native";
 import { createNotifications } from '../../services/notificationService'
@@ -12,7 +12,7 @@ import theme from '../../constants/theme';
 import { ScrollView } from "react-native";
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
-import ReleaeCard from '../../components/RelesaeCard';
+import OttCard from "../../components/OttCard";
 import FeedLoader from "../../components/FeedLoader";
 import Icon from '../../assets/icons';
 import { Text } from "react-native";
@@ -79,9 +79,11 @@ const StreamPeopleDetails = () => {
 
       // seperate useffetct for checking user reviewed
       useEffect(() => {
-        if (release) {
+        if (!release?.directRelease) {
             checkUserReview();
-        }
+          }else{
+            checkUserReviewDirect();
+          }
     }, [release]);
 
     // use effect which fetch the reviews from theatre
@@ -108,17 +110,44 @@ const StreamPeopleDetails = () => {
     }, []);
 
       // Add this function to check if the user has posted reviews
-      const checkUserReview = async () => {
-        if (!streamId) return;
-        try {
-          const res = await hasUserPostedAnyReview(user.id, release.connectedId, streamId);
-          if (res.success) {
-            setHasUserPostedReview(res.hasPostedReview);
+    //   const checkUserReview = async () => {
+    //     if (!streamId) return;
+    //     try {
+    //       const res = await hasUserPostedAnyReview(user.id, release.connectedId, streamId);
+    //       if (res.success) {
+    //         setHasUserPostedReview(res.hasPostedReview);
+    //       }
+    //     } catch (error) {
+    //       console.error("Error checking user review:", error);
+    //     }
+    //   };
+
+    // if(!release?.directRelease){
+        const checkUserReview = async () => {
+          if (!streamId) return;
+          try {
+            const res = await hasUserPostedAnyReview(user.id, release.connectedId, streamId);
+            if (res.success) {
+              setHasUserPostedReview(res.hasPostedReview);
+            }
+          } catch (error) {
+            console.error("Error checking user review:", error);
           }
-        } catch (error) {
-          console.error("Error checking user review:", error);
-        }
-      };
+        };
+    //   } else {
+        // For direct relationships, use the specific API function
+        const checkUserReviewDirect = async () => {
+          if (!streamId) return;
+          try {
+            const res = await hasUserPostedAnyReviewInDirect(user.id, streamId);
+            if (res.success) {
+              setHasUserPostedReview(res.hasPostedReview);
+            }
+          } catch (error) {
+            console.error("Error checking user direct review:", error);
+          }
+        };
+    //   }
 
     // function to fetch the reviews from theatre
     const getThPeoplesReleaseDetails = async () => {
@@ -693,7 +722,7 @@ const StreamPeopleDetails = () => {
                     />
                   }
                  >
-                    <ReleaeCard
+                    <OttCard
                         item={{ ...release ,reviews: [{ count: release?.dpeopreviews?.length || 0 }] }}
                         currentUser={user}
                         router={router}
@@ -734,8 +763,6 @@ const StreamPeopleDetails = () => {
                 )}
             </Animated.View>
         )}
-
-
 
 
          {/* tha Reviews rendering here ADMINS*/}
@@ -916,27 +943,27 @@ const StreamPeopleDetails = () => {
                     />
                 </ScrollView>
 
-{!hasUserPostedReview && (
-  <Animated.View
-    style={{
-      position: 'absolute',
-      bottom: hp(2.5),
-      right: wp(3),
-      transform: [{ translateX: buttonSlideAnim }]
-    }}
-  >
-    <TouchableOpacity 
-      style={styles.floatingButton}
-      onPress={onNewReview}
-    >
-      <Icon 
-        name="pencil" 
-        size={hp(3.2)} 
-        color={theme.colors.primary}
-      />
-    </TouchableOpacity>
-  </Animated.View>
-)}
+                {!hasUserPostedReview && (
+                <Animated.View
+                    style={{
+                    position: 'absolute',
+                    bottom: hp(2.5),
+                    right: wp(3),
+                    transform: [{ translateX: buttonSlideAnim }]
+                    }}
+                >
+                    <TouchableOpacity 
+                    style={styles.floatingButton}
+                    onPress={onNewReview}
+                    >
+                    <Icon 
+                        name="pencil" 
+                        size={hp(3.2)} 
+                        color={theme.colors.primary}
+                    />
+                    </TouchableOpacity>
+                </Animated.View>
+                )}
 
                  {/* place outside of scrollview to work properly */}
                     <RatingBottomSheet 

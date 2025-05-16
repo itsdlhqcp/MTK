@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Dimensions, Image } from 'react-native';
 import moment from 'moment';
 import ReleaseCard from '../components/RelesaeCard';
@@ -8,6 +8,7 @@ import Icon from '../assets/icons';
 import { getSupabaseFileUrl } from '../services/imageService';
 import PratingStars from './pRatingStars';
 import MLoading from './MaterialLoader';
+import { fetchAverageRating } from '../services/releaseService';
 
 // Modified header with toggle button that only shows for the first header
 const ReleaseDateHeader = ({ date, viewMode, onToggleView, isFirstHeader }) => (
@@ -35,52 +36,127 @@ const ReleaseDateHeader = ({ date, viewMode, onToggleView, isFirstHeader }) => (
 
 // Grid version of ReleaseCard with date added above rating
 const ReleaseGridCard = ({ item, router }) => {
+  const [avgRating, setAvgRating] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Fetch the average rating when component mounts
+    const getAverageRating = async () => {
+      try {
+        if (!item?.id) return;
+        setIsLoading(true);
+        const avgRes = await fetchAverageRating(item?.id, item?.connectedId);
+        setAvgRating(avgRes || 0);
+      } catch (error) {
+        console.error("Error fetching average rating:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    getAverageRating();
+  }, [item?.id]);
+
   const handleCardPress = () => {
     if (!item?.id) return null;
-   // router.push({ pathname: 'releasePeopleSection/releasePeopleDetails', params: { releaseId: item.id } });
-   router.push({ pathname: 'releaseInfo', params: { releaseId: item.id }});
+    router.push({ pathname: 'releaseInfo', params: { releaseId: item.id }});
   };
 
   // Format the date as requested
-  const createdAt = item?.rDate ? moment(item.rDate).format('MMM D') : '';
+  const releaseAt = item?.rDate ? moment(item.rDate).format('MMM D') : '';
+  const show = releaseAt && moment(item.rDate).isSameOrBefore(moment(), 'day');
 
   return (
     <TouchableOpacity 
-    style={styles.gridItem}
-    onPress={handleCardPress}
-    activeOpacity={0.9}
-  >
-    {item?.file?.includes('postImage') && (
-      <View style={styles.gridImageContainer}>
-        <Image
-          source={getSupabaseFileUrl(item.filel)}
-          style={styles.gridItemImage}
-          resizeMode="cover"
-        />
-        
-        {(item?.defRating > 0) && (
-          <View style={styles.gridRatingContainer}>
-            <PratingStars 
-              rating={item?.defRating} 
-              showRatingText={false} 
-              starSize={hp(1.6)}
-            />
-            <Text style={styles.gridRatingText}>{item?.defRating}/5</Text>
-          </View>
-        )}
-      </View>
-    )}
-  </TouchableOpacity>
+      style={styles.gridItem}
+      onPress={handleCardPress}
+      activeOpacity={0.9}
+    >
+      {item?.file?.includes('postImage') && (
+        <View style={styles.gridImageContainer}>
+          <Image
+            source={getSupabaseFileUrl(item.filel)}
+            style={styles.gridItemImage}
+            resizeMode="cover"
+          />
+          
+          {(item?.defRating > 0) &&(
+            <View style={styles.gridRatingContainer}>
+
+                 {show ? ( 
+                    <> <PratingStars 
+                            rating={avgRating?.average} 
+                            showRatingText={false} 
+                            starSize={hp(1.6)}
+                          />
+                          <Text style={styles.gridRatingText}>
+                            {isLoading ? '...' : `${avgRating?.average}/5`}
+                          </Text></>
+                           
+                        ) : (
+                          <Text style={styles.gridRatingText}>
+                          {releaseAt}
+                   </Text>
+                )}
+            </View>
+          )}
+        </View>
+      )}
+    </TouchableOpacity>
   );
 };
 
 const ReleaseList = ({ releases, currentUser, router, loading, hasMore, onLoadMore }) => {
   // Add view mode state
-  const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
+  const [viewMode, setViewMode] = useState(''); // 'list' or 'grid'
+  // Map to store average ratings for each release
+  const [ratingsMap, setRatingsMap] = useState({});
+  // Loading state for ratings
+  const [ratingsLoading, setRatingsLoading] = useState({});
+
+  // Fetch average ratings for all releases
+  useEffect(() => {
+    const fetchAllRatings = async () => {
+      const newRatingsMap = { ...ratingsMap };
+      const newLoadingMap = { ...ratingsLoading };
+      
+      // Create a list of releases that need ratings fetched
+      const releasesToFetch = releases.filter(release => 
+        release.id && !newRatingsMap[release.id]
+      );
+      
+      // Mark these releases as loading
+      releasesToFetch.forEach(release => {
+        newLoadingMap[release.id] = true;
+      });
+      setRatingsLoading(newLoadingMap);
+      
+      // Fetch ratings for each release
+      await Promise.all(releasesToFetch.map(async (release) => {
+        try {
+          // const avgRes = await fetchAverageRating(release.id);
+          const avgRes = await fetchAverageRating(release?.id, release?.sconnectedId);
+          newRatingsMap[release.id] = avgRes || 0;
+        } catch (error) {
+          console.error(`Error fetching rating for release ${release.id}:`, error);
+          newRatingsMap[release.id] = 0;
+        } finally {
+          newLoadingMap[release.id] = false;
+        }
+      }));
+      
+      setRatingsMap(newRatingsMap);
+      setRatingsLoading(newLoadingMap);
+    };
+    
+    if (releases.length > 0) {
+      fetchAllRatings();
+    }
+  }, [releases]);
 
   const getHeaderText = (date, endDate) => {
-    const today = moment();
-    const releaseDate = moment(date);
+    const today = moment().startOf('day');
+    const releaseDate = moment(date).startOf('day');
     const diffDays = releaseDate.diff(today, 'days');
     
     if (endDate && moment().isBetween(releaseDate, moment(endDate), null, '[]')) {
@@ -95,16 +171,31 @@ const ReleaseList = ({ releases, currentUser, router, loading, hasMore, onLoadMo
     if (diffDays > 14) return 'COMING WEEKS';
     
     // Past dates
-    // if (diffDays === 0) return 'TODAY';
-    // if (diffDays === -1) return 'YESTERDAY';
     if (diffDays >= -7) return releaseDate.format('dddd').toUpperCase();
     if (diffDays < -7) return 'COMING STREAMS';
-    return releaseDate.format('MMMM YYYY').toUpperCase(); // RENOVE THIS LINE IF NOT WORKS
+    return releaseDate.format('MMMM YYYY').toUpperCase();
+  };
+
+  // Helper function for header priority
+  const getHeaderPriority = (header) => {
+    // Define the custom priority order
+    const priorityOrder = {
+      'NOW SHOWING': 0,
+      'TOMORROW': 1,
+      'AFTER TOMORROW': 2,
+      'THIS WEEK': 3,
+      'NEXT WEEK': 4,
+      'COMING WEEKS': 5
+    };
+    
+    // Return the priority (lower number = higher priority)
+    // If header is not in the list, give it low priority
+    return priorityOrder[header] !== undefined ? priorityOrder[header] : 100;
   };
 
   const groupedReleases = useMemo(() => {
     const grouped = {};
-    const today = moment();
+    const today = moment().startOf('day');
     
     // Filter releases where the current date is not after endDate
     const filteredReleases = releases.filter(release => {
@@ -125,14 +216,19 @@ const ReleaseList = ({ releases, currentUser, router, loading, hasMore, onLoadMo
   
     return Object.entries(grouped)
       .sort((a, b) => {
-        // Always place "NOW SHOWING" at the top
-        if (a[0] === 'NOW SHOWING') return -1;
-        if (b[0] === 'NOW SHOWING') return 1;
+        // Get the custom priority for each header
+        const priorityA = getHeaderPriority(a[0]);
+        const priorityB = getHeaderPriority(b[0]);
         
-        // For other headers, sort by date as before
+        // Sort by priority first
+        if (priorityA !== priorityB) {
+          return priorityA - priorityB;
+        }
+        
+        // If priorities are the same, use the original date-based sorting
         const dateA = moment(a[1][0].rDate);
         const dateB = moment(b[1][0].rDate);
-        return dateB.diff(dateA);
+        return dateA.diff(dateB); // Changed to ascending order
       })
       .map(([header, items]) => ({
         header,
@@ -170,11 +266,18 @@ const ReleaseList = ({ releases, currentUser, router, loading, hasMore, onLoadMo
       );
     }
     
+    // Pass the corresponding average rating to ReleaseCard
+    // remove all rating map and loading state
+    const avgRating = ratingsMap[item.id] || 0;
+    const isRatingLoading = ratingsLoading[item.id] || false;
+    
     return (
       <ReleaseCard
         item={item}
         currentUser={currentUser}
         router={router}
+        // avgRating={avgRating}
+        // isRatingLoading={isRatingLoading}
       />
     );
   };
@@ -295,9 +398,6 @@ const ReleaseList = ({ releases, currentUser, router, loading, hasMore, onLoadMo
   );
 };
 
-const screenWidth = Dimensions.get('window').width;
-const itemWidth = (screenWidth - (wp(4) * 2 + wp(2) * 2)) / 3;
-
 export default ReleaseList;
 
 const styles = StyleSheet.create({
@@ -359,8 +459,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: wp(2),
   },
   gridItem: {
-    width: itemWidth,
-    height: hp(20),
+    width: wp(30),
+    height: hp(24),
     borderRadius: 4,
     overflow: 'hidden',
   },

@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center', 
    // marginBottom: 10,)rgb(12, 21, 36)
-    backgroundColor: 'rgb(21, 23, 24)',
+    backgroundColor: 'rgb(19, 21, 22)',
     padding: wp(2.4),
   }, 
   title:{

@@ -182,7 +182,7 @@ const MainLayout = () => {
     if (!user?.id) return;
     try {
       let res = await getUserData(user.id);
-      console.log('got user data', res);
+      //console.log('got user data', res);
       if (res.success) {
         await setUserData({ ...res.data, email });
       }

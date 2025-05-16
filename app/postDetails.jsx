@@ -231,7 +231,7 @@ const PostDetails = () => {
                 contentContainerStyle={styles.list}
             >
               
-                <PostCard
+                {/* <PostCard
                     item={{...post, comments: [{count: post?.comments?.length}]}}
                     currentUser={user}
                     router={router}
@@ -239,7 +239,7 @@ const PostDetails = () => {
                     showMoreIcon={true}
                     showDelete={onDeletePost}
                     onEdit={onEditPost}
-                />
+                /> */}
 
                 {/* Using our new CommentSection component */}
                 <CommentsSection 

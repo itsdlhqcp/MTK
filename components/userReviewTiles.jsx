@@ -46,7 +46,7 @@ const MonthHeader = ({ month, viewMode, onToggleView, isFirstHeader }) => (
   </View>
 );
 
-const UserReviewsComponent = ({ navigation }) => {
+const UserReviewsComponent = ({ navigation, userId }) => {
   const [combinedReviews, setCombinedReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -103,8 +103,8 @@ const UserReviewsComponent = ({ navigation }) => {
         return;
       }
       
-      // Fetch paginated reviews
-      const result = await fetchAllUserReviews(user.id, page, PAGE_SIZE);
+      const targetUserId = userId || user?.id;
+      const result = await fetchAllUserReviews(targetUserId, page, PAGE_SIZE);
       
       if (result.success) {
         if (reset) {
@@ -428,7 +428,7 @@ const UserReviewsComponent = ({ navigation }) => {
     // Regular empty state
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>You haven't posted any reviews yet.</Text>
+        <Text style={styles.emptyText}>{userId? "He haven't posted any reviews yet.": "You haven't posted any reviews yet."}</Text>
       </View>
     );
   };

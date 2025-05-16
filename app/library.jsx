@@ -1,22 +1,54 @@
 import React, { Component } from 'react';
-import { Text, View, StyleSheet, Pressable, TextInput, Animated } from 'react-native';
+import { Text, View, StyleSheet, Pressable, TextInput, Animated, ActivityIndicator } from 'react-native';
 import AllReleasesList from '../components/LibraryReleaseList';
 import Icon from '../assets/icons';
-import { hp} from '../helpers/common';
+import { hp } from '../helpers/common';
 import ScreenWrapper from '../components/ScreenWrapper';
-
+import { NetworkUtils } from '../utils/network';
 export class Library extends Component {
   constructor(props) {
     super(props);
     this.state = {
       isSearchVisible: false,
       searchQuery: '',
-      searchWidth: new Animated.Value(0)
+      searchWidth: new Animated.Value(0),
+      isSearchEnabled: true,
+      checkingNetwork: true
     };
   }
 
+  componentDidMount() {
+    this.checkSearchAvailability();
+  }
+
+  checkSearchAvailability = async () => {
+    this.setState({ checkingNetwork: true });
+    const isAvailable = await NetworkUtils.isConnected();
+    this.setState({ 
+      isSearchEnabled: isAvailable,
+      checkingNetwork: false
+    });
+    
+    // Set up network listener for search availability
+    this.unsubscribeNetwork = NetworkUtils.initNetworkListener((connected) => {
+      this.setState({ isSearchEnabled: connected });
+    });
+  }
+
+  componentWillUnmount() {
+    if (this.unsubscribeNetwork) {
+      this.unsubscribeNetwork();
+    }
+  }
+
   toggleSearch = () => {
-    const { isSearchVisible } = this.state;
+    const { isSearchVisible, isSearchEnabled } = this.state;
+    
+    // If search is disabled due to offline status, show alert
+    if (!isSearchVisible && !isSearchEnabled) {
+      Alert.alert('Offline', 'Search is only available when online');
+      return;
+    }
     
     if (isSearchVisible) {
       // Close search bar
@@ -49,7 +81,7 @@ export class Library extends Component {
   };
 
   render() {
-    const { isSearchVisible, searchQuery, searchWidth } = this.state;
+    const { isSearchVisible, searchQuery, searchWidth, isSearchEnabled, checkingNetwork } = this.state;
     
     const searchBarWidth = searchWidth.interpolate({
       inputRange: [0, 1],
@@ -58,50 +90,61 @@ export class Library extends Component {
 
     return (
       <ScreenWrapper bg="#121212">
-      <View style={styles.container}>
-        <View style={styles.top}>
-          {!isSearchVisible && (
-            <Text style={styles.header}>Library</Text>
-          )}
-          
-          <View style={styles.searchContainer}>
-            {isSearchVisible && (
-              <Animated.View style={[styles.searchBar, { width: searchBarWidth }]}>
-                <TextInput
-                  ref={(ref) => (this.searchInput = ref)}
-                  style={styles.searchInput}
-                  placeholder="Search library..."
-                  placeholderTextColor="#999"
-                  value={searchQuery}
-                  onChangeText={this.handleSearchChange}
-                  autoCapitalize="none"
-                />
-                {searchQuery !== '' && (
-                  <Pressable style={styles.clearButton} onPress={() => this.handleSearchChange('')}>
-                    <Icon name="close" size={hp(2)} color="white" />
-                  </Pressable>
-                )}
-              </Animated.View>
+        <View style={styles.container}>
+          <View style={styles.top}>
+            {!isSearchVisible && (
+              <Text style={styles.header}>Library</Text>
             )}
-            <Pressable 
-              style={[styles.searchButton, isSearchVisible && styles.searchButtonActive]} 
-              onPress={this.toggleSearch}
-            >
-              <Icon 
-                name={isSearchVisible ? "search" : "search"} 
-                size={hp(2.5)} 
-                color="white" 
-              />
-            </Pressable>
+            
+            <View style={styles.searchContainer}>
+              {isSearchVisible && (
+                <Animated.View style={[styles.searchBar, { width: searchBarWidth }]}>
+                  <TextInput
+                    ref={(ref) => (this.searchInput = ref)}
+                    style={styles.searchInput}
+                    placeholder="Search library..."
+                    placeholderTextColor="#999"
+                    value={searchQuery}
+                    onChangeText={this.handleSearchChange}
+                    autoCapitalize="none"
+                  />
+                  {searchQuery !== '' && (
+                    <Pressable style={styles.clearButton} onPress={() => this.handleSearchChange('')}>
+                      <Icon name="close" size={hp(2)} color="white" />
+                    </Pressable>
+                  )}
+                </Animated.View>
+              )}
+              
+              {checkingNetwork ? (
+                <ActivityIndicator size="small" color="#FFFFFF" style={styles.searchButton} />
+              ) : (
+                <Pressable 
+                  style={[
+                    styles.searchButton, 
+                    isSearchVisible && styles.searchButtonActive,
+                    !isSearchEnabled && styles.searchButtonDisabled
+                  ]} 
+                  onPress={this.toggleSearch}
+                >
+                  <Icon 
+                    name="search" 
+                    size={hp(2.5)} 
+                    color={isSearchEnabled ? "white" : "#888"} 
+                  />
+                </Pressable>
+              )}
+            </View>
           </View>
+          
+          <AllReleasesList searchQuery={searchQuery} />
         </View>
-        
-        <AllReleasesList searchQuery={searchQuery} />
-      </View>
       </ScreenWrapper>
     );
   }
 }
+
+export default Library;
 
 const styles = StyleSheet.create({
   container: {
@@ -156,7 +199,9 @@ const styles = StyleSheet.create({
   },
   clearButton: {
     padding: 5,
+  },
+  searchButtonDisabled: {
+    opacity: 0.5,
   }
 });
 
-export default Library;

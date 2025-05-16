@@ -428,7 +428,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.xxl * 0.2,
     borderCurve: 'continuous', 
     paddingVertical: 12,
-    backgroundColor: '#1A1A1A',
+    backgroundColor: '#121212',
     borderWidth: 1,
     borderColor: '#333333',
     overflow: 'hidden',

@@ -223,6 +223,14 @@ AdMob ad unit ID
 
 ca-app-pub-7806969239829181/7694546782
 
+NATIVE ADD :-
+
+ca-app-pub-7806969239829181~9318981034
+
+add unit id :-
+
+ca-app-pub-7806969239829181/3313619507
+
 which helps in building the apk with keystore :-
 
 npx expo install expo-dev-client
@@ -536,10 +544,54 @@ plotwistapi-access@emerald-spring-458903-f6.iam.gserviceaccount.com
 
 
 
+native advanced add :-
+
+NATIVE ADD :-
+
+ca-app-pub-7806969239829181~9318981034
+
+add unit id :-
+
+ca-app-pub-7806969239829181/3313619507
 
 
 
 
 
+// below is the eas json file to generate abb file
+
+
+{
+  "cli": {
+    "version": ">= 16.3.3",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "android": {
+        "buildType": "app-bundle"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "android": {}
+    }
+  }
+}
 
 

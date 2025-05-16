@@ -499,6 +499,39 @@ export const fetchPosts = async (limit=10,userId) => {
             }
           };
 
+          export const searchTwists = async (query, limit = 10) => {
+            try {
+              if (!query || query.trim() === '') {
+                return { success: true, data: [] };
+              }
+          
+              const searchTerm = `%${query.toLowerCase()}%`;
+          
+              const { data, error } = await supabase
+                .from('twists')
+                .select(`
+                  *,
+                  user: users (id, name, image),
+                  twistLikes(*),
+                  twistUnlikes(*),
+                  tcomments(count)
+                `)
+                .or(`body.ilike.${searchTerm}`)
+                .order('created_at', { ascending: false })
+                .limit(limit);
+          
+              if (error) {
+                console.error('Search error:', error);
+                return { success: false, msg: 'Failed to search twists' };
+              }
+          
+              return { success: true, data };
+            } catch (error) {
+              console.error('Exception in searchTwists:', error);
+              return { success: false, msg: 'Could not search twists due to an exception' };
+            }
+          };
+
 
                 
             
