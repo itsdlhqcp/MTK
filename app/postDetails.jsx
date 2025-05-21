@@ -15,9 +15,11 @@ import { supabase } from '../lib/supabase'
 import { createNotifications } from '../services/notificationService'
 import ProfilePopup from '../components/profilePopup'
 import ScreenWrapper from '../components/ScreenWrapper'
+import { useToast } from '../contexts/ToastContext'
 
 const PostDetails = () => {
     const [selectedUser, setSelectedUser] = useState(null);
+    const { showToast } = useToast();
     const [isProfilePopupVisible, setIsProfilePopupVisible] = useState(false);
     const { postId, commentId } = useLocalSearchParams()
     const { user } = useAuth()
@@ -173,6 +175,7 @@ const PostDetails = () => {
                         let res = await removePost(post.id);
                         if (res.success) {
                             router.back();
+                            showToast('error', 'Post deleted!!');
                         } else {
                             Alert.alert('Error', res.msg || 'Something went wrong while deleting the post');
                         }
@@ -231,7 +234,7 @@ const PostDetails = () => {
                 contentContainerStyle={styles.list}
             >
               
-                {/* <PostCard
+                <PostCard
                     item={{...post, comments: [{count: post?.comments?.length}]}}
                     currentUser={user}
                     router={router}
@@ -239,7 +242,7 @@ const PostDetails = () => {
                     showMoreIcon={true}
                     showDelete={onDeletePost}
                     onEdit={onEditPost}
-                /> */}
+                />
 
                 {/* Using our new CommentSection component */}
                 <CommentsSection 

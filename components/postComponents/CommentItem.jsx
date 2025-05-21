@@ -1,4 +1,4 @@
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import theme from '../../constants/theme'
 import { hp } from '../../helpers/common'
@@ -8,6 +8,7 @@ import moment from 'moment'
 import { userService } from '../../services/helperService'
 import { createCommentLike, createCommentReplylike, createCommentUnlike, removeCommentLike, removeCommentReplyunlike, removeCommentUnlike } from '../../services/postService'
 import { useAuth } from '../../contexts/AuthContext'
+import CustomAlert from '../CustomAlert'
 
 const CommentItem = ({
   item, 
@@ -20,19 +21,18 @@ const CommentItem = ({
 }) => {
   const createdAt = moment(item?.created_at).format('MMM D');
   const {user} = useAuth();
+  
+  // States for custom alerts
+  const [deleteAlertVisible, setDeleteAlertVisible] = useState(false);
+  const [errorAlertVisible, setErrorAlertVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleDelete = () => {
-    Alert.alert('Confirm', 'Are you sure you want to delete this comment?', [
-          {
-            text: 'Cancel',
-            style: 'cancel'
-          },
-          {
-            text: 'Delete',
-            style: 'destructive',
-            onPress: ()=> onDelete(item)
-          }
-        ]);
+    setDeleteAlertVisible(true);
+  }
+
+  const performDelete = () => {
+    onDelete(item);
   }
 
   // Function to handle username press
@@ -72,8 +72,9 @@ const CommentItem = ({
                   if (userData) {
                     onShowProfile && onShowProfile(userData);
                   } else {
-                    // Fallback to just the name if user data not found
-                    Alert.alert('Error', 'User under this username not exists');
+                    // Show error with custom alert instead of standard Alert
+                    setErrorMessage('User under this username not exists');
+                    setErrorAlertVisible(true);
                   }
                 }}
               >
@@ -100,7 +101,8 @@ const CommentItem = ({
       setCmtlikes(updatedCmtLikes);
       const res = await removeCommentLike(item?.id, user?.id);
       if (!res.success) {
-        Alert.alert('Error', res.msg || 'Something went wrong');
+        setErrorMessage(res.msg || 'Something went wrong');
+        setErrorAlertVisible(true);
       }
     } else {
       let data = {
@@ -116,7 +118,8 @@ const CommentItem = ({
   
       const res = await createCommentLike(data);
       if (!res.success) {
-        Alert.alert('Error', res.msg || 'Something went wrong');
+        setErrorMessage(res.msg || 'Something went wrong');
+        setErrorAlertVisible(true);
       }
     }
   };
@@ -137,7 +140,8 @@ const CommentItem = ({
       setCmtunlikes(updatedCmtUnlikes);
       const res = await removeCommentUnlike(item?.id, user?.id);
       if (!res.success) {
-        Alert.alert('Error', res.msg || 'Something went wrong');
+        setErrorMessage(res.msg || 'Something went wrong');
+        setErrorAlertVisible(true);
       }
     } else {
       let data = {
@@ -153,7 +157,8 @@ const CommentItem = ({
   
       const res = await createCommentUnlike(data);
       if (!res.success) {
-        Alert.alert('Error', res.msg || 'Something went wrong');
+        setErrorMessage(res.msg || 'Something went wrong');
+        setErrorAlertVisible(true);
       }
     }
   };
@@ -174,7 +179,8 @@ const CommentItem = ({
       setCmtreplylikes([...updatedCmtReplylikes]);
       const res = await removeCommentReplyunlike(item?.id, user?.id);
       if(!res.success){
-        Alert.alert('Error', res.msg || 'Something went wrong');
+        setErrorMessage(res.msg || 'Something went wrong');
+        setErrorAlertVisible(true);
       }
     } else {
       let data = {
@@ -184,7 +190,8 @@ const CommentItem = ({
       setCmtreplylikes([...cmtreplylikes, data]);
       const res = await createCommentReplylike(data);
       if(!res.success){
-        Alert.alert('Error', res.msg || 'Something went wrong');
+        setErrorMessage(res.msg || 'Something went wrong');
+        setErrorAlertVisible(true);
       }
     }
   }
@@ -196,6 +203,30 @@ const CommentItem = ({
 
   return (
     <View style={styles.container}>
+      {/* Custom Alerts */}
+      <CustomAlert
+        visible={deleteAlertVisible}
+        title="Confirm"
+        message="Are you sure you want to delete this comment?"
+        onCancel={() => setDeleteAlertVisible(false)}
+        onConfirm={() => {
+          setDeleteAlertVisible(false);
+          performDelete();
+        }}
+        cancelText="Cancel"
+        confirmText="Delete"
+      />
+
+      <CustomAlert
+        visible={errorAlertVisible}
+        title="Error"
+        message={errorMessage}
+        onCancel={() => setErrorAlertVisible(false)}
+        onConfirm={() => setErrorAlertVisible(false)}
+        cancelText="OK"
+        confirmText="OK"
+      />
+
       <TouchableOpacity onPress={handleUsernamePress}>
         <Avatar
           uri={item?.user?.image}

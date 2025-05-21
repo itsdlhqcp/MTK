@@ -1,4 +1,4 @@
-import { View, StyleSheet, Text, Pressable, TouchableOpacity, ScrollView } from 'react-native'
+import { View, StyleSheet, Text, Pressable, TouchableOpacity, ScrollView, Linking } from 'react-native'
 import React, { useState } from 'react'
 import { StatusBar } from 'expo-status-bar'
 import BackButton from '../components/BackButton'
@@ -43,6 +43,11 @@ const SignUp = () => {
     gradientMiddle: '#141414', // Very dark gray/near black
     gradientEnd: '#8B0000', // Dark red shade
     lightText: '#e0e0e0',
+  };
+
+  // Privacy policy link handler
+  const openPrivacyPolicy = () => {
+    Linking.openURL('https://doc-hosting.flycricket.io/plottwist-privacy-policy/f92ff1b6-e29c-4dab-b265-b1ce7f497179/privacy');
   };
 
   // Validation functions
@@ -362,7 +367,10 @@ const SignUp = () => {
                 By signing up, you agree to our 
                 <Text style={{color: colors.blue, fontWeight: theme.fonts.semibold}}> Terms of Service </Text> 
                 and 
-                <Text style={{color: colors.blue, fontWeight: theme.fonts.semibold}}> Privacy Policy</Text>
+                <Text 
+                  style={{color: colors.blue, fontWeight: theme.fonts.semibold}}
+                  onPress={openPrivacyPolicy}
+                > Privacy Policy</Text>
               </Text>
             </View>
             

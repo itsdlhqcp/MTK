@@ -71,16 +71,6 @@ const PosterReview = React.forwardRef(({ item, avgRating }, ref) => {
                         {item?.peoplesReview?.length || 0} Reviews
                     </Text>
                     
-                    {/* Share button - only enabled when rating is available */}
-                    {/* {avgRating?.average > 0 && (
-                        <TouchableOpacity 
-                            style={styles.shareButton} 
-                            onPress={handleShare}
-                            disabled={!avgRating?.average}
-                        >
-                            <Text style={styles.shareButtonText}>Share</Text>
-                        </TouchableOpacity>
-                    )} */}
                 </View>
             </View>
             

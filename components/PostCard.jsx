@@ -61,7 +61,7 @@ const PostCard = ({
     if (videoRef.current) {
       if (isVisible) {
         videoRef.current.playAsync();
-      } else {
+      }else {
         videoRef.current.pauseAsync();
       }
     }
@@ -318,7 +318,6 @@ const PostCard = ({
 }
 
 export default PostCard
-
 
 const styles = StyleSheet.create({
   container:{

@@ -8,7 +8,6 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Alert,
 } from 'react-native';
 import ScreenWrapper from '../components/ScreenWrapper';
 import { useAuth } from '../contexts/AuthContext';
@@ -23,6 +22,7 @@ import { updateUser } from '../services/userServices';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import PhoneVerification from '../components/MobileVerification';
+import { useToast } from '../contexts/ToastContext';
 
 // Pre-defined tags that users can select from
 const PREDEFINED_TAGS = [
@@ -39,6 +39,7 @@ const TagInput = ({ tags = [], setTags }) => {
     const inputRef = useRef();
     const MAX_TAGS = 2;
     const MAX_TAG_LENGTH = 15; // Increased length to accommodate predefined tags
+    
   
     const handleAddTag = () => {
         setError('');
@@ -190,6 +191,7 @@ const EditProfile = () => {
     const { user: currentUser, updateUserContext } = useAuth();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const { showToast } = useToast();
     const [user, setUser] = useState({
       name: '',
       phoneNumber: '',
@@ -197,6 +199,7 @@ const EditProfile = () => {
       image: '',
       bio: '',
       tags: [],
+      orgname: '', 
     });
     
     // Form validation state
@@ -206,6 +209,7 @@ const EditProfile = () => {
       bio: '',
       image: '',
       tags: '',
+      orgname: '', // Added validation field for orgname
     });
 
     useEffect(() => {
@@ -230,6 +234,7 @@ const EditProfile = () => {
                 image: currentUser.image || null,
                 bio: currentUser.bio || '',
                 tags: userTags, // Set the parsed tags
+                orgname: currentUser.orgname || 'your name', // Get orgname from currentUser or default
             });
         }
     }, [currentUser]);
@@ -242,6 +247,7 @@ const EditProfile = () => {
         bio: '',
         image: '',
         tags: '',
+        orgname: '', // Added validation for orgname
       };
 
       // Name validation
@@ -280,6 +286,12 @@ const EditProfile = () => {
         isValid = false;
       }
 
+      // Orgname validation
+      if (!user.orgname.trim()) {
+        newErrors.orgname = 'Organization name is required';
+        isValid = false;
+      }
+
       setErrors(newErrors);
       return isValid;
     };
@@ -295,20 +307,20 @@ const EditProfile = () => {
           
           if (!result.canceled) {
               setUser({...user, image: result.assets[0]});
-              // Clear image error if it exists
+              // Clear image error if it exists  showToast
               if (errors.image) {
                 setErrors({...errors, image: ''});
               }
           }
         } catch (error) {
-          Alert.alert('Error', 'Failed to pick image');
+          showToast('error', 'Failed to pick image');
         }
     };
       
     const onSubmit = async () => {
         // Validate all fields
         if (!validateForm()) {
-          Alert.alert('Validation Error', 'Please fix the errors before submitting');
+          showToast('warning', 'Please validate before submitting');
           return;
         }
         
@@ -320,7 +332,8 @@ const EditProfile = () => {
             address: user.address,
             bio: user.bio,
             tags: user.tags,
-            image: user.image
+            image: user.image,
+            orgname: user.orgname, // Add orgname to the data being updated
           };
       
           if (typeof user.image === 'object') {
@@ -334,17 +347,17 @@ const EditProfile = () => {
           }
       
           const res = await updateUser(currentUser?.id, updatedUserData);
-          
           if (res) {
             updateUserContext({
               ...currentUser,
               ...updatedUserData
             });
-            router.back();
-            Alert.alert('Success', 'Profile updated successfully');
+            router.back(); // here the router getting into the profile screeen
+            showToast('success', 'Profile updated successfully. Changes will appear shortly after data validation!!');
           }
         } catch (error) {
-          Alert.alert('Error', error.message || 'Failed to update profile');
+          showToast('error',  error.message || 'Failed to update profile');
+
         } finally {
           setLoading(false);
         }
@@ -378,7 +391,7 @@ const EditProfile = () => {
               <View style={styles.avatarContainer}>
                 <Image source={imageSource} style={styles.avatar} />
                 <Pressable style={styles.cameraIcon} onPress={onPickImage}>
-                  <Icon name="camera" strokeWidth={2.5} size={hp(3)} color={theme.colors.text} />
+                  <Icon name="camera" strokeWidth={2.5} size={hp(2.5)} color={theme.colors.text} />
                 </Pressable>
               </View>
               {errors.image ? (
@@ -389,13 +402,26 @@ const EditProfile = () => {
               </Text>
               <Input
                 icon={<Icon name="user" color="#fff" />}
-                placeholder="Enter your name"
+                placeholder="Enter username"
                 value={user.name}
                 onChangeText={(value) => handleInputChange('name', value)}
                 inputStyle={errors.name ? styles.inputError : null}
+                editable={false}  // Disable editing for now
               />
               {errors.name ? (
                 <Text style={styles.errorText}>{errors.name}</Text>
+              ) : null}
+              
+              {/* Added Organization Name Field */}
+              <Input
+                icon={<Icon name="name" color="#fff" />}
+                placeholder="Enter your name"
+                value={user.orgname}
+                onChangeText={(value) => handleInputChange('orgname', value)}
+                inputStyle={errors.orgname ? styles.inputError : null}
+              />
+              {errors.orgname ? (
+                <Text style={styles.errorText}>{errors.orgname}</Text>
               ) : null}
               
               {/* <PhoneVerification /> */}
@@ -493,7 +519,7 @@ const styles = StyleSheet.create({
     height: hp(15),
     alignItems: 'flex-start',
     paddingVertical: 15,
-    backgroundColor: '#1E1E1E', // Darker input background
+   // backgroundColor: '#1E1E1E', // Darker input background
     borderColor: '#444',
     borderWidth: 0.4,
     borderRadius: theme.radius.xxl,
@@ -516,7 +542,7 @@ const styles = StyleSheet.create({
     borderColor: '#444', // Darker border
     borderRadius: theme.radius.sm,
     padding: 8,
-    backgroundColor: '#1E1E1E', // Darker background
+   // backgroundColor: '#1E1E1E', // Darker background
   },
   tag: {
     flexDirection: 'row',

@@ -268,7 +268,7 @@ const ReleaseCardInfo = ({
                 {/* Content Overlay */}
                 <View style={styles.overlay}>
                     {/* Rating Stars - Top Left - Now using avgRating */}
-                    {show ? (
+                    {show && avgRating?.average ? (
                         renderRating()
                         ) : (
                             <Text style={styles.statusTextx}>
@@ -306,12 +306,12 @@ const ReleaseCardInfo = ({
                     <Text style={styles.statusText}>
                     Status: {
                         waitingForDigital
-                        ? 'Waiting for Digital Release'
+                        ? 'Coming Soon - Digital'
                         : show
                             ? item?.sconnectedId
                             ? 'Now Streaming'
                             : 'In Cinemas'
-                            : 'Coming Soon In Cinemas'
+                            : 'Coming Soon - Theatre'
                     }
                     </Text>
                         

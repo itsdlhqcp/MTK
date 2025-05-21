@@ -595,3 +595,14 @@ ca-app-pub-7806969239829181/3313619507
 }
 
 
+
+// how to deploy working change to expo server
+
+copy 14 files from the feb-15 folder
+remove those 14 from xxxx folder 
+then run
+eas build --platform android --profile development
+
+additionally :- 
+
+add banner at review release list -  review digital list - relese info - stream info

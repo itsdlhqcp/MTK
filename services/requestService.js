@@ -17,7 +17,7 @@ export const friendRequestService = {
       if (existingRequest) {
         return { 
           success: false, 
-          message: 'A request already exists between these users' 
+          message: 'You Already placed a friend request' 
         };
       }
       

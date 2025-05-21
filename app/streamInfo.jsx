@@ -5,9 +5,8 @@ import { hp, wp } from '../helpers/common';
 import theme from '../constants/theme';
 import Loading from "../components/Loading";
 import { fetchAverageRating, fetchPeoplesReleaseDetails } from "../services/ottService";
-import moment from 'moment/moment';
-import ReleaseCardInfo from "../components/releaseCardInfo";
 import StreamCardInfo from "../components/streamCardInfo";
+import { useToast } from "../contexts/ToastContext";
 // import { BannerAd, BannerAdSize, MobileAds, TestIds } from 'react-native-google-mobile-ads';
 
 const ReleaseInfo = () => {
@@ -15,6 +14,7 @@ const ReleaseInfo = () => {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [release, setRelease] = useState(null);
+    const { showToast } = useToast();
     // const [adLoaded, setAdLoaded] = useState(false);
     // const [adsInitialized, setAdsInitialized] = useState(false);
     // const [adFailedToLoad, setAdFailedToLoad] = useState(false);
@@ -78,7 +78,7 @@ const ReleaseInfo = () => {
             
                     setRelease(releaseWithRating);
                 } else if (isMounted) {
-                    Alert.alert('Error', res.msg || 'Failed to fetch release details');
+                    showToast('success', 'Failed to fetch release details!! - Network Problem');
                 }
             } catch (error) {
                 console.error('Error fetching release details:', error);
@@ -231,5 +231,7 @@ const styles = StyleSheet.create({
         marginTop: 4,
         opacity: 0.7,
         color: theme.colors.text || '#FFFFFF',
-    }
+    },
+    
+
 });

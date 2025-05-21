@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, Text, Alert, StatusBar as RNStatusBar, TouchableOpacity } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, StyleSheet, Text, TouchableOpacity, StatusBar as RNStatusBar, Modal, Animated, Pressable } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import ScreenWrapper from '@/components/ScreenWrapper';
 import { StatusBar } from 'expo-status-bar';
@@ -11,14 +11,73 @@ import Icon from '@/assets/icons';
 import Input from "@/components/Input";
 import Button from '@/components/Button';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useToast } from '../../contexts/ToastContext';
+
+// Custom Alert Component with Dark Background
+const CustomAlert = ({ visible, title, message, onCancel, onConfirm, cancelText, confirmText }) => {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  React.useEffect(() => {
+    if (visible) {
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      fadeAnim.setValue(0);
+    }
+  }, [visible, fadeAnim]);
+
+  if (!visible) return null;
+
+  return (
+    <Modal
+      transparent={true}
+      visible={visible}
+      animationType="fade"
+      onRequestClose={onCancel}
+    >
+      <View style={styles.modalOverlay}>
+        <Animated.View 
+          style={[
+            styles.modalContent,
+            { opacity: fadeAnim }
+          ]}
+        >
+          <Text style={styles.alertTitle}>{title}</Text>
+          <Text style={styles.alertMessage}>{message}</Text>
+          <View style={styles.alertButtonsContainer}>
+            {onCancel && (
+              <Pressable
+                style={[styles.alertButton, styles.alertCancelButton]}
+                onPress={onCancel}
+              >
+                <Text style={styles.alertCancelText}>{cancelText || 'Cancel'}</Text>
+              </Pressable>
+            )}
+            <Pressable
+              style={[styles.alertButton, styles.alertConfirmButton]}
+              onPress={onConfirm}
+            >
+              <Text style={styles.alertConfirmText}>{confirmText || 'Confirm'}</Text>
+            </Pressable>
+          </View>
+        </Animated.View>
+      </View>
+    </Modal>
+  );
+};
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState('');
   const { requestPasswordReset, loading } = useAuth();
+  const { showToast } = useToast();
   const router = useRouter();
   const [errors, setErrors] = useState({
     email: ""
   });
+  const [alertVisible, setAlertVisible] = useState(false);
 
   // Colors matching the login page
   const colors = {
@@ -62,19 +121,16 @@ export default function ForgotPasswordScreen() {
       const { error, success } = await requestPasswordReset(email.trim());
 
       if (error) {
-        Alert.alert('Error', error.message);
+        showToast('error', error.message);
         return;
       }
 
       if (success) {
-        Alert.alert(
-          'Check Your Email',
-          'If an account exists with this email, you will receive passwordless login instructions.',
-          [{ text: 'OK', onPress: () => router.back() }]
-        );
+        // Show custom alert instead of default Alert
+        setAlertVisible(true);
       }
     } catch (error) {
-      Alert.alert('Error', error.message);
+      showToast('error', error.message);
     }
   };
 
@@ -175,6 +231,18 @@ export default function ForgotPasswordScreen() {
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Custom Alert */}
+      <CustomAlert
+        visible={alertVisible}
+        title="Check Your Email"
+        message="If an account exists with this email, you will receive passwordless login instructions."
+        onConfirm={() => {
+          setAlertVisible(false);
+          router.back();
+        }}
+        confirmText="OK"
+      />
     </View>
   );
 }
@@ -256,5 +324,63 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 0, 0, 0.5)',
     textShadowOffset: { width: 0.5, height: 0.5 },
     textShadowRadius: 1,
-  }
+  },
+  // Custom Alert Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: '80%',
+    backgroundColor: '#121212', // Dark background
+    borderRadius: 8,
+    padding: 20,
+    alignItems: 'center',
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: '#262626',
+  },
+  alertTitle: {
+    fontSize: hp(2.5),
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  alertMessage: {
+    fontSize: hp(2),
+    color: '#8E8E8E',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  alertButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  alertButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 4,
+    alignItems: 'center',
+    marginHorizontal: 5,
+  },
+  alertCancelButton: {
+    backgroundColor: '#262626',
+  },
+  alertConfirmButton: {
+    backgroundColor: '#E50914', // Using the app's red color for consistency
+  },
+  alertCancelText: {
+    color: '#FFFFFF',
+    fontWeight: '500',
+    fontSize: hp(1.8),
+  },
+  alertConfirmText: {
+    color: '#FFFFFF',
+    fontWeight: '500',
+    fontSize: hp(1.8),
+  },
 });

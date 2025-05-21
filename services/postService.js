@@ -1,5 +1,6 @@
 import { uploadProfileImage } from "./imageService";
 import { supabase } from "../lib/supabase";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const createOrUpdatePost = async (post) => {
   try {
@@ -26,44 +27,181 @@ export const createOrUpdatePost = async (post) => {
   }
 };
 
-export const fetchPosts = async (limit = 10, userId) => {
+// Modified fetchPosts function to sort unwatched posts first
+export const fetchPosts = async (limit=60 , userId, showOnlyUnwatched = false) => {
   try {
+    let query = supabase
+      .from('posts')
+      .select(`
+        *,
+        user: users (id, name, image),
+        postLikes(*),
+        comments(count),
+        post_views!left (id, viewed_at)
+      `)
+      .order('created_at', { ascending: false });
+
+    // Filter by specific user if userId provided
     if (userId) {
-      const { data, error } = await supabase
-        .from('posts')
-        .select(`
-          *,
-          user: users (id, name, image),
-          postLikes(*),
-          comments(count)
-        `)
-        .order('created_at', { ascending: false })
-        .eq('userId', userId)
-        .limit(limit);
-      
-      if (error) {
-        return { success: false, msg: 'Could not fetch the posts' };
-      }
-      return { success: true, data };
-    } else {
-      const { data, error } = await supabase
-        .from('posts')
-        .select(`
-          *,
-          user: users (id, name, image),
-          postLikes(*),
-          comments(count)
-        `)
-        .order('created_at', { ascending: false })
-        .limit(limit);
-      
-      if (error) {
-        return { success: false, msg: 'Could not fetch the posts' };
-      }
-      return { success: true, data };
+      query = query.eq('userId', userId);
     }
+
+    // Filter only unwatched posts if requested
+    if (showOnlyUnwatched && userId) {
+      query = query.is('post_views.id', null);
+    }
+
+    // Get the data
+    const { data, error } = await query.limit(limit);
+    
+    if (error) {
+      return { success: false, msg: 'Could not fetch the posts' };
+    }
+
+    // Add isWatched property to each post
+    const postsWithWatchStatus = data.map(post => ({
+      ...post,
+      isWatched: post.post_views && post.post_views.length > 0
+    }));
+
+    // Sort posts with unwatched first, then watched (both groups still sorted by created_at desc)
+    const sortedPosts = postsWithWatchStatus.sort((a, b) => {
+      // If watch status is different, unwatched comes first
+      if (a.isWatched !== b.isWatched) {
+        return a.isWatched ? 1 : -1;
+      }
+      
+      // If watch status is the same, sort by created_at (newest first)
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
+
+    return { success: true, data: sortedPosts };
   } catch (error) {
+    console.error('Error fetching posts:', error);
     return { success: false, msg: 'Could not fetch the posts due to an exception' };
+  }
+};
+
+// Mark a post as viewed
+export const markPostAsViewed = async (postId, userId) => {
+  try {
+    const { error } = await supabase
+      .from('post_views')
+      .upsert({
+        user_id: userId,
+        post_id: postId,
+        viewed_at: new Date().toISOString()
+      }, {
+        onConflict: 'user_id,post_id'
+      });
+
+    if (error) {
+      console.error('Error marking post as viewed:', error);
+      return { success: false, msg: 'Could not mark post as viewed' };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error marking post as viewed:', error);
+    return { success: false, msg: 'Could not mark post as viewed' };
+  }
+};
+
+// Get unwatched posts count
+
+// Fixed unwatched posts count function
+export const getUnwatchedPostsCount = async (userId) => {
+  try {
+    // Validate userId input
+    if (!userId) {
+      console.log('No userId provided for getUnwatchedPostsCount');
+      return { success: false, count: 0, msg: 'No userId provided' };
+    }
+
+    console.log('Fetching unwatched count for userId:', userId);
+    
+    // First approach: Get total posts count
+    const { count: totalCount, error: totalError } = await supabase
+      .from('posts')
+      .select('*', { count: 'exact', head: true });
+      
+    if (totalError) {
+      console.error('Error getting total posts count:', totalError);
+      return { success: false, count: 0, msg: 'Failed to get total posts count' };
+    }
+    
+    // If there are no posts at all, return zero
+    if (totalCount === 0) {
+      return { success: true, count: 0 };
+    }
+    
+    // Second approach: Get viewed posts count
+    const { count: viewedCount, error: viewedError } = await supabase
+      .from('post_views')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId);
+      
+    if (viewedError) {
+      console.error('Error getting viewed posts count:', viewedError);
+      return { success: false, count: 0, msg: 'Failed to get viewed posts count' };
+    }
+    
+    // Calculate unwatched count by subtracting
+    const unwatchedCount = totalCount - viewedCount;
+    
+    return { 
+      success: true, 
+      count: unwatchedCount < 0 ? 0 : unwatchedCount,
+      totalCount,
+      viewedCount 
+    };
+  } catch (error) {
+    console.error('Exception in getUnwatchedPostsCount:', error);
+    return { success: false, count: 0, msg: 'Exception occurred' };
+  }
+};
+
+// Sync pending views when connection is restored
+export const syncPendingViews = async (userId) => {
+  try {
+    // Get pending views from storage
+    const pendingViewsStr = await AsyncStorage.getItem('pendingViews');
+    if (!pendingViewsStr) {
+      return { success: true, syncedCount: 0 };
+    }
+    
+    const pendingViews = JSON.parse(pendingViewsStr);
+    let syncedCount = 0;
+    const failedViews = [];
+    
+    // Process each pending view
+    for (const viewKey of pendingViews) {
+      // Extract postId from key (format: userId-postId)
+      const [storedUserId, postId] = viewKey.split('-');
+      
+      // Only process views for the current user
+      if (storedUserId === userId) {
+        // Mark post as viewed
+        const { success } = await markPostAsViewed(postId, userId);
+        
+        if (success) {
+          syncedCount++;
+        } else {
+          failedViews.push(viewKey);
+        }
+      } else {
+        // Keep views for other users
+        failedViews.push(viewKey);
+      }
+    }
+    
+    // Update local storage with any failed views
+    await AsyncStorage.setItem('pendingViews', JSON.stringify(failedViews));
+    
+    return { success: true, syncedCount };
+  } catch (error) {
+    console.error('Error syncing pending views:', error);
+    return { success: false, msg: 'Could not sync pending views', syncedCount: 0 };
   }
 };
 

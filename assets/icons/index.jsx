@@ -94,6 +94,17 @@ import AcctStat from "./AccountStat"
 import Community from "./Community"
 import LgOut from "./Lgout";
 import RstPass from "./RstPass";
+import Insta from "./Insta";
+import Info from "./Info";
+import Warn from "./Warning";
+import Privacy from "./Privacy";
+import Clear from "./Clear";
+import Download from "./Download";
+import Box from "./Box";
+import Star from "./Star";
+import Behind from "./Behind";
+import Name from "./Name";
+import Sadmin from "./Sadmin";
 
 const icons = {
     home: Home,
@@ -189,7 +200,18 @@ const icons = {
     acctstat: AcctStat,
     community: Community,
     lgout: LgOut,
-    rstpass: RstPass
+    rstpass: RstPass,
+    insta: Insta,
+    info: Info,
+    warn: Warn,
+    privacy: Privacy,
+    clear: Clear,
+    download: Download,
+    box: Box,
+    star: Star,
+    behind: Behind,
+    name: Name,
+    saddlt: Sadmin
 
 }
 

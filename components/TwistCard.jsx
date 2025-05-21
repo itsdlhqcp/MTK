@@ -1,4 +1,4 @@
-import { Text, View, StyleSheet, TouchableOpacity, Image, AppState, Dimensions, Modal } from 'react-native';
+import { Text, View, StyleSheet, TouchableOpacity, Image, AppState, Dimensions, Modal, Alert } from 'react-native';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import theme from '../constants/theme';
 import { wp, hp } from '../helpers/common';
@@ -15,6 +15,8 @@ import { useFocusEffect } from '@react-navigation/native';
 import AspectRatioImage from './AspectRatioImage';
 import ReportModal from './ReportModel';
 import { adminIds } from '../constants/admin';
+import { removePost } from '../services/homeService';
+import { useToast } from '../contexts/ToastContext';
 
 const textStyle = {
   color: theme.colors.light || '#E0E0E0', 
@@ -64,6 +66,7 @@ const TwistCard = ({
   isVisible
 }) => {
   const { registerPost } = usePost();
+  const { showToast } = useToast();
   const [youtubeVideoId, setYoutubeVideoId] = useState(null);
   const [playing, setPlaying] = useState(false);
   const videoRef = useRef(null);
@@ -93,6 +96,33 @@ const TwistCard = ({
       });
     }
   };
+
+  const onDeletePost = async (item) => {
+    try {
+        Alert.alert('Confirm', 'Are you sure you want to delete this Post?', [
+            {
+                text: 'Cancel',
+                style: 'cancel'
+            },
+            {
+                text: 'Delete',
+                style: 'destructive',
+                onPress: async () => {
+                    let res = await removePost(item?.id);
+                    if (res.success) {
+                        router.back();
+                        showToast('error', 'POST DELETED!!');
+                    } else {
+                        Alert.alert('Error', res.msg || 'Something went wrong while deleting the post');
+                    }
+                }
+            }
+        ]);
+    } catch (error) {
+        console.error('Delete post error:', error);
+        Alert.alert('Error', 'An unexpected error occurred while deleting the post.');
+    }
+};
 
   const handleMorePress = () => {
     setShowDropdown(!showDropdown);
@@ -265,7 +295,7 @@ const TwistCard = ({
     );
   };
 
-  const isadmin = adminIds.includes(currentUser?.id);
+  const isadmin = adminIds.includes(currentUser?.id) || currentUser?.role === 'sadmin';
 
   return (
     <View style={[styles.container, hasShadow && shadowStyle]}>
@@ -313,6 +343,21 @@ const TwistCard = ({
                        >
                          <Icon name="edit" size={hp(2)} color={theme.colors.light || '#E0E0E0'} />
                          <Text style={styles.dropdownText}>Edit</Text>
+                       </TouchableOpacity>
+                  </>
+                )}
+
+
+                  {/* Only show the Edit option if currentUser.id === item.userId */}
+                  {isadmin && (
+                  <>
+                    <View style={styles.divider} />
+                       <TouchableOpacity 
+                         style={styles.dropdownItem} 
+                         onPress={() => onDeletePost(item)}
+                       >
+                         <Icon name="delete" size={hp(2)} color={theme.colors.rose || '#E0E0E0'} />
+                         <Text style={styles.dropdownText}>Delete</Text>
                        </TouchableOpacity>
                   </>
                 )}

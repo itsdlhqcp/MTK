@@ -12,8 +12,9 @@ import { supabase } from '../../lib/supabase';
 import { NetworkUtils } from '../../utils/network';
 import theme from '../../constants/theme';
 import Icon from '../../assets/icons';
+import { useToast } from '../../contexts/ToastContext';
 
-const ITEMS_PER_PAGE = 22;
+const ITEMS_PER_PAGE = 30;
 
 const upcoming = () => {
     const { user, setAuth } = useAuth();
@@ -33,6 +34,7 @@ const upcoming = () => {
        const [isConnected, setIsConnected] = useState(true);
        const [initialCheckDone, setInitialCheckDone] = useState(false);
        const [offlineMode, setOfflineMode] = useState(false);
+       const { showToast } = useToast();
 
        // Check network status on mount
         useEffect(() => {
@@ -168,7 +170,7 @@ const getReleases = async () => {
             
             setReleasesPage(prev => prev + 1);
         } else {
-            Alert.alert('Error', 'Failed to fetch releases');
+            showToast('success', 'Failed to fetch releases - Network Problem');
         }
     } catch (error) {
         console.error('Error fetching releases:', error);
@@ -208,7 +210,7 @@ const getOtts = async () => {
             
             setOttsPage(prev => prev + 1);
         } else {
-            Alert.alert('Error', 'Failed to fetch OTT platforms');
+            showToast('error', 'Failed to fetch OTT platforms!! - Network Problem');
         }
     } catch (error) {
         console.error('Error fetching OTT platforms:', error);

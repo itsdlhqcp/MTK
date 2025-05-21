@@ -221,7 +221,6 @@ const RatingBottomSheet = ({ visible, onClose, onSubmit, item }) => {
   const bottomSheetRef = useRef(null);
   const router = useRouter();
   const params = useLocalSearchParams();
-  console.log("value of favour favour", favour);
 
    // Use the review context
    const { activeReview, clearReviewData, updateFavoriteStatus } = useReview();

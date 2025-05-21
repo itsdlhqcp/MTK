@@ -5,6 +5,7 @@ import theme from '../../../constants/theme';
 import Icon from '@/assets/icons';
 import Avatar from '../../../components/Avatar';
 import { friendRequestService } from '../../../services/requestService';
+import { useToast } from '../../../contexts/ToastContext';
 
 // Dark theme colors
 const darkTheme = {
@@ -23,6 +24,7 @@ const darkTheme = {
 
 const RequestTab = () => {
   const [loading, setLoading] = useState(false);
+  const { showToast } = useToast();
   const [requests, setRequests] = useState({ incoming: [], outgoing: [] });
   const [activeSection, setActiveSection] = useState('incoming'); // 'incoming' or 'outgoing'
   
@@ -37,11 +39,11 @@ const RequestTab = () => {
       if (res.success) {
         setRequests(res.data);
       } else {
-        Alert.alert('Error', res.message || 'Failed to fetch requests');
+        showToast('success', 'Failed to fetch requests!! - Network Problem');
       }
     } catch (error) {
       console.error('Error fetching requests:', error);
-      Alert.alert('Error', 'Something went wrong');
+      showToast('success', 'Something went wrong');
     } finally {
       setLoading(false);
     }
@@ -51,14 +53,14 @@ const RequestTab = () => {
     try {
       const res = await friendRequestService.acceptRequest(requestId);
       if (res.success) {
-        Alert.alert('Success', 'Friend request accepted');
+        showToast('success', 'Friend request accepted');
         fetchRequests();
       } else {
-        Alert.alert('Error', res.message || 'Failed to accept request');
+        showToast('success', res.message || 'Failed to accept request');
       }
     } catch (error) {
       console.error('Error accepting request:', error);
-      Alert.alert('Error', 'Something went wrong');
+      showToast('success','Something went wrong');
     }
   };
   
@@ -66,14 +68,14 @@ const RequestTab = () => {
     try {
       const res = await friendRequestService.rejectRequest(requestId);
       if (res.success) {
-        Alert.alert('Success', 'Friend request rejected');
+        showToast('success', 'Friend request rejected');
         fetchRequests();
       } else {
-        Alert.alert('Error', res.message || 'Failed to reject request');
+        showToast('success', res.message || 'Failed to reject request');
       }
     } catch (error) {
       console.error('Error rejecting request:', error);
-      Alert.alert('Error', 'Something went wrong');
+      showToast('success', 'Something went wrong');
     }
   };
   
@@ -126,7 +128,7 @@ const RequestTab = () => {
       </View>
       <TouchableOpacity 
         style={[styles.actionButton, styles.cancelButton]}
-        onPress={() => Alert.alert('Coming Soon', 'This feature is not yet implemented')}
+        onPress={() =>showToast('success', 'This feature is not yet implemented')}
       >
         <Text style={styles.cancelButtonText}>Cancel</Text>
       </TouchableOpacity>

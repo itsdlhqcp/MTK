@@ -34,7 +34,7 @@ export const uploadProfileImage = async (folderName, isImage=true, fileUri) => {
         return {success: false, msg: 'Could not upload media'};
      }
 
-     console.log('file upload data', data);
+    //  console.log('file upload data', data);
 
      return {success: true, data: data.path};  // Fixed typo in 'success'
 

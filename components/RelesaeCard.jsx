@@ -178,7 +178,7 @@ const ReleaseCard = ({
     const titleTagsStyles = {
         div: {
              color: 'white',
-             fontSize: hp(3.7),
+             fontSize: hp(3.1),
              textAlign: 'left',
              fontWeight: '600'
         },
@@ -247,7 +247,7 @@ const ReleaseCard = ({
                         )} */}
 
 
-                       {show ? (
+                       {show && avgRating?.average ? (
                             <View style={styles.ratingSection}>
                             {renderRating()}
                         </View>
@@ -273,14 +273,19 @@ const ReleaseCard = ({
                         <View style={styles.titleDateContainer}>
                             {item?.body && (
                                 <RenderHtml
-                                    contentWidth={wp(90)}
+                                    contentWidth={wp(120)}
                                     source={{ html: item.body }}
                                     tagsStyles={titleTagsStyles}
                                 />
                             )}
-                            <Text style={styles.releaseDate}>
-                                {createdAt || 'N/A'}
-                            </Text>
+
+                    {createdAt && (
+                        <Text style={styles.releaseDate}>
+                        {createdAt || 'N/A'}
+                    </Text>
+                    )}
+
+                           
                             {/* Display End Date if available */}
                             
                                 {item?.endDate && isadmin && (

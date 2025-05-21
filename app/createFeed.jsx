@@ -201,7 +201,7 @@ const CreateFeed = () => {
 
   return (
     <ScreenWrapper bg="white">
-      <Header title={post?.id ? "Edit Feed" : "Create Feed"}
+      <Header title={post?.id ? "Edit Feed" : "Create Spotlight Feed"}
          showBackButton={true} />
       <View style={styles.container}>
         <ScrollView
@@ -325,9 +325,9 @@ const CreateFeed = () => {
               <TouchableOpacity onPress={() => onPick(true)}>
                 <Icon name="image" size={30} color={theme.colors.dark} />
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => onPick(false)}>
+              {/* <TouchableOpacity onPress={() => onPick(false)}>
                 <Icon name="video" size={37} color={theme.colors.dark} />
-              </TouchableOpacity>
+              </TouchableOpacity> */}
             </View>
           </View>
         </ScrollView>

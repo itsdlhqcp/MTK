@@ -12,6 +12,7 @@ import { fetchPosts } from '../services/postService'
 import PostCard from '../components/PostCard'
 import MLoading from '../components/MaterialLoader'
 import { useFocusEffect } from '@react-navigation/native';
+import { useToast } from '../contexts/ToastContext'
 
 // Dark mode colors
 const darkTheme = {
@@ -30,7 +31,7 @@ const darkTheme = {
   }
 }
 
-const ITEMS_PER_PAGE = 4;
+const ITEMS_PER_PAGE = 5;
 
 const Profile = () => {
   const { user, navigationGuard } = useAuth();
@@ -49,6 +50,7 @@ const Profile = () => {
   const params = useLocalSearchParams();
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileDataTimestamp, setProfileDataTimestamp] = useState(null);
+  const { showToast } = useToast();
 
   // Navigation guard to redirect if not logged in
   useFocusEffect(
@@ -137,7 +139,7 @@ const Profile = () => {
         
         setPage(prev => prev + 1);
       } else {
-        Alert.alert('Error', 'Failed to fetch posts');
+        showToast('success', 'Failed to fetch posts- Network Problem!!');
       }
     } catch (error) {
       console.error('Error fetching posts:', error);

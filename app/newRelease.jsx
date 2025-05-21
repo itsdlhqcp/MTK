@@ -231,20 +231,28 @@ const NewRelease = () => {
 
   const onSubmit = async () => {
     // Basic validation for required fields
-    if (!selectedDate && !file && !bodyRef.current && !rating) {
+    if (!file && !bodyRef.current) {
       Alert.alert('Error', 'Please provide at least release date, poster image, title, and rating');
       return;
     }
     
-    if (!rating) {
-      Alert.alert('Error', 'Please enter Rating of release!!');
-      return;
-    }
+    // if (!rating) {
+    //   Alert.alert('Error', 'Please enter Rating of release!!');
+    //   return;
+    // }
 
     // Check duration format if it's provided
     if (duration && !validateDuration(duration)) {
       return; // Stop submission if duration format is invalid
     }
+
+    const normalizeDate = (date) => {
+      if (!date) return null;
+      // Set time to noon to avoid timezone issues with date shifts
+      const normalized = new Date(date);
+      normalized.setHours(12, 0, 0, 0);
+      return normalized;
+    };
 
     let data = {
       ...(post?.id && { id: post.id }),
@@ -252,11 +260,11 @@ const NewRelease = () => {
       filel, // Added second file to submission data
       body: bodyRef.current,
       userId: user?.id,
-      rDate: selectedDate,
+      rDate: normalizeDate(selectedDate),
       defRating: rating,
       userRatImpact: userRatingImpact,
       type: tags, 
-      endDate: selectedEndate
+      endDate: normalizeDate(selectedEndate)
     }
     
     // Add film information only if provided
@@ -328,8 +336,9 @@ const NewRelease = () => {
           <RichTextEditor 
             editorRef={editorRef} 
             onChange={handleEditorChange}
+            disableCopyPaste={true}
             initialHeight={136}
-            placeholder="Enter Film Title here @author ## write film name in a line ## please don't use any text alignment for this session and use default text font size ==>> like film name = Interstellar"  />
+            placeholder="🚫No copy/paste - respect films 🎞️📽️🎥📹🚫 Enter Film Title here @author ## write film name in a line ## please don't use any text alignment for this session and use default text font size ==>> like film name = Interstellar"  />
         </View>
 
           {file && (
@@ -569,7 +578,7 @@ const NewRelease = () => {
           />
         </View>
 
-          <RatingInput
+          {/* <RatingInput
             onRatingChange={handleRatingChange}
             initialValue={post?.rating}
           />
@@ -577,7 +586,7 @@ const NewRelease = () => {
          <UserRatingImpact
             onRatingChange={handleuserRatingImpactChange}
             initialValue={post?.rating}
-          />
+          /> */}
 
         </ScrollView>
         <Button

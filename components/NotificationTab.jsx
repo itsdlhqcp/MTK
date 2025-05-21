@@ -9,14 +9,15 @@ import { useRouter } from 'expo-router';
 import Icon from '@/assets/icons';
 import NotificationItem from './NotificationItem';
 
-// Instagram-like dark theme colors
+// Enhanced Instagram-like dark theme colors
 const darkTheme = {
-  background: '#121212', // Main background
+  background: '#121212', // Main background (darker)
   cardBackground: '#1F1F1F', // Card/component background
+  itemBackground: '#262626', // Individual notification background
   textPrimary: '#FFFFFF', // Primary text
   textSecondary: '#8E8E8E', // Secondary text
   accent: '#0095F6', // Instagram blue accent
-  border: '#262626', // Subtle borders
+  border: '#363636', // Subtle borders (slightly lighter for visibility)
   error: '#ED4956', // Instagram red for errors
 };
 
@@ -85,11 +86,12 @@ const NotificationsTab = () => {
                 contentContainerStyle={styles.listStyle}
             >
                 {notifications.map(item => (
-                    <NotificationItem
-                        item={item}
-                        key={item?.id}
-                        router={router}
-                    />
+                    <View style={styles.notificationItemContainer} key={item?.id}>
+                        <NotificationItem
+                            item={item}
+                            router={router}
+                        />
+                    </View>
                 ))}
             </ScrollView>
         </View>
@@ -104,6 +106,20 @@ const styles = StyleSheet.create({
     listStyle: {
         padding: wp(4),
         paddingBottom: hp(2),
+        backgroundColor: darkTheme.background,
+    },
+    notificationItemContainer: {
+        backgroundColor: darkTheme.itemBackground,
+        borderRadius: 12,
+        marginBottom: hp(1.5),
+        padding: wp(3),
+        borderWidth: 1,
+        borderColor: darkTheme.border,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+        elevation: 2,
     },
     loadingContainer: {
         flex: 1,

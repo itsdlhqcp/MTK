@@ -52,7 +52,7 @@ const CreateFeed = () => {
   const { showToast } = useToast();
   
   // Predefined tags for the bubble selector
-  const predefinedTags = ['common', 'malayalam', 'anime', 'kdrama', 'holywod', 'hindi', 'tamil'];
+  const predefinedTags = ['Common', 'Malayalam', 'Anime', 'Kdrama', 'Hollywod', 'Tamil', 'Kannada', 'Telugu', 'Hindi', 'English', 'Korean', 'Japanese'];
 
   useEffect(() => {
     if(post && post.id && !initialContentSet){
@@ -304,7 +304,7 @@ const CreateFeed = () => {
   return (
     <ScreenWrapper bg={darkTheme.colors.background}>
       <Header 
-        title={post?.id ? "Edit Twist" : "Create Twist"}
+        title={post?.id ? "Edit Post" : "Studio"}
         showBackButton={true} 
         textColor={darkTheme.colors.text}
         backgroundColor={darkTheme.colors.background}
@@ -414,7 +414,7 @@ const CreateFeed = () => {
 
           {/* Tag Management Section */}
           <View style={[styles.tagsSection, { backgroundColor: darkTheme.colors.cardBackground, borderRadius: darkTheme.radius.md, padding: 16 }]}>
-            <Text style={[styles.tagsSectionTitle, { color: darkTheme.colors.text }]}>Add Tags ( content type - important)</Text>
+            <Text style={[styles.tagsSectionTitle, { color: darkTheme.colors.text }]}>Add Tags</Text>
             
             {/* Tag bubble selector - NEW COMPONENT */}
             <View style={styles.tagBubblesContainer}>
@@ -485,12 +485,12 @@ const CreateFeed = () => {
               <TouchableOpacity onPress={() => onPick(true)}>
                 <Icon name="image" size={30} color={darkTheme.colors.dark} />
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => onPick(false)}>
+              {/* <TouchableOpacity onPress={() => onPick(false)}>
                 <Icon name="video" size={37} color={darkTheme.colors.dark} />
               </TouchableOpacity>
               <TouchableOpacity onPress={addYoutubeLink}>
                 <Icon name="youtube" size={37} color={darkTheme.colors.dark} />
-              </TouchableOpacity>
+              </TouchableOpacity> */}
             </View>
           </View>
         </ScrollView>
@@ -664,28 +664,28 @@ const styles = StyleSheet.create({
     fontSize: hp(1.8),
     fontWeight: 'bold',
   },
-  // New styles for tag bubbles
-  tagBubblesContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginBottom: hp(1.5),
-  },
-  tagBubble: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    backgroundColor: 'transparent',
-  },
-  selectedTagBubble: {
-    backgroundColor: theme.colors.primary,
-  },
-  tagBubbleText: {
-    fontSize: hp(1.6),
-    fontWeight: '500',
-  },
-  selectedTagBubbleText: {
-    color: 'white',
-  }
+// Modified styles for smaller tag bubbles
+tagBubblesContainer: {
+  flexDirection: 'row',
+  flexWrap: 'wrap',
+  gap: 8, 
+  marginBottom: hp(1.5),
+},
+tagBubble: {
+  paddingHorizontal: 10, 
+  paddingVertical: 6,  
+  borderRadius: 16,      
+  borderWidth: 1,
+  backgroundColor: 'transparent',
+},
+selectedTagBubble: {
+  backgroundColor: theme.colors.primary,
+},
+tagBubbleText: {
+  fontSize: hp(1.3),   
+  fontWeight: '500',
+},
+selectedTagBubbleText: {
+  color: 'white',
+}
 });

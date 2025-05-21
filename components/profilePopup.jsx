@@ -6,12 +6,12 @@ import { hp, wp } from '../helpers/common';
 import Icon from '@/assets/icons';
 import { friendRequestService } from '../services/requestService';
 import { useAuth } from '../contexts/AuthContext';
-
-const { width } = Dimensions.get('window');
+import { useToast } from '../contexts/ToastContext';
 
 const ProfilePopup = ({ user, visible, onClose, router }) => {
   const { user: currentUser } = useAuth(); // Get current authenticated user
   const [friendshipStatus, setFriendshipStatus] = useState(null);
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
   
   // Check if the profile being viewed belongs to the current user
@@ -45,7 +45,8 @@ const ProfilePopup = ({ user, visible, onClose, router }) => {
       const result = await friendRequestService.sendRequest(user.id);
       
       if (result.success) {
-        Alert.alert('Success', 'Friend request sent successfully');
+        Alert.alert('Success', '');
+        showToast('success', 'Friend request sent successfully!');
         setFriendshipStatus('pending');
       } else {
         Alert.alert('Error', result.message || 'Failed to send friend request');
@@ -68,7 +69,7 @@ const ProfilePopup = ({ user, visible, onClose, router }) => {
   
   switch (friendshipStatus) {
     case 'accepted':
-      buttonText = 'I am a friend';
+      buttonText = 'Friends';
       buttonStyle = styles.friendsButton;
       buttonTextStyle = styles.friendsButtonText;
       buttonDisabled = true;
@@ -96,7 +97,7 @@ const ProfilePopup = ({ user, visible, onClose, router }) => {
       <View style={styles.overlay}>
         <View style={styles.container}>
           <TouchableOpacity style={styles.closeButton} onPress={onClose} >
-            <Icon name="close" size={hp(4)} strokeWidth={2} color={theme.colors.textDark} />
+            <Icon name="close" size={hp(4)} strokeWidth={2} color={theme.colors.red} />
           </TouchableOpacity>
 
           <View style={styles.avatarContainer}>
@@ -126,7 +127,7 @@ const ProfilePopup = ({ user, visible, onClose, router }) => {
 
             {!isCurrentUser && (
               loading ? (
-                <ActivityIndicator size="small" color={theme.colors.primary} style={styles.activityIndicator} />
+                <ActivityIndicator size="small" color={theme.colors.blue} style={styles.activityIndicator} />
               ) : (
                 <TouchableOpacity 
                   style={[styles.friendRequestButton, buttonStyle]}
@@ -151,19 +152,19 @@ export default ProfilePopup;
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: 'rgba(0,0,0,0.85)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   container: {
     width: wp(85),
-    backgroundColor: 'rgba(255,245,240,0.95)',
+    backgroundColor: 'rgb(14, 15, 16)',
     borderRadius: theme.radius.xl,
     padding: wp(5),
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255,140,0,0.3)',
-    shadowColor: '#FF8C00',
+    borderColor: 'rgba(80, 14, 14, 0.8)',
+    shadowColor: theme.colors.red,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
@@ -177,51 +178,27 @@ const styles = StyleSheet.create({
   },
   avatarContainer: {
     marginBottom: hp(2),
-    shadowColor: theme.colors.primary,
+    shadowColor: theme.colors.blue,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    borderWidth: 3,
-    borderColor: 'rgba(255,140,0,0.5)',
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
+    borderWidth: 2,
+    borderColor: theme.colors.blue,
     borderRadius: theme.radius.xxl * 2,
     padding: 2,
   },
   name: {
     fontSize: hp(2.7),
     fontWeight: '700',
-    color: theme.colors.textDark,
+    color: '#FFFFFF',
     marginBottom: hp(1),
     fontFamily: 'System',
   },
   bio: {
-    color: theme.colors.text,
+    color: '#AAAAAA',
     marginBottom: hp(2),
     textAlign: 'center',
     paddingHorizontal: wp(3),
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-    marginBottom: hp(2),
-    backgroundColor: 'rgba(255,200,160,0.2)',
-    borderRadius: theme.radius.lg,
-    paddingVertical: hp(1.5),
-    borderWidth: 1,
-    borderColor: 'rgba(255,140,0,0.2)',
-  },
-  statItem: {
-    alignItems: 'center',
-    width: wp(20),
-  },
-  statValue: {
-    fontSize: hp(2.2),
-    fontWeight: 'bold',
-    color: theme.colors.textDark,
-  },
-  statLabel: {
-    color: theme.colors.textLight,
-    fontSize: hp(1.6),
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -230,16 +207,18 @@ const styles = StyleSheet.create({
     marginTop: hp(1),
   },
   viewProfileButton: {
-    backgroundColor: 'rgba(255,160,80,0.8)',
+    backgroundColor: 'rgba(20,20,20,0.8)',
     paddingVertical: hp(1.5),
     paddingHorizontal: wp(3),
     borderRadius: theme.radius.lg,
     flex: 1,
     marginRight: wp(2),
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: theme.colors.blue,
   },
   viewProfileText: {
-    color: theme.colors.textDark,
+    color: theme.colors.blue,
     fontWeight: 'bold',
     fontSize: hp(1.8),
   },
@@ -251,30 +230,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   addButton: {
-    backgroundColor: theme.colors.primary,
+    backgroundColor: 'rgba(30,30,30,0.8)',
+    borderWidth: 1,
+    borderColor: theme.colors.red,
   },
   pendingButton: {
-    backgroundColor: 'rgba(200,200,200,0.5)',
+    backgroundColor: 'rgba(30,30,30,0.8)',
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: '#444444',
   },
   friendsButton: {
-    backgroundColor: 'rgba(100,200,100,0.3)',
+    backgroundColor: 'rgba(30,30,30,0.8)',
     borderWidth: 1,
-    borderColor: 'rgba(100,200,100,0.5)',
+    borderColor: theme.colors.blue,
   },
   friendRequestText: {
     fontWeight: 'bold',
     fontSize: hp(1.8),
   },
   addButtonText: {
-    color: theme.colors.buttonText,
+    color: theme.colors.red,
   },
   pendingButtonText: {
-    color: theme.colors.textLight,
+    color: '#888888',
   },
   friendsButtonText: {
-    color: theme.colors.text,
+    color: theme.colors.blue,
   },
   activityIndicator: {
     flex: 1,
@@ -283,9 +264,10 @@ const styles = StyleSheet.create({
   decorativeElement: {
     position: 'absolute',
     bottom: -wp(1),
-    width: wp(60),
-    height: wp(1),
-    backgroundColor: 'rgba(255,140,0,0.4)',
+    width: wp(30),
+    height: wp(0.5),
+    backgroundColor: theme.colors.red,
     borderRadius: theme.radius.full,
+    left: wp(10),
   },
 });

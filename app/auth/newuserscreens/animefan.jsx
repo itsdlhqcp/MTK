@@ -141,8 +141,7 @@ const AnimeFanPage = () => {
       if (!response.success) {
         throw new Error(response.msg);
       }
-      
-      // Navigate to the home page
+      router.dismissAll();
       router.replace('/home');
     } catch (error) {
       Alert.alert('Error', error.message);
@@ -258,7 +257,7 @@ const AnimeFanPage = () => {
           
           {showAnimeTags && (
             <Animated.View style={[styles.animeTagsSection, animeShakeStyle]}>
-              <Text style={styles.animeTagsTitle}>Select your favourite anime:</Text>
+              <Text style={styles.animeTagsTitle}>Select your favourite anime</Text>
               
               <Animated.Text 
                 style={[

@@ -1,119 +1,5 @@
-// import { View, StyleSheet, Text, Alert } from 'react-native'
-// import React, { useState, useEffect } from 'react'
-// import { useLocalSearchParams } from 'expo-router'
-// import ScreenWrapper from '@/components/ScreenWrapper'
-// import { StatusBar } from 'expo-status-bar'
-// import { hp, wp } from '@/helpers/common'
-// import theme from '@/constants/theme'
-// import Icon from '@/assets/icons'
-// import Input from "@/components/Input"
-// import Button from '@/components/Button'
-// import { supabase } from '@/lib/supabase'
-
-// export default function ResetPassword() {
-//   const [password, setPassword] = useState('')
-//   const [confirmPassword, setConfirmPassword] = useState('')
-//   const [loading, setLoading] = useState(false)
-//   const { token } = useLocalSearchParams()
-
-//   const handleResetPassword = async () => {
-//     if (!password || !confirmPassword) {
-//       Alert.alert('Error', 'Please fill in all fields')
-//       return
-//     }
-
-//     if (password !== confirmPassword) {
-//       Alert.alert('Error', 'Passwords do not match')
-//       return
-//     }
-
-//     if (password.length < 6) {
-//       Alert.alert('Error', 'Password must be at least 6 characters')
-//       return
-//     }
-
-//     setLoading(true)
-//     try {
-//       const { error } = await supabase.auth.updateUser({
-//         password: password
-//       })
-
-//       if (error) throw error
-
-//       Alert.alert(
-//         'Success',
-//         'Your password has been reset successfully',
-//         [{ text: 'OK', onPress: () => router.replace('/auth/login') }]
-//       )
-//     } catch (error) {
-//       Alert.alert('Error', error.message)
-//     } finally {
-//       setLoading(false)
-//     }
-//   }
-
-//   return (
-//     <ScreenWrapper bg="white">
-//       <StatusBar style="dark" />
-//       <View style={styles.container}>
-//         <View>
-//           <Text style={styles.welcomeText}>Reset</Text>
-//           <Text style={styles.welcomeSmallText}>Password</Text>
-//         </View>
-//         <View style={styles.form}>
-//           <Input
-//             icon={<Icon name="lock" size={26} strokeWidth={1.6} />}
-//             placeholder="New Password"
-//             secureTextEntry
-//             value={password}
-//             onChangeText={setPassword}
-//           />
-//           <Input
-//             icon={<Icon name="lock" size={26} strokeWidth={1.6} />}
-//             placeholder="Confirm Password"
-//             secureTextEntry
-//             value={confirmPassword}
-//             onChangeText={setConfirmPassword}
-//           />
-//           <Button
-//             loaderType="BarIndicator"
-//             title="Reset Password"
-//             loading={loading}
-//             onPress={handleResetPassword}
-//           />
-//         </View>
-//       </View>
-//     </ScreenWrapper>
-//   )
-// }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     padding: wp(4),
-//   },
-//   welcomeText: {
-//     fontSize: hp(4),
-//     fontWeight: theme.fonts.bold,
-//     color: theme.colors.primary,
-//     marginTop: hp(4),
-//   },
-//   welcomeSmallText: {
-//     fontSize: hp(3),
-//     fontWeight: theme.fonts.semibold,
-//     color: theme.colors.text,
-//   },
-//   form: {
-//     marginTop: hp(6),
-//     gap: hp(2),
-//   },
-// })
-
-
-// below code works fine in login state #####################################################
-
 // import React, { useState, useEffect } from 'react';
-// import { View, StyleSheet, Text, Alert } from 'react-native';
+// import { View, StyleSheet, Text, Alert, ActivityIndicator } from 'react-native';
 // import { useLocalSearchParams, useRouter } from 'expo-router';
 // import ScreenWrapper from '@/components/ScreenWrapper';
 // import { StatusBar } from 'expo-status-bar';
@@ -124,1127 +10,308 @@
 // import Input from "@/components/Input";
 // import Button from '@/components/Button';
 // import { validatePassword } from '@/utils/validation';
+// import { useToast } from '../../contexts/ToastContext';
+// import { supabase } from '@/lib/supabase';
 
 // export default function ResetPasswordScreen() {
 //   const [password, setPassword] = useState('');
 //   const [confirmPassword, setConfirmPassword] = useState('');
 //   const [passwordStrength, setPasswordStrength] = useState({ score: 0, feedback: '' });
-//   const { updatePassword, loading, resetSession } = useAuth();
-//   const router = useRouter();
-//   const { token } = useLocalSearchParams();
-
-//   const handleResetPassword = async () => {
-//     if (!password || !confirmPassword) {
-//       Alert.alert('Error', 'Please fill in all fields');
-//       return;
-//     }
-
-//     if (password !== confirmPassword) {
-//       Alert.alert('Error', 'Passwords do not match');
-//       return;
-//     }
-
-//     const validationResult = validatePassword(password);
-//     if (!validationResult.isValid) {
-//       Alert.alert('Error', validationResult.message);
-//       return;
-//     }
-
-//     try {
-//       const { error, success } = await updatePassword(password);
-
-//       if (error) throw error;
-
-//       if (success) {
-//         Alert.alert(
-//           'Success',
-//           'Your password has been reset successfully',
-//           [{ text: 'OK', onPress: () => router.replace('/login') }]
-//         );
-//       }
-//     } catch (error) {
-//       Alert.alert('Error', error.message);
-//     }
-//   };
-
-//   useEffect(() => {
-//     if (password) {
-//       const strength = validatePassword(password);
-//       setPasswordStrength(strength);
-//     }
-//   }, [password]);
-
-//   // Redirect to login if no reset session is available
-//   useEffect(() => {
-//     if (!resetSession) {
-//       router.replace('/home');
-//     }
-//   }, [resetSession]);
-
-//   return (
-//     <ScreenWrapper bg="white">
-//       {/* Rest of your component JSX remains the same */}
-//     </ScreenWrapper>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     padding: wp(4),
-//   },
-//   welcomeText: {
-//     fontSize: hp(4),
-//     fontWeight: theme.fonts.bold,
-//     color: theme.colors.primary,
-//     marginTop: hp(4),
-//   },
-//   welcomeSmallText: {
-//     fontSize: hp(3),
-//     fontWeight: theme.fonts.semibold,
-//     color: theme.colors.text,
-//   },
-//   form: {
-//     marginTop: hp(6),
-//     gap: hp(2),
-//   },
-// })
-
-
-
-
-
-
-
-/// updated rest but not forworking even both cases
-
-// import React, { useState, useEffect } from 'react';
-// import { View, StyleSheet, Text, Alert } from 'react-native';
-// import { useLocalSearchParams, useRouter } from 'expo-router';
-// import ScreenWrapper from '@/components/ScreenWrapper';
-// import { StatusBar } from 'expo-status-bar';
-// import Input from "@/components/Input";
-// import { hp, wp } from '@/helpers/common';
-// import Icon from '@/assets/icons';
-// import theme from '@/constants/theme';
-// import Button from '@/components/Button';
-// import { validatePassword } from '@/utils/validation';
-// import { useAuth } from '@/contexts/AuthContext';
-// import * as Linking from 'expo-linking';
-
-// export default function ResetPasswordScreen() {
-//   const [password, setPassword] = useState('');
-//   const [confirmPassword, setConfirmPassword] = useState('');
-//   const [passwordStrength, setPasswordStrength] = useState({ score: 0, feedback: '' });
-//   const [isValidatingToken, setIsValidatingToken] = useState(true);
+//   const { updatePassword, loading, user } = useAuth();
+//   const { showToast } = useToast();
 //   const router = useRouter();
 //   const params = useLocalSearchParams();
-//   const { updatePassword, loginWithToken, loading } = useAuth();
-
-//   // Validate tokens on mount
-//   useEffect(() => {
-//     const validateTokens = async () => {
-//       try {
-//         setIsValidatingToken(true);
-        
-//         // Get tokens from URL params
-//         const tokens = {
-//           access_token: params?.access_token,
-//           refresh_token: params?.refresh_token
-//         };
-
-//         if (!tokens.access_token || !tokens.refresh_token) {
-//           throw new Error('Missing reset tokens');
-//         }
-
-//         // Attempt to login with tokens to validate them
-//         const { error } = await loginWithToken(tokens);
-//         if (error) throw error;
-
-//       } catch (error) {
-//         console.error('Token validation error:', error);
-//         Alert.alert(
-//           'Error',
-//           'Invalid or expired reset link. Please request a new password reset.',
-//           [{ text: 'OK', onPress: () => router.replace('/auth/login') }]
-//         );
-//       } finally {
-//         setIsValidatingToken(false);
-//       }
-//     };
-
-//     validateTokens();
-//   }, []);
+  
+//   // Skip session validation if we already have a user in the auth context
+//   // This will significantly speed up the process
 
 //   const handleResetPassword = async () => {
+//     if (!password || !confirmPassword) {
+//       showToast('error', 'Please fill in all fields');
+//       return;
+//     }
+  
+//     if (password !== confirmPassword) {
+//       showToast('error', 'Passwords do not match');
+//       return;
+//     }
+  
+//     const validationResult = validatePassword(password);
+//     if (!validationResult.isValid) {
+//       showToast('error', validationResult.message);
+//       return;
+//     }
+  
 //     try {
-//       // Basic validation
-//       if (!password || !confirmPassword) {
-//         throw new Error('Please fill in all fields');
-//       }
-
-//       if (password !== confirmPassword) {
-//         throw new Error('Passwords do not match');
-//       }
-
-//       const validationResult = validatePassword(password);
-//       if (!validationResult.isValid) {
-//         throw new Error(validationResult.message);
-//       }
-
-//       // Get tokens from params
-//       const tokens = {
-//         access_token: params?.access_token,
-//         refresh_token: params?.refresh_token
-//       };
-
-//       if (!tokens.access_token || !tokens.refresh_token) {
-//         throw new Error('Invalid reset link. Please request a new password reset.');
-//       }
-
-//       const { error, success } = await updatePassword(
-//         password,
-//         tokens.access_token,
-//         tokens.refresh_token
-//       );
-
+//       const { error, success } = await updatePassword(password);
+  
 //       if (error) throw error;
-
+  
 //       if (success) {
 //         Alert.alert(
 //           'Success',
-//           'Your password has been reset successfully',
-//           [{ text: 'OK', onPress: () => router.replace('/auth/login') }]
+//           'Your password has been updated successfully',
+//           [{ 
+//             text: 'OK', 
+//             onPress: () => {
+//               // Clear the password fields
+//               setPassword('');
+//               setConfirmPassword('');
+              
+//               // Navigate to home
+//               router.replace('/home');
+//             }
+//           }]
 //         );
 //       }
 //     } catch (error) {
-//       Alert.alert('Error', error.message || 'Failed to reset password. Please try again.');
+//       console.error('Password reset error:', error);
+//       showToast('error', error.message || 'Failed to reset password');
 //     }
 //   };
 
-//   // Update password strength feedback
 //   useEffect(() => {
 //     if (password) {
 //       const strength = validatePassword(password);
 //       setPasswordStrength(strength);
+//     } else {
+//       setPasswordStrength({ score: 0, feedback: '' });
 //     }
 //   }, [password]);
 
-//   if (isValidatingToken) {
-//     return (
-//       <ScreenWrapper bg="white">
-//         <View style={styles.container}>
-//           <Text>Validating reset link...</Text>
+//   // Render the main form directly
+//   return (
+//     <ScreenWrapper bg="white">
+//       <StatusBar style="dark" />
+//       <View style={styles.container}>
+//         <View>
+//           <Text style={styles.welcomeText}>Reset</Text>
+//           <Text style={styles.welcomeSmallText}>Password</Text>
 //         </View>
-//       </ScreenWrapper>
-//     );
+//         <View style={styles.form}>
+//           <Input
+//             icon={<Icon name="lock" size={26} strokeWidth={1.6} />}
+//             placeholder="New Password"
+//             secureTextEntry
+//             value={password}
+//             onChangeText={setPassword}
+//             textContentType="newPassword"
+//             autoComplete="password-new"
+//           />
+//           {password && (
+//             <Text style={[
+//               styles.strengthIndicator,
+//               { color: passwordStrength.score > 2 ? theme.colors.success : theme.colors.error }
+//             ]}>
+//               {passwordStrength.feedback}
+//             </Text>
+//           )}
+//           <Input
+//             icon={<Icon name="lock" size={26} strokeWidth={1.6} />}
+//             placeholder="Confirm Password"
+//             secureTextEntry
+//             value={confirmPassword}
+//             onChangeText={setConfirmPassword}
+//             textContentType="newPassword"
+//             autoComplete="password-new"
+//           />
+//           <Button
+//             loaderType="BarIndicator"
+//             title="Reset Password"
+//             loading={loading}
+//             onPress={handleResetPassword}
+//             disabled={!password || !confirmPassword || passwordStrength.score <= 2}
+//           />
+//         </View>
+//       </View>
+//     </ScreenWrapper>
+//   );
+// }
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     padding: wp(4),
+//   },
+//   centered: {
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+//   welcomeText: {
+//     fontSize: hp(4),
+//     fontWeight: theme.fonts.bold,
+//     color: theme.colors.primary,
+//     marginTop: hp(4),
+//   },
+//   welcomeSmallText: {
+//     fontSize: hp(3),
+//     fontWeight: theme.fonts.semibold,
+//     color: theme.colors.text,
+//   },
+//   form: {
+//     marginTop: hp(6),
+//     gap: hp(2),
+//   },
+//   strengthIndicator: {
+//     fontSize: hp(1.6),
+//     marginTop: -hp(1.5),
+//     marginLeft: wp(2),
 //   }
+// });
 
-//   return (
-//     <ScreenWrapper bg="white">
-//       <StatusBar style="dark" />
-//       <View style={styles.container}>
-//         <View>
-//           <Text style={styles.welcomeText}>Reset</Text>
-//           <Text style={styles.welcomeSmallText}>Password</Text>
-//         </View>
-//         <View style={styles.form}>
-//           <Input
-//             icon={<Icon name="lock" size={26} strokeWidth={1.6} />}
-//             placeholder="New Password"
-//             secureTextEntry
-//             value={password}
-//             onChangeText={setPassword}
-//             textContentType="newPassword"
-//             autoComplete="password-new"
-//           />
-//           {password && (
-//             <Text style={[
-//               styles.strengthIndicator,
-//               { color: passwordStrength.score > 2 ? theme.colors.success : theme.colors.error }
-//             ]}>
-//               {passwordStrength.feedback}
-//             </Text>
-//           )}
-//           <Input
-//             icon={<Icon name="lock" size={26} strokeWidth={1.6} />}
-//             placeholder="Confirm Password"
-//             secureTextEntry
-//             value={confirmPassword}
-//             onChangeText={setConfirmPassword}
-//             textContentType="newPassword"
-//             autoComplete="password-new"
-//           />
-//           <Button
-//             loaderType="BarIndicator"
-//             title="Reset Password"
-//             loading={loading}
-//             onPress={handleResetPassword}
-//             disabled={!password || !confirmPassword || passwordStrength.score <= 2}
-//           />
-//         </View>
-//       </View>
-//     </ScreenWrapper>
-//   );
-// }
 
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     padding: wp(4),
-//   },
-//   welcomeText: {
-//     fontSize: hp(4),
-//     fontWeight: theme.fonts.bold,
-//     color: theme.colors.primary,
-//     marginTop: hp(4),
-//   },
-//   welcomeSmallText: {
-//     fontSize: hp(3),
-//     fontWeight: theme.fonts.semibold,
-//     color: theme.colors.text,
-//   },
-//   form: {
-//     marginTop: hp(6),
-//     gap: hp(2),
-//   },
-// })
 
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//***** working code for */
 
 
 // import React, { useState, useEffect } from 'react';
-// import { View, StyleSheet, Text, Alert } from 'react-native';
+// import { View, StyleSheet, Text, Alert, ActivityIndicator, Animated } from 'react-native';
 // import { useLocalSearchParams, useRouter } from 'expo-router';
 // import ScreenWrapper from '@/components/ScreenWrapper';
 // import { StatusBar } from 'expo-status-bar';
+// import { useAuth } from '../../contexts/AuthContext';
 // import { hp, wp } from '@/helpers/common';
 // import theme from '@/constants/theme';
 // import Icon from '@/assets/icons';
 // import Input from "@/components/Input";
 // import Button from '@/components/Button';
-// import { supabase } from '@/lib/supabase';
 // import { validatePassword } from '@/utils/validation';
+// import { useToast } from '../../contexts/ToastContext';
 
 // export default function ResetPasswordScreen() {
 //   const [password, setPassword] = useState('');
 //   const [confirmPassword, setConfirmPassword] = useState('');
-//   const [loading, setLoading] = useState(false);
 //   const [passwordStrength, setPasswordStrength] = useState({ score: 0, feedback: '' });
+//   const { updatePassword, loading, loadingProgress, error, clearError } = useAuth();
+//   const { showToast } = useToast();
 //   const router = useRouter();
-//   const { token } = useLocalSearchParams();
-
-//   const handleResetPassword = async () => {
-//     if (!password || !confirmPassword) {
-//       Alert.alert('Error', 'Please fill in all fields');
-//       return;
+//   const params = useLocalSearchParams();
+  
+//   // Animation for progress bar
+//   const progressAnimation = new Animated.Value(0);
+  
+//   useEffect(() => {
+//     // Animate progress bar based on loading status
+//     Animated.timing(progressAnimation, {
+//       toValue: loadingProgress.progress / 100,
+//       duration: 300,
+//       useNativeDriver: false
+//     }).start();
+    
+//     // Show toast for error messages
+//     if (error) {
+//       showToast('error', error);
+//       clearError();
 //     }
-
-//     if (password !== confirmPassword) {
-//       Alert.alert('Error', 'Passwords do not match');
-//       return;
-//     }
-
-//     const validationResult = validatePassword(password);
-//     if (!validationResult.isValid) {
-//       Alert.alert('Error', validationResult.message);
-//       return;
-//     }
-
-//     setLoading(true);
-//     try {
-//       const { error } = await supabase.auth.updateUser({
-//         password: password
-//       });
-
-//       if (error) throw error;
-
-//       Alert.alert(
-//         'Success',
-//         'Your password has been reset successfully',
-//         [{ text: 'OK', onPress: () => router.replace('/login') }]
-//       );
-//     } catch (error) {
-//       Alert.alert('Error', error.message);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
+//   }, [loadingProgress, error, clearError]);
 
 //   useEffect(() => {
 //     if (password) {
 //       const strength = validatePassword(password);
 //       setPasswordStrength(strength);
+//     } else {
+//       setPasswordStrength({ score: 0, feedback: '' });
 //     }
 //   }, [password]);
 
-//   return (
-//     <ScreenWrapper bg="white">
-//       <StatusBar style="dark" />
-//       <View style={styles.container}>
-//         <View>
-//           <Text style={styles.welcomeText}>Reset</Text>
-//           <Text style={styles.welcomeSmallText}>Password</Text>
-//         </View>
-//         <View style={styles.form}>
-//           <Input
-//             icon={<Icon name="lock" size={26} strokeWidth={1.6} />}
-//             placeholder="New Password"
-//             secureTextEntry
-//             value={password}
-//             onChangeText={setPassword}
-//             textContentType="newPassword"
-//             autoComplete="password-new"
-//           />
-//           {password && (
-//             <Text style={[
-//               styles.strengthIndicator,
-//               { color: passwordStrength.score > 2 ? theme.colors.success : theme.colors.error }
-//             ]}>
-//               {passwordStrength.feedback}
-//             </Text>
-//           )}
-//           <Input
-//             icon={<Icon name="lock" size={26} strokeWidth={1.6} />}
-//             placeholder="Confirm Password"
-//             secureTextEntry
-//             value={confirmPassword}
-//             onChangeText={setConfirmPassword}
-//             textContentType="newPassword"
-//             autoComplete="password-new"
-//           />
-//           <Button
-//             loaderType="BarIndicator"
-//             title="Reset Password"
-//             loading={loading}
-//             onPress={handleResetPassword}
-//             disabled={!password || !confirmPassword || passwordStrength.score <= 2}
-//           />
-//         </View>
-//       </View>
-//     </ScreenWrapper>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     padding: wp(4),
-//   },
-//   welcomeText: {
-//     fontSize: hp(4),
-//     fontWeight: theme.fonts.bold,
-//     color: theme.colors.primary,
-//     marginTop: hp(4),
-//   },
-//   welcomeSmallText: {
-//     fontSize: hp(3),
-//     fontWeight: theme.fonts.semibold,
-//     color: theme.colors.text,
-//   },
-//   form: {
-//     marginTop: hp(6),
-//     gap: hp(2),
-//   },
-// })
-
-
-
-
-
-
-
-
-
-
-// import React, { useState, useEffect } from 'react';
-// import { View, StyleSheet, Text, Alert } from 'react-native';
-// import { useLocalSearchParams, useRouter } from 'expo-router';
-// import ScreenWrapper from '@/components/ScreenWrapper';
-// import { StatusBar } from 'expo-status-bar';
-// import { hp, wp } from '@/helpers/common';
-// import theme from '@/constants/theme';
-// import Icon from '@/assets/icons';
-// import Input from "@/components/Input";
-// import Button from '@/components/Button';
-// import { supabase } from '@/lib/supabase';
-// import { validatePassword } from '@/utils/validation';
-
-// export default function ResetPasswordScreen() {
-//   const [password, setPassword] = useState('');
-//   const [confirmPassword, setConfirmPassword] = useState('');
-//   const [loading, setLoading] = useState(false);
-//   const [passwordStrength, setPasswordStrength] = useState({ score: 0, feedback: '' });
-//   const router = useRouter();
-//   const { token } = useLocalSearchParams();
-
 //   const handleResetPassword = async () => {
 //     if (!password || !confirmPassword) {
-//       Alert.alert('Error', 'Please fill in all fields');
+//       showToast('error', 'Please fill in all fields');
 //       return;
 //     }
-
+  
 //     if (password !== confirmPassword) {
-//       Alert.alert('Error', 'Passwords do not match');
+//       showToast('error', 'Passwords do not match');
 //       return;
 //     }
-
+  
 //     const validationResult = validatePassword(password);
 //     if (!validationResult.isValid) {
-//       Alert.alert('Error', validationResult.message);
+//       showToast('error', validationResult.message);
 //       return;
 //     }
-
-//     setLoading(true);
+  
 //     try {
-//       const { error, success } = await supabase.auth.updateUser({
-//         password: password
-//       });
-
+//       const { error, success } = await updatePassword(password);
+  
 //       if (error) throw error;
-
-//       // Alert.alert(
-//       //   'Success',
-//       //   'Your password has been reset successfully',
-//       //   [{ text: 'OK', onPress: () => router.replace('/login') }]
-//       // );
+  
 //       if (success) {
 //         Alert.alert(
 //           'Success',
-//           'Your password has been reset successfully',
-//           [{ text: 'OK', onPress: () => router.replace('/login') }]
+//           'Your password has been updated successfully',
+//           [{ 
+//             text: 'OK', 
+//             onPress: () => {
+//               // Clear the password fields
+//               setPassword('');
+//               setConfirmPassword('');
+              
+//               // Navigate to home
+//               router.replace('/home');
+//             }
+//           }]
 //         );
 //       }
 //     } catch (error) {
-//       Alert.alert('Error', error.message);
-//     } finally {
-//       setLoading(false);
+//       console.error('Password reset error:', error);
+//       showToast('error', error.message || 'Failed to reset password');
 //     }
 //   };
 
-//   useEffect(() => {
-//     if (password) {
-//       const strength = validatePassword(password);
-//       setPasswordStrength(strength);
-//     }
-//   }, [password]);
-
-//     // Redirect to login if no reset session is available
-//     // useEffect(() => {
-//     //   if (!resetSession) {
-//     //     router.replace('/login');
-//     //   }
-//     // }, [resetSession]);
+//   // Calculate progress bar width and color
+//   const progressBarWidth = progressAnimation.interpolate({
+//     inputRange: [0, 1],
+//     outputRange: ['0%', '100%']
+//   });
+  
+//   // Make sure to use RGB/RGBA string values for color interpolation
+//   const progressBarColor = progressAnimation.interpolate({
+//     inputRange: [0, 0.3, 0.7, 1],
+//     outputRange: ['#3498db', '#5bc0de', '#9b59b6', '#2ecc71'] // Use hex codes instead of theme references
+//   });
 
 //   return (
 //     <ScreenWrapper bg="white">
 //       <StatusBar style="dark" />
+      
+//       {/* Loading Progress Bar */}
+//       {loading && (
+//         <View style={styles.progressContainer}>
+//           <View style={styles.progressBackground}>
+//             <Animated.View 
+//               style={[
+//                 styles.progressFill, 
+//                 { width: progressBarWidth, backgroundColor: progressBarColor }
+//               ]} 
+//             />
+//           </View>
+//           {loadingProgress.status ? (
+//             <Text style={styles.progressText}>{loadingProgress.status}</Text>
+//           ) : null}
+//         </View>
+//       )}
+      
 //       <View style={styles.container}>
 //         <View>
 //           <Text style={styles.welcomeText}>Reset</Text>
 //           <Text style={styles.welcomeSmallText}>Password</Text>
 //         </View>
+
 //         <View style={styles.form}>
 //           <Input
-//             icon={<Icon name="lock" size={26} strokeWidth={1.6} />}
+//             icon={<Icon name="eye" size={26} strokeWidth={1.6} />}
 //             placeholder="New Password"
 //             secureTextEntry
 //             value={password}
 //             onChangeText={setPassword}
 //             textContentType="newPassword"
 //             autoComplete="password-new"
+//             editable={!loading}
 //           />
 //           {password && (
 //             <Text style={[
@@ -1254,22 +321,90 @@
 //               {passwordStrength.feedback}
 //             </Text>
 //           )}
+          
 //           <Input
-//             icon={<Icon name="lock" size={26} strokeWidth={1.6} />}
+//             icon={<Icon name="eye" size={26} strokeWidth={1.6} />}
 //             placeholder="Confirm Password"
 //             secureTextEntry
 //             value={confirmPassword}
 //             onChangeText={setConfirmPassword}
 //             textContentType="newPassword"
 //             autoComplete="password-new"
+//             editable={!loading}
 //           />
+          
 //           <Button
 //             loaderType="BarIndicator"
-//             title="Reset Password"
+//             title={loading ? loadingProgress.status || "Processing..." : "Reset Password"}
 //             loading={loading}
 //             onPress={handleResetPassword}
-//             disabled={!password || !confirmPassword || passwordStrength.score <= 2}
+//             disabled={!password || !confirmPassword || passwordStrength.score <= 2 || loading}
 //           />
+          
+//           {/* Password Requirements */}
+//           <View style={styles.requirementsContainer}>
+//             <Text style={styles.requirementsTitle}>Password must:</Text>
+//             <View style={styles.requirementItem}>
+//               <Icon 
+//                 name={password.length >= 8 ? "send" : "send"} 
+//                 size={16} 
+//                 color={password.length >= 8 ? theme.colors.success : theme.colors.muted} 
+//               />
+//               <Text style={[styles.requirementText, password.length >= 8 && styles.requirementMet]}>
+//                 Be at least 8 characters long
+//               </Text>
+//             </View>
+//             <View style={styles.requirementItem}>
+//               <Icon 
+//                 name={/[A-Z]/.test(password) ? "send" : "send"} 
+//                 size={16} 
+//                 color={/[A-Z]/.test(password) ? theme.colors.success : theme.colors.muted} 
+//               />
+//               <Text style={[styles.requirementText, /[A-Z]/.test(password) && styles.requirementMet]}>
+//                 Contain at least one uppercase letter
+//               </Text>
+//             </View>
+//             <View style={styles.requirementItem}>
+//               <Icon 
+//                 name={/[a-z]/.test(password) ? "send" : "send"} 
+//                 size={16} 
+//                 color={/[a-z]/.test(password) ? theme.colors.success : theme.colors.muted} 
+//               />
+//               <Text style={[styles.requirementText, /[a-z]/.test(password) && styles.requirementMet]}>
+//                 Contain at least one lowercase letter
+//               </Text>
+//             </View>
+//             <View style={styles.requirementItem}>
+//               <Icon 
+//                 name={/[0-9]/.test(password) ? "send" : "send"} 
+//                 size={16} 
+//                 color={/[0-9]/.test(password) ? theme.colors.success : theme.colors.muted} 
+//               />
+//               <Text style={[styles.requirementText, /[0-9]/.test(password) && styles.requirementMet]}>
+//                 Contain at least one number
+//               </Text>
+//             </View>
+//             <View style={styles.requirementItem}>
+//               <Icon 
+//                 name={/[^A-Za-z0-9]/.test(password) ? "send" : "send"} 
+//                 size={16} 
+//                 color={/[^A-Za-z0-9]/.test(password) ? theme.colors.success : theme.colors.muted} 
+//               />
+//               <Text style={[styles.requirementText, /[^A-Za-z0-9]/.test(password) && styles.requirementMet]}>
+//                 Contain at least one special character
+//               </Text>
+//             </View>
+//             <View style={styles.requirementItem}>
+//               <Icon 
+//                 name={password === confirmPassword && password ? "send" : "send"} 
+//                 size={16} 
+//                 color={password === confirmPassword && password ? theme.colors.success : theme.colors.muted} 
+//               />
+//               <Text style={[styles.requirementText, password === confirmPassword && password && styles.requirementMet]}>
+//                 Passwords match
+//               </Text>
+//             </View>
+//           </View>
 //         </View>
 //       </View>
 //     </ScreenWrapper>
@@ -1280,6 +415,10 @@
 //   container: {
 //     flex: 1,
 //     padding: wp(4),
+//   },
+//   centered: {
+//     justifyContent: 'center',
+//     alignItems: 'center',
 //   },
 //   welcomeText: {
 //     fontSize: hp(4),
@@ -1296,15 +435,893 @@
 //     marginTop: hp(6),
 //     gap: hp(2),
 //   },
-// })
+//   strengthIndicator: {
+//     fontSize: hp(1.6),
+//     marginTop: -hp(1.5),
+//     marginLeft: wp(2),
+//   },
+//   progressContainer: {
+//     padding: wp(2),
+//     backgroundColor: theme.colors.background,
+//     borderBottomWidth: 1,
+//     borderBottomColor: theme.colors.border,
+//   },
+//   progressBackground: {
+//     height: hp(1),
+//     backgroundColor: theme.colors.muted,
+//     borderRadius: hp(0.5),
+//     overflow: 'hidden',
+//   },
+//   progressFill: {
+//     height: '100%',
+//     borderRadius: hp(0.5),
+//   },
+//   progressText: {
+//     fontSize: hp(1.4),
+//     color: theme.colors.text,
+//     marginTop: hp(0.5),
+//     textAlign: 'center',
+//   },
+//   requirementsContainer: {
+//     marginTop: hp(2),
+//     padding: wp(4),
+//     backgroundColor: theme.colors.background,
+//     borderRadius: wp(2),
+//   },
+//   requirementsTitle: {
+//     fontSize: hp(1.8),
+//     fontWeight: theme.fonts.semibold,
+//     marginBottom: hp(1),
+//     color: theme.colors.text,
+//   },
+//   requirementItem: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     marginBottom: hp(0.8),
+//   },
+//   requirementText: {
+//     fontSize: hp(1.6),
+//     color: theme.colors.text,
+//     marginLeft: wp(2),
+//   },
+//   requirementMet: {
+//     color: theme.colors.success,
+//   },
+// });
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import React, { useState, useEffect } from 'react';
+// import { View, StyleSheet, Text, Alert, ActivityIndicator, Animated, DevSettings } from 'react-native';
+// import { useLocalSearchParams, useRouter } from 'expo-router';
+// import ScreenWrapper from '@/components/ScreenWrapper';
+// import { StatusBar } from 'expo-status-bar';
+// import { useAuth } from '../../contexts/AuthContext';
+// import { hp, wp } from '@/helpers/common';
+// import theme from '@/constants/theme';
+// import Icon from '@/assets/icons';
+// import Input from "@/components/Input";
+// import Button from '@/components/Button';
+// import { validatePassword } from '@/utils/validation';
+// import { useToast } from '../../contexts/ToastContext';
+
+// export default function ResetPasswordScreen() {
+//   const [password, setPassword] = useState('');
+//   const [confirmPassword, setConfirmPassword] = useState('');
+//   const [passwordStrength, setPasswordStrength] = useState({ score: 0, feedback: '' });
+//   const { updatePassword, loading, loadingProgress, error, clearError } = useAuth();
+//   const { showToast } = useToast();
+//   const router = useRouter();
+//   const params = useLocalSearchParams();
+  
+//   // Animation for progress bar
+//   const progressAnimation = new Animated.Value(0);
+  
+//   useEffect(() => {
+//     // Animate progress bar based on loading status
+//     Animated.timing(progressAnimation, {
+//       toValue: loadingProgress.progress / 100,
+//       duration: 300,
+//       useNativeDriver: false
+//     }).start();
+    
+//     // Show toast for error messages
+//     if (error) {
+//       showToast('error', error);
+//       clearError();
+//     }
+//   }, [loadingProgress, error, clearError]);
+
+//   // Separate state to track if button should be disabled during loading
+//   const [buttonDisabled, setButtonDisabled] = useState(false);
+
+//   // Update button disabled state based on loading and error
+//   useEffect(() => {
+//     if (loading && error) {
+//       setButtonDisabled(true);
+//     } else if (!loading) {
+//       // Short timeout to ensure the loading state is completely finished
+//       setTimeout(() => setButtonDisabled(false), 300);
+//     }
+//   }, [loading, error]);
+
+//   useEffect(() => {
+//     if (password) {
+//       const strength = validatePassword(password);
+//       setPasswordStrength(strength);
+//     } else {
+//       setPasswordStrength({ score: 0, feedback: '' });
+//     }
+//   }, [password]);
+
+//   const handleResetPassword = async () => {
+//     if (!password || !confirmPassword) {
+//       showToast('error', 'Please fill in all fields');
+//       return;
+//     }
+  
+//     if (password !== confirmPassword) {
+//       showToast('error', 'Passwords do not match');
+//       return;
+//     }
+  
+//     const validationResult = validatePassword(password);
+//     if (!validationResult.isValid) {
+//       showToast('error', validationResult.message);
+//       return;
+//     }
+  
+//     try {
+
+//         // Only show success message if there's no error
+//         Alert.alert(
+//           'Success',
+//           'Your password has been updated successfully',
+//           [{ 
+//             text: 'OK', 
+//             onPress: () => {
+//               // Clear the password fields
+//               setPassword('');
+//               setConfirmPassword('');
+              
+//               // Navigate to home
+//               router.replace('/home');
+//               DevSettings.reload();
+//             }
+//           }]
+//         );
+//       // Attempt to update password
+//       await updatePassword(password);
+    
+     
+//     } catch (error) {
+//       // Check if the error is about same password
+//       if (error.message === "New password should be different from the old password.") {
+//         // Just show toast, don't show success alert
+//         showToast('error', error.message);
+//       } else {
+//         // Log the error
+//         console.error('Password reset error:', error);
+        
+//         // Show error toast
+//         showToast('error', error.message || 'Failed to reset password');
+//       }
+//     }
+//   };
+
+//   // Calculate progress bar width and color
+//   const progressBarWidth = progressAnimation.interpolate({
+//     inputRange: [0, 1],
+//     outputRange: ['0%', '100%']
+//   });
+  
+//   // Make sure to use RGB/RGBA string values for color interpolation
+//   const progressBarColor = progressAnimation.interpolate({
+//     inputRange: [0, 0.3, 0.7, 1],
+//     outputRange: ['#3498db', '#5bc0de', '#9b59b6', '#2ecc71'] // Use hex codes instead of theme references
+//   });
+
+//   return (
+//     <ScreenWrapper bg="white">
+//       <StatusBar style="dark" />
+      
+//       {/* Loading Progress Bar */}
+//       {loading && (
+//         <View style={styles.progressContainer}>
+//           <View style={styles.progressBackground}>
+//             <Animated.View 
+//               style={[
+//                 styles.progressFill, 
+//                 { width: progressBarWidth, backgroundColor: progressBarColor }
+//               ]} 
+//             />
+//           </View>
+//           {loadingProgress.status ? (
+//             <Text style={styles.progressText}>{loadingProgress.status}</Text>
+//           ) : null}
+//         </View>
+//       )}
+      
+//       <View style={styles.container}>
+//         <View>
+//           <Text style={styles.welcomeText}>Reset</Text>
+//           <Text style={styles.welcomeSmallText}>Password</Text>
+//         </View>
+
+//         <View style={styles.form}>
+//           <Input
+//             icon={<Icon name="send" size={26} strokeWidth={1.6} />}
+//             placeholder="New Password"
+//             secureTextEntry
+//             value={password}
+//             onChangeText={setPassword}
+//             textContentType="newPassword"
+//             autoComplete="password-new"
+//             editable={!buttonDisabled}
+//           />
+//           {password && (
+//             <Text style={[
+//               styles.strengthIndicator,
+//               { color: passwordStrength.score > 2 ? theme.colors.success : theme.colors.error }
+//             ]}>
+//               {passwordStrength.feedback}
+//             </Text>
+//           )}
+          
+//           <Input
+//             icon={<Icon name="send" size={26} strokeWidth={1.6} />}
+//             placeholder="Confirm Password"
+//             secureTextEntry
+//             value={confirmPassword}
+//             onChangeText={setConfirmPassword}
+//             textContentType="newPassword"
+//             autoComplete="password-new"
+//             editable={!buttonDisabled}
+//           />
+          
+//           <Button
+//             loaderType="BarIndicator"
+//             title={loading ? loadingProgress.status || "Processing..." : "Reset Password"}
+//             loading={loading}
+//             onPress={handleResetPassword}
+//             disabled={!password || !confirmPassword || passwordStrength.score <= 2 || buttonDisabled}
+//           />
+          
+//           {/* Password Requirements */}
+//           <View style={styles.requirementsContainer}>
+//             <Text style={styles.requirementsTitle}>Password must:</Text>
+//             <View style={styles.requirementItem}>
+//               <Icon 
+//                 name={password.length >= 8 ? "send" : "send"} 
+//                 size={16} 
+//                 color={password.length >= 8 ? theme.colors.success : theme.colors.muted} 
+//               />
+//               <Text style={[styles.requirementText, password.length >= 8 && styles.requirementMet]}>
+//                 Be at least 8 characters long
+//               </Text>
+//             </View>
+//             <View style={styles.requirementItem}>
+//               <Icon 
+//                 name={/[A-Z]/.test(password) ? "send" : "send"} 
+//                 size={16} 
+//                 color={/[A-Z]/.test(password) ? theme.colors.success : theme.colors.muted} 
+//               />
+//               <Text style={[styles.requirementText, /[A-Z]/.test(password) && styles.requirementMet]}>
+//                 Contain at least one uppercase letter
+//               </Text>
+//             </View>
+//             <View style={styles.requirementItem}>
+//               <Icon 
+//                 name={/[a-z]/.test(password) ? "send" : "send"} 
+//                 size={16} 
+//                 color={/[a-z]/.test(password) ? theme.colors.success : theme.colors.muted} 
+//               />
+//               <Text style={[styles.requirementText, /[a-z]/.test(password) && styles.requirementMet]}>
+//                 Contain at least one lowercase letter
+//               </Text>
+//             </View>
+//             <View style={styles.requirementItem}>
+//               <Icon 
+//                 name={/[0-9]/.test(password) ? "send" : "send"} 
+//                 size={16} 
+//                 color={/[0-9]/.test(password) ? theme.colors.success : theme.colors.muted} 
+//               />
+//               <Text style={[styles.requirementText, /[0-9]/.test(password) && styles.requirementMet]}>
+//                 Contain at least one number
+//               </Text>
+//             </View>
+//             <View style={styles.requirementItem}>
+//               <Icon 
+//                 name={/[^A-Za-z0-9]/.test(password) ? "send" : "send"} 
+//                 size={16} 
+//                 color={/[^A-Za-z0-9]/.test(password) ? theme.colors.success : theme.colors.muted} 
+//               />
+//               <Text style={[styles.requirementText, /[^A-Za-z0-9]/.test(password) && styles.requirementMet]}>
+//                 Contain at least one special character
+//               </Text>
+//             </View>
+//             <View style={styles.requirementItem}>
+//               <Icon 
+//                 name={password === confirmPassword && password ? "send" : "send"} 
+//                 size={16} 
+//                 color={password === confirmPassword && password ? theme.colors.success : theme.colors.muted} 
+//               />
+//               <Text style={[styles.requirementText, password === confirmPassword && password && styles.requirementMet]}>
+//                 Passwords match
+//               </Text>
+//             </View>
+//           </View>
+//         </View>
+//       </View>
+//     </ScreenWrapper>
+//   );
+// }
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     padding: wp(4),
+//   },
+//   centered: {
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+//   welcomeText: {
+//     fontSize: hp(4),
+//     fontWeight: theme.fonts.bold,
+//     color: theme.colors.primary,
+//     marginTop: hp(4),
+//   },
+//   welcomeSmallText: {
+//     fontSize: hp(3),
+//     fontWeight: theme.fonts.semibold,
+//     color: theme.colors.text,
+//   },
+//   form: {
+//     marginTop: hp(6),
+//     gap: hp(2),
+//   },
+//   strengthIndicator: {
+//     fontSize: hp(1.6),
+//     marginTop: -hp(1.5),
+//     marginLeft: wp(2),
+//   },
+//   progressContainer: {
+//     padding: wp(2),
+//     backgroundColor: theme.colors.background,
+//     borderBottomWidth: 1,
+//     borderBottomColor: theme.colors.border,
+//   },
+//   progressBackground: {
+//     height: hp(1),
+//     backgroundColor: theme.colors.muted,
+//     borderRadius: hp(0.5),
+//     overflow: 'hidden',
+//   },
+//   progressFill: {
+//     height: '100%',
+//     borderRadius: hp(0.5),
+//   },
+//   progressText: {
+//     fontSize: hp(1.4),
+//     color: theme.colors.text,
+//     marginTop: hp(0.5),
+//     textAlign: 'center',
+//   },
+//   requirementsContainer: {
+//     marginTop: hp(2),
+//     padding: wp(4),
+//     backgroundColor: theme.colors.background,
+//     borderRadius: wp(2),
+//   },
+//   requirementsTitle: {
+//     fontSize: hp(1.8),
+//     fontWeight: theme.fonts.semibold,
+//     marginBottom: hp(1),
+//     color: theme.colors.text,
+//   },
+//   requirementItem: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     marginBottom: hp(0.8),
+//   },
+//   requirementText: {
+//     fontSize: hp(1.6),
+//     color: theme.colors.text,
+//     marginLeft: wp(2),
+//   },
+//   requirementMet: {
+//     color: theme.colors.success,
+//   },
+// });
+
+
+
+
+// import React, { useState, useEffect } from 'react';
+// import { View, StyleSheet, Text, Alert, Pressable, TouchableOpacity, ScrollView, Linking } from 'react-native';
+// import { useLocalSearchParams, useRouter } from 'expo-router';
+// import { StatusBar } from 'expo-status-bar';
+// import { useAuth } from '../../contexts/AuthContext';
+// import { hp, wp } from '@/helpers/common';
+// import theme from '@/constants/theme';
+// import Icon from '@/assets/icons';
+// import Input from "@/components/Input";
+// import Button from '@/components/Button';
+// import { validatePassword } from '@/utils/validation';
+// import { useToast } from '../../contexts/ToastContext';
+// import { LinearGradient } from 'expo-linear-gradient';
+// import BackButton from '../../components/BackButton';
+
+// export default function ResetPasswordScreen() {
+//   const [password, setPassword] = useState('');
+//   const [confirmPassword, setConfirmPassword] = useState('');
+//   const [passwordStrength, setPasswordStrength] = useState({ score: 0, feedback: '' });
+//   const { updatePassword, loading, loadingProgress, error, clearError } = useAuth();
+//   const { showToast } = useToast();
+//   const router = useRouter();
+//   const params = useLocalSearchParams();
+  
+//   // For password visibility toggle
+//   const [showPassword, setShowPassword] = useState(false);
+//   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
+//   // Colors matching Code X
+//   const colors = {
+//     red: '#E50914',
+//     darkRed: '#8B0000',
+//     blue: '#0066B1',
+//     darkBlue: '#00284D',
+//     darkBackground: '#0A0A0A',
+//     gradientStart: '#00284D', // Dark blue shade
+//     gradientMiddle: '#141414', // Very dark gray/near black
+//     gradientEnd: '#8B0000', // Dark red shade
+//     lightText: '#e0e0e0',
+//   };
+  
+//   // Separate state to track if button should be disabled during loading
+//   const [buttonDisabled, setButtonDisabled] = useState(false);
+
+//   useEffect(() => {
+//     // Show toast for error messages
+//     if (error) {
+//       showToast('error', error);
+//       clearError();
+//     }
+//   }, [error, clearError]);
+
+//   // Update button disabled state based on loading and error
+//   useEffect(() => {
+//     if (loading && error) {
+//       setButtonDisabled(true);
+//     } else if (!loading) {
+//       // Short timeout to ensure the loading state is completely finished
+//       setTimeout(() => setButtonDisabled(false), 300);
+//     }
+//   }, [loading, error]);
+
+//   useEffect(() => {
+//     if (password) {
+//       const strength = validatePassword(password);
+//       setPasswordStrength(strength);
+//     } else {
+//       setPasswordStrength({ score: 0, feedback: '' });
+//     }
+//   }, [password]);
+
+//   // Toggle password visibility
+//   const togglePasswordVisibility = () => {
+//     setShowPassword(!showPassword);
+//   };
+
+//   const toggleConfirmPasswordVisibility = () => {
+//     setShowConfirmPassword(!showConfirmPassword);
+//   };
+
+//   const handleResetPassword = async () => {
+//     if (!password || !confirmPassword) {
+//       showToast('error', 'Please fill in all fields');
+//       return;
+//     }
+  
+//     if (password !== confirmPassword) {
+//       showToast('error', 'Passwords do not match');
+//       return;
+//     }
+  
+//     const validationResult = validatePassword(password);
+//     if (!validationResult.isValid) {
+//       showToast('error', validationResult.message);
+//       return;
+//     }
+  
+//     try {
+//         // Only show success message if there's no error
+//         Alert.alert(
+//           'Success',
+//           'Your password has been updated successfully',
+//           [{ 
+//             text: 'OK', 
+//             onPress: () => {
+//               // Clear the password fields
+//               setPassword('');
+//               setConfirmPassword('');
+              
+//               // Navigate to home
+//               router.replace('/home');
+//               DevSettings.reload();
+//             }
+//           }]
+//         );
+//       // Attempt to update password
+//       await updatePassword(password);
+    
+     
+//     } catch (error) {
+//       // Check if the error is about same password
+//       if (error.message === "New password should be different from the old password.") {
+//         // Just show toast, don't show success alert
+//         showToast('error', error.message);
+//       } else {
+//         // Log the error
+//         console.error('Password reset error:', error);
+        
+//         // Show error toast
+//         showToast('error', error.message || 'Failed to reset password');
+//       }
+//     }
+//   };
+
+//   return (
+//     <View style={styles.mainContainer}>
+//       <StatusBar style="light" />
+      
+//       {/* Main background gradient */}
+//       <LinearGradient
+//         colors={[colors.gradientStart, colors.gradientMiddle, colors.gradientEnd]}
+//         style={styles.backgroundGradient}
+//         start={{ x: 0, y: 0 }}
+//         end={{ x: 1, y: 1 }}
+//       />
+      
+//       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+//         <View style={styles.container}>
+//           <BackButton router={router} iconColor={colors.lightText} />
+          
+//           {/* Header */}
+//           <View>
+//             <Text style={styles.welcomeText}>
+//               <Text style={{color: colors.red}}>Reset</Text>
+//             </Text>
+//             <Text style={styles.welcomeSmallText}>Password</Text>
+//           </View>
+
+//           {/* Form */}
+//           <View style={styles.form}>
+//             <Text style={{fontSize: hp(1.5), color: colors.lightText}}>
+//               Please enter your new password below
+//             </Text>
+            
+//             {/* Password Input */}
+//             <View>
+//               <View style={styles.passwordContainer}>
+//                 <Input
+//                   icon={<Icon name="lock" size={26} strokeWidth={1.6} color={colors.lightText} />}
+//                   placeholder="New Password"
+//                   value={password}
+//                   onChangeText={setPassword}
+//                   secureTextEntry={!showPassword}
+//                   inputStyle={styles.inputStyle}
+//                   containerStyle={[
+//                     styles.inputContainer,
+//                     styles.passwordInput
+//                   ]}
+//                   placeholderTextColor="rgba(224, 224, 224, 0.7)"
+//                   editable={!buttonDisabled}
+//                   textContentType="newPassword"
+//                   autoComplete="password-new"
+//                 />
+//                 <TouchableOpacity 
+//                   style={styles.eyeIcon} 
+//                   onPress={togglePasswordVisibility}
+//                 >
+//                   <Icon 
+//                     name={showPassword ? "eyeoff" : "eye"} 
+//                     size={22} 
+//                     strokeWidth={1.6} 
+//                     color={colors.lightText} 
+//                   />
+//                 </TouchableOpacity>
+//               </View>
+//               {password && (
+//                 <Text style={[
+//                   styles.strengthIndicator,
+//                   { color: passwordStrength.score > 2 ? colors.blue : colors.red }
+//                 ]}>
+//                   {passwordStrength.feedback}
+//                 </Text>
+//               )}
+//             </View>
+            
+//             {/* Confirm Password Input */}
+//             <View>
+//               <View style={styles.passwordContainer}>
+//                 <Input
+//                   icon={<Icon name="lock" size={26} strokeWidth={1.6} color={colors.lightText} />}
+//                   placeholder="Confirm Password"
+//                   value={confirmPassword}
+//                   onChangeText={setConfirmPassword}
+//                   secureTextEntry={!showConfirmPassword}
+//                   inputStyle={styles.inputStyle}
+//                   containerStyle={[
+//                     styles.inputContainer,
+//                     styles.passwordInput
+//                   ]}
+//                   placeholderTextColor="rgba(224, 224, 224, 0.7)"
+//                   editable={!buttonDisabled}
+//                   textContentType="newPassword"
+//                   autoComplete="password-new"
+//                 />
+//                 <TouchableOpacity 
+//                   style={styles.eyeIcon} 
+//                   onPress={toggleConfirmPasswordVisibility}
+//                 >
+//                   <Icon 
+//                     name={showConfirmPassword ? "eyeoff" : "eye"} 
+//                     size={22} 
+//                     strokeWidth={1.6} 
+//                     color={colors.lightText} 
+//                   />
+//                 </TouchableOpacity>
+//               </View>
+//             </View>
+            
+//             {/* Password Requirements */}
+//             <View style={styles.requirementsContainer}>
+//               <Text style={styles.requirementsTitle}>Password must:</Text>
+//               <View style={styles.requirementItem}>
+//                 <Icon 
+//                   name={password.length >= 8 ? "check" : "close"} 
+//                   size={16} 
+//                   color={password.length >= 8 ? colors.blue : colors.red} 
+//                 />
+//                 <Text style={[styles.requirementText, { color: password.length >= 8 ? colors.blue : colors.lightText }]}>
+//                   Be at least 8 characters long
+//                 </Text>
+//               </View>
+//               <View style={styles.requirementItem}>
+//                 <Icon 
+//                   name={/[A-Z]/.test(password) ? "check" : "close"} 
+//                   size={16} 
+//                   color={/[A-Z]/.test(password) ? colors.blue : colors.red} 
+//                 />
+//                 <Text style={[styles.requirementText, { color: /[A-Z]/.test(password) ? colors.blue : colors.lightText }]}>
+//                   Contain at least one uppercase letter
+//                 </Text>
+//               </View>
+//               <View style={styles.requirementItem}>
+//                 <Icon 
+//                   name={/[a-z]/.test(password) ? "check" : "close"} 
+//                   size={16} 
+//                   color={/[a-z]/.test(password) ? colors.blue : colors.red} 
+//                 />
+//                 <Text style={[styles.requirementText, { color: /[a-z]/.test(password) ? colors.blue : colors.lightText }]}>
+//                   Contain at least one lowercase letter
+//                 </Text>
+//               </View>
+//               <View style={styles.requirementItem}>
+//                 <Icon 
+//                   name={/[0-9]/.test(password) ? "check" : "close"} 
+//                   size={16} 
+//                   color={/[0-9]/.test(password) ? colors.blue : colors.red} 
+//                 />
+//                 <Text style={[styles.requirementText, { color: /[0-9]/.test(password) ? colors.blue : colors.lightText }]}>
+//                   Contain at least one number
+//                 </Text>
+//               </View>
+//               <View style={styles.requirementItem}>
+//                 <Icon 
+//                   name={/[^A-Za-z0-9]/.test(password) ? "check" : "close"} 
+//                   size={16} 
+//                   color={/[^A-Za-z0-9]/.test(password) ? colors.blue : colors.red} 
+//                 />
+//                 <Text style={[styles.requirementText, { color: /[^A-Za-z0-9]/.test(password) ? colors.blue : colors.lightText }]}>
+//                   Contain at least one special character
+//                 </Text>
+//               </View>
+//               <View style={styles.requirementItem}>
+//                 <Icon 
+//                   name={password === confirmPassword && password ? "check" : "close"} 
+//                   size={16} 
+//                   color={password === confirmPassword && password ? colors.blue : colors.red} 
+//                 />
+//                 <Text style={[styles.requirementText, { color: password === confirmPassword && password ? colors.blue : colors.lightText }]}>
+//                   Passwords match
+//                 </Text>
+//               </View>
+//             </View>
+            
+//             {/* Reset Button */}
+//             <Button 
+//               loaderType="BarIndicator" 
+//               title={loading ? loadingProgress.status || "Processing..." : "Reset Password"} 
+//               loading={loading} 
+//               onPress={handleResetPassword}
+//               disabled={!password || !confirmPassword || passwordStrength.score <= 2 || buttonDisabled}
+//               buttonStyle={{
+//                 backgroundColor: colors.red,
+//                 borderRadius: 10,
+//                 elevation: 5,
+//               }}
+//               textStyle={{
+//                 fontWeight: 'bold',
+//                 fontSize: hp(1.8),
+//                 color: colors.lightText,
+//               }}
+//             />
+//           </View>
+
+//           {/* Footer */} 
+//           <View style={styles.footer}>
+//             <Text style={styles.footerText}>
+//               Remember your password?
+//             </Text>
+//             <Pressable onPress={() => router.push('login')}>
+//               <Text style={[styles.footerText, { 
+//                 color: colors.blue, 
+//                 fontWeight: theme.fonts.semibold,
+//                 textShadowColor: 'rgba(0, 0, 0, 0.5)',
+//                 textShadowOffset: { width: 0.5, height: 0.5 },
+//                 textShadowRadius: 1,
+//               }]}>
+//                 Login
+//               </Text>
+//             </Pressable>
+//           </View>
+//         </View>
+//       </ScrollView>
+//     </View>
+//   );
+// }
+
+// const styles = StyleSheet.create({
+//   mainContainer: {
+//     flex: 1,
+//   },
+//   backgroundGradient: {
+//     position: 'absolute',
+//     left: 0,
+//     right: 0,
+//     top: 0,
+//     bottom: 0,
+//   },
+//   container: {
+//     flex: 1, 
+//     gap: 30, 
+//     paddingHorizontal: wp(5),
+//     paddingTop: 55,
+//     paddingBottom: hp(3),
+//   },
+//   welcomeText: {
+//     fontSize: hp(4),
+//     fontWeight: theme.fonts.bold,
+//     textShadowColor: 'rgba(0, 0, 0, 0.75)',
+//     textShadowOffset: { width: 1, height: 1 },
+//     textShadowRadius: 3,
+//   }, 
+//   welcomeSmallText: {
+//     fontSize: hp(3.3),
+//     fontWeight: theme.fonts.bold, 
+//     color: '#e0e0e0',
+//     textShadowColor: 'rgba(0, 0, 0, 0.75)',
+//     textShadowOffset: { width: 1, height: 1 },
+//     textShadowRadius: 3,
+//   }, 
+//   form: {
+//     gap: 25,
+//   },
+//   inputContainer: {
+//     backgroundColor: 'rgba(255, 255, 255, 0.1)',
+//     borderWidth: 0,
+//     borderRadius: 10,
+//   },
+//   inputStyle: {
+//     color: '#e0e0e0',
+//   },
+//   strengthIndicator: {
+//     fontSize: hp(1.4),
+//     marginTop: 5,
+//     marginLeft: 10,
+//     textShadowColor: 'rgba(0, 0, 0, 0.5)',
+//     textShadowOffset: { width: 0.5, height: 0.5 },
+//     textShadowRadius: 1,
+//   },
+//   passwordContainer: {
+//     position: 'relative',
+//   },
+//   passwordInput: {
+//     paddingRight: 50,
+//   },
+//   eyeIcon: {
+//     position: 'absolute',
+//     right: 15,
+//     top: 0,
+//     height: '100%',
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     zIndex: 1,
+//   },
+//   requirementsContainer: {
+//     padding: wp(4),
+//     backgroundColor: 'rgba(0, 0, 0, 0.3)',
+//     borderRadius: wp(2),
+//     borderWidth: 1,
+//     borderColor: 'rgba(255, 255, 255, 0.1)',
+//   },
+//   requirementsTitle: {
+//     fontSize: hp(1.8),
+//     fontWeight: theme.fonts.semibold,
+//     marginBottom: hp(1.5),
+//     color: '#e0e0e0',
+//     textShadowColor: 'rgba(0, 0, 0, 0.5)',
+//     textShadowOffset: { width: 0.5, height: 0.5 },
+//     textShadowRadius: 1,
+//   },
+//   requirementItem: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     marginBottom: hp(1),
+//   },
+//   requirementText: {
+//     fontSize: hp(1.5),
+//     marginLeft: wp(2),
+//     textShadowColor: 'rgba(0, 0, 0, 0.5)',
+//     textShadowOffset: { width: 0.5, height: 0.5 },
+//     textShadowRadius: 1,
+//   },
+//   footer: {
+//     flexDirection: 'row', 
+//     justifyContent: 'center', 
+//     alignItems: 'center', 
+//     gap: 5,
+//     marginTop: hp(3),
+//   },
+//   footerText: {
+//     textAlign: 'center', 
+//     color: '#e0e0e0', 
+//     fontSize: hp(1.6),
+//     textShadowColor: 'rgba(0, 0, 0, 0.5)',
+//     textShadowOffset: { width: 0.5, height: 0.5 },
+//     textShadowRadius: 1,
+//   }
+// });
 
 
 
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, Alert } from 'react-native';
+import { View, StyleSheet, Text, Pressable, TouchableOpacity, ScrollView, Linking } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import ScreenWrapper from '@/components/ScreenWrapper';
 import { StatusBar } from 'expo-status-bar';
 import { useAuth } from '../../contexts/AuthContext';
 import { hp, wp } from '@/helpers/common';
@@ -1313,137 +1330,479 @@ import Icon from '@/assets/icons';
 import Input from "@/components/Input";
 import Button from '@/components/Button';
 import { validatePassword } from '@/utils/validation';
+import { useToast } from '../../contexts/ToastContext';
+import { LinearGradient } from 'expo-linear-gradient';
+import BackButton from '../../components/BackButton';
+import CustomAlert from '../../components/CustomAlert';
+import { DevSettings } from 'react-native';
 
 export default function ResetPasswordScreen() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordStrength, setPasswordStrength] = useState({ score: 0, feedback: '' });
-  const { updatePassword, loading } = useAuth();
+  const { updatePassword, loading, loadingProgress, error, clearError } = useAuth();
+  const { showToast } = useToast();
   const router = useRouter();
-  const { token } = useLocalSearchParams();
-
-  const handleResetPassword = async () => {
-    if (!password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return;
-    }
+  const params = useLocalSearchParams();
   
-    if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
-      return;
-    }
+  // For password visibility toggle
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
-    const validationResult = validatePassword(password);
-    if (!validationResult.isValid) {
-      Alert.alert('Error', validationResult.message);
-      return;
-    }
+  // States for custom alerts
+  const [successAlertVisible, setSuccessAlertVisible] = useState(false);
+  const [errorAlertVisible, setErrorAlertVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   
-    try {
-      const { error, success, user } = await updatePassword(password);
-  
-      if (error) throw error;
-  
-      if (success) {
-        Alert.alert(
-          'Success',
-          'Your password has been reset successfully',
-          [{ 
-            text: 'OK', 
-            onPress: () => {
-              // Clear the password fields
-              setPassword('');
-              setConfirmPassword('');
-              router.replace('/home');
-            }
-          }]
-        );
-      }
-    } catch (error) {
-      Alert.alert('Error', error.message || 'Failed to reset password');
-    }
+  // Colors matching Code X
+  const colors = {
+    red: '#E50914',
+    darkRed: '#8B0000',
+    blue: '#0066B1',
+    darkBlue: '#00284D',
+    darkBackground: '#0A0A0A',
+    gradientStart: '#00284D', // Dark blue shade
+    gradientMiddle: '#141414', // Very dark gray/near black
+    gradientEnd: '#8B0000', // Dark red shade
+    lightText: '#e0e0e0',
   };
+  
+  // Separate state to track if button should be disabled during loading
+  const [buttonDisabled, setButtonDisabled] = useState(false);
+
+  useEffect(() => {
+    // Show custom alert for error messages
+    if (error) {
+      setErrorMessage(error);
+      setErrorAlertVisible(true);
+      clearError();
+    }
+  }, [error, clearError]);
+
+  // Update button disabled state based on loading and error
+  useEffect(() => {
+    if (loading && error) {
+      setButtonDisabled(true);
+    } else if (!loading) {
+      // Short timeout to ensure the loading state is completely finished
+      setTimeout(() => setButtonDisabled(false), 300);
+    }
+  }, [loading, error]);
 
   useEffect(() => {
     if (password) {
       const strength = validatePassword(password);
       setPasswordStrength(strength);
+    } else {
+      setPasswordStrength({ score: 0, feedback: '' });
     }
   }, [password]);
 
-  // Redirect to login if no reset session is available
-  // useEffect(() => {
-  //   if (!resetSession) {
-  //     router.replace('/home');
-  //   }
-  // }, [resetSession]);
+  // Toggle password visibility
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const toggleConfirmPasswordVisibility = () => {
+    setShowConfirmPassword(!showConfirmPassword);
+  };
+
+  const handleResetPassword = async () => {
+    if (!password || !confirmPassword) {
+      setErrorMessage('Please fill in all fields');
+      setErrorAlertVisible(true);
+      return;
+    }
+  
+    if (password !== confirmPassword) {
+      setErrorMessage('Passwords do not match');
+      setErrorAlertVisible(true);
+      return;
+    }
+  
+    const validationResult = validatePassword(password);
+    if (!validationResult.isValid) {
+      setErrorMessage(validationResult.message);
+      setErrorAlertVisible(true);
+      return;
+    }
+  
+    try {
+
+       // Only show success message if there's no error
+       setSuccessAlertVisible(true);
+      // Attempt to update password
+      await updatePassword(password);
+    
+    } catch (error) {
+      // Check if the error is about same password
+      if (error.message === "New password should be different from the old password.") {
+        // Show error alert
+        setErrorMessage(error.message);
+        setErrorAlertVisible(true);
+      } else {
+        // Log the error
+        console.error('Password reset error:', error);
+        
+        // Show error alert
+        setErrorMessage(error.message || 'Failed to reset password');
+        setErrorAlertVisible(true);
+      }
+    }
+  };
+
+  const handleSuccessConfirm = () => {
+    setSuccessAlertVisible(false);
+    // Clear the password fields
+    setPassword('');
+    setConfirmPassword('');
+    
+    // Navigate to home
+    router.replace('/home');
+     DevSettings.reload()
+  };
 
   return (
-    <ScreenWrapper bg="white">
-    <StatusBar style="dark" />
-    <View style={styles.container}>
-      <View>
-        <Text style={styles.welcomeText}>Reset</Text>
-        <Text style={styles.welcomeSmallText}>Password</Text>
-      </View>
-      <View style={styles.form}>
-        <Input
-          icon={<Icon name="lock" size={26} strokeWidth={1.6} />}
-          placeholder="New Password"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-          textContentType="newPassword"
-          autoComplete="password-new"
-        />
-        {password && (
-          <Text style={[
-            styles.strengthIndicator,
-            { color: passwordStrength.score > 2 ? theme.colors.success : theme.colors.error }
-          ]}>
-            {passwordStrength.feedback}
-          </Text>
-        )}
-        <Input
-          icon={<Icon name="lock" size={26} strokeWidth={1.6} />}
-          placeholder="Confirm Password"
-          secureTextEntry
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          textContentType="newPassword"
-          autoComplete="password-new"
-        />
-        <Button
-          loaderType="BarIndicator"
-          title="Reset Password"
-          loading={loading}
-          onPress={handleResetPassword}
-          disabled={!password || !confirmPassword || passwordStrength.score <= 2}
-        />
-      </View>
+    <View style={styles.mainContainer}>
+      <StatusBar style="light" />
+      
+      {/* Custom Alerts */}
+      <CustomAlert
+        visible={successAlertVisible}
+        title="Success"
+        message="Your password has been updated successfully"
+        onCancel={handleSuccessConfirm}
+        onConfirm={handleSuccessConfirm}
+        cancelText="OK"
+        confirmText="OK"
+      />
+
+      <CustomAlert
+        visible={errorAlertVisible}
+        title="Error"
+        message={errorMessage}
+        onCancel={() => setErrorAlertVisible(false)}
+        onConfirm={() => setErrorAlertVisible(false)}
+        cancelText="OK"
+        confirmText="OK"
+      />
+      
+      {/* Main background gradient */}
+      <LinearGradient
+        colors={[colors.gradientStart, colors.gradientMiddle, colors.gradientEnd]}
+        style={styles.backgroundGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      />
+      
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <View style={styles.container}>
+          <BackButton router={router} iconColor={colors.lightText} />
+          
+          {/* Header */}
+          <View>
+            <Text style={styles.welcomeText}>
+              <Text style={{color: colors.red}}>Reset</Text>
+            </Text>
+            <Text style={styles.welcomeSmallText}>Password</Text>
+          </View>
+
+          {/* Form */}
+          <View style={styles.form}>
+            <Text style={{fontSize: hp(1.5), color: colors.lightText}}>
+              Please enter your new password below
+            </Text>
+            
+            {/* Password Input */}
+            <View>
+              <View style={styles.passwordContainer}>
+                <Input
+                  icon={<Icon name="lock" size={26} strokeWidth={1.6} color={colors.lightText} />}
+                  placeholder="New Password"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                  inputStyle={styles.inputStyle}
+                  containerStyle={[
+                    styles.inputContainer,
+                    styles.passwordInput
+                  ]}
+                  placeholderTextColor="rgba(224, 224, 224, 0.7)"
+                  editable={!buttonDisabled}
+                  textContentType="newPassword"
+                  autoComplete="password-new"
+                />
+                <TouchableOpacity 
+                  style={styles.eyeIcon} 
+                  onPress={togglePasswordVisibility}
+                >
+                  <Icon 
+                    name={showPassword ? "eyeoff" : "eye"} 
+                    size={22} 
+                    strokeWidth={1.6} 
+                    color={colors.lightText} 
+                  />
+                </TouchableOpacity>
+              </View>
+              {password && (
+                <Text style={[
+                  styles.strengthIndicator,
+                  { color: passwordStrength.score > 2 ? colors.blue : colors.red }
+                ]}>
+                  {passwordStrength.feedback}
+                </Text>
+              )}
+            </View>
+            
+            {/* Confirm Password Input */}
+            <View>
+              <View style={styles.passwordContainer}>
+                <Input
+                  icon={<Icon name="lock" size={26} strokeWidth={1.6} color={colors.lightText} />}
+                  placeholder="Confirm Password"
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  secureTextEntry={!showConfirmPassword}
+                  inputStyle={styles.inputStyle}
+                  containerStyle={[
+                    styles.inputContainer,
+                    styles.passwordInput
+                  ]}
+                  placeholderTextColor="rgba(224, 224, 224, 0.7)"
+                  editable={!buttonDisabled}
+                  textContentType="newPassword"
+                  autoComplete="password-new"
+                />
+                <TouchableOpacity 
+                  style={styles.eyeIcon} 
+                  onPress={toggleConfirmPasswordVisibility}
+                >
+                  <Icon 
+                    name={showConfirmPassword ? "eyeoff" : "eye"} 
+                    size={22} 
+                    strokeWidth={1.6} 
+                    color={colors.lightText} 
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+            
+            {/* Password Requirements */}
+            <View style={styles.requirementsContainer}>
+              <Text style={styles.requirementsTitle}>Password must:</Text>
+              <View style={styles.requirementItem}>
+                <Icon 
+                  name={password.length >= 8 ? "check" : "close"} 
+                  size={16} 
+                  color={password.length >= 8 ? colors.blue : colors.red} 
+                />
+                <Text style={[styles.requirementText, { color: password.length >= 8 ? colors.blue : colors.lightText }]}>
+                  Be at least 8 characters long
+                </Text>
+              </View>
+              <View style={styles.requirementItem}>
+                <Icon 
+                  name={/[A-Z]/.test(password) ? "check" : "close"} 
+                  size={16} 
+                  color={/[A-Z]/.test(password) ? colors.blue : colors.red} 
+                />
+                <Text style={[styles.requirementText, { color: /[A-Z]/.test(password) ? colors.blue : colors.lightText }]}>
+                  Contain at least one uppercase letter
+                </Text>
+              </View>
+              <View style={styles.requirementItem}>
+                <Icon 
+                  name={/[a-z]/.test(password) ? "check" : "close"} 
+                  size={16} 
+                  color={/[a-z]/.test(password) ? colors.blue : colors.red} 
+                />
+                <Text style={[styles.requirementText, { color: /[a-z]/.test(password) ? colors.blue : colors.lightText }]}>
+                  Contain at least one lowercase letter
+                </Text>
+              </View>
+              <View style={styles.requirementItem}>
+                <Icon 
+                  name={/[0-9]/.test(password) ? "check" : "close"} 
+                  size={16} 
+                  color={/[0-9]/.test(password) ? colors.blue : colors.red} 
+                />
+                <Text style={[styles.requirementText, { color: /[0-9]/.test(password) ? colors.blue : colors.lightText }]}>
+                  Contain at least one number
+                </Text>
+              </View>
+              <View style={styles.requirementItem}>
+                <Icon 
+                  name={/[^A-Za-z0-9]/.test(password) ? "check" : "close"} 
+                  size={16} 
+                  color={/[^A-Za-z0-9]/.test(password) ? colors.blue : colors.red} 
+                />
+                <Text style={[styles.requirementText, { color: /[^A-Za-z0-9]/.test(password) ? colors.blue : colors.lightText }]}>
+                  Contain at least one special character
+                </Text>
+              </View>
+              <View style={styles.requirementItem}>
+                <Icon 
+                  name={password === confirmPassword && password ? "check" : "close"} 
+                  size={16} 
+                  color={password === confirmPassword && password ? colors.blue : colors.red} 
+                />
+                <Text style={[styles.requirementText, { color: password === confirmPassword && password ? colors.blue : colors.lightText }]}>
+                  Passwords match
+                </Text>
+              </View>
+            </View>
+            
+            {/* Reset Button */}
+            <Button 
+              loaderType="BarIndicator" 
+              title={loading ? loadingProgress.status || "Processing..." : "Reset Password"} 
+              loading={loading} 
+              onPress={handleResetPassword}
+              disabled={!password || !confirmPassword || passwordStrength.score <= 2 || buttonDisabled}
+              buttonStyle={{
+                backgroundColor: colors.red,
+                borderRadius: 10,
+                elevation: 5,
+              }}
+              textStyle={{
+                fontWeight: 'bold',
+                fontSize: hp(1.8),
+                color: colors.lightText,
+              }}
+            />
+          </View>
+
+          {/* Footer */} 
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>
+              Remember your password?
+            </Text>
+            <Pressable onPress={() => router.push('login')}>
+              <Text style={[styles.footerText, { 
+                color: colors.blue, 
+                fontWeight: theme.fonts.semibold,
+                textShadowColor: 'rgba(0, 0, 0, 0.5)',
+                textShadowOffset: { width: 0.5, height: 0.5 },
+                textShadowRadius: 1,
+              }]}>
+                Login
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      </ScrollView>
     </View>
-  </ScreenWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  mainContainer: {
     flex: 1,
-    padding: wp(4),
+  },
+  backgroundGradient: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+  },
+  container: {
+    flex: 1, 
+    gap: 30, 
+    paddingHorizontal: wp(5),
+    paddingTop: 55,
+    paddingBottom: hp(3),
   },
   welcomeText: {
     fontSize: hp(4),
     fontWeight: theme.fonts.bold,
-    color: theme.colors.primary,
-    marginTop: hp(4),
-  },
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
+  }, 
   welcomeSmallText: {
-    fontSize: hp(3),
-    fontWeight: theme.fonts.semibold,
-    color: theme.colors.text,
-  },
+    fontSize: hp(3.3),
+    fontWeight: theme.fonts.bold, 
+    color: '#e0e0e0',
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
+  }, 
   form: {
-    marginTop: hp(6),
-    gap: hp(2),
+    gap: 25,
   },
-})
+  inputContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderWidth: 0,
+    borderRadius: 10,
+  },
+  inputStyle: {
+    color: '#e0e0e0',
+  },
+  strengthIndicator: {
+    fontSize: hp(1.4),
+    marginTop: 5,
+    marginLeft: 10,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0.5, height: 0.5 },
+    textShadowRadius: 1,
+  },
+  passwordContainer: {
+    position: 'relative',
+  },
+  passwordInput: {
+    paddingRight: 50,
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: 15,
+    top: 0,
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  requirementsContainer: {
+    padding: wp(4),
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderRadius: wp(2),
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  requirementsTitle: {
+    fontSize: hp(1.8),
+    fontWeight: theme.fonts.semibold,
+    marginBottom: hp(1.5),
+    color: '#e0e0e0',
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0.5, height: 0.5 },
+    textShadowRadius: 1,
+  },
+  requirementItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: hp(1),
+  },
+  requirementText: {
+    fontSize: hp(1.5),
+    marginLeft: wp(2),
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0.5, height: 0.5 },
+    textShadowRadius: 1,
+  },
+  footer: {
+    flexDirection: 'row', 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    gap: 5,
+    marginTop: hp(3),
+  },
+  footerText: {
+    textAlign: 'center', 
+    color: '#e0e0e0', 
+    fontSize: hp(1.6),
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0.5, height: 0.5 },
+    textShadowRadius: 1,
+  }
+});

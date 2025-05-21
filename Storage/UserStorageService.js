@@ -13,6 +13,32 @@ const IMAGE_CACHE_DIR = `${FileSystem.cacheDirectory}image_cache/`;
  * Service to securely store and retrieve user data with offline support
  */
 export const UserStorageService = {
+
+  cacheProfileStats: async (stats) => {
+    try {
+      if (!stats) return false;
+      
+      const cacheData = {
+        timestamp: Date.now(),
+        data: stats
+      };
+      
+      // 1. Cache the stats directly
+      await SecureStore.setItemAsync(PROFILE_STATS_KEY, JSON.stringify(cacheData));
+      
+      // 2. Update user data with these stats
+      const userData = await UserStorageService.getUserData();
+      if (userData) {
+        userData.profileStats = cacheData;
+        await UserStorageService.storeUserData(userData);
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error caching profile stats:', error);
+      return false;
+    }
+  },
   /**
    * Stores user data securely
    * @param {Object} userData - The user data to store

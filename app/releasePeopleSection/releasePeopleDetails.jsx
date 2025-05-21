@@ -26,6 +26,7 @@ import TheatreReviewTabs from "../../components/TheatreReviewTabs";
 import { adminIds } from "../../constants/admin";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import moment from "moment";
+import { useToast } from "../../contexts/ToastContext";
 
 const MIN_CHARS = 0;
 
@@ -62,6 +63,7 @@ const ReleasePeopleDetails = () => {
     const [refreshing, setRefreshing] = useState(false);
     const { updateReviewData} = useReview();
     const [thReview, setThReview] = useState(null);
+    const { showToast } = useToast();
     const [hasUserPostedReview, setHasUserPostedReview] = useState(false);
     const route = useRoute();
 
@@ -175,7 +177,6 @@ useEffect(() => {
 
           const getThPeoplesReleaseDetails = async () => {
                 if (!release || !release.sconnectedId) {
-                    console.log("Release or connectedId not available yet");
                     return;
                 }
                 
@@ -538,9 +539,8 @@ useEffect(() => {
             try{
                 let res = await removeReplyPeopleReview(review?.id);
                 if(res.success){
-                    Alert.alert('Review Reply :', 'Reply deleted. Thanks! You can still view it to respond again.');
+                    showToast('success', 'Reply deleted. Thanks! You can still view it to respond again.');
 
-                    // here is the upadtion to be done to make instant reply release functions
                 }
             }catch(err){
                 Alert.alert('Review Reply', 'Something went wrong');
@@ -664,6 +664,7 @@ useEffect(() => {
 
                     const releaseAt = release?.rDate ? moment(release?.rDate).format('MMM D') : '';
                     const show = releaseAt && moment(release?.rDate).isSameOrBefore(moment(), 'day');  
+
     
         return (
 <ScreenWrapper bg="#121212">
@@ -801,6 +802,7 @@ useEffect(() => {
                                      openProfilePopup={openProfilePopup}
                                      reviewId={reviewId}
                                      onhandleEdit={handleEditReview} 
+                                     date={release?.rDate}
                                      />
                               )}    
 
@@ -818,7 +820,8 @@ useEffect(() => {
                                         onDeleteReview={onDeleteReview}
                                         openProfilePopup={openProfilePopup}
                                         reviewId={reviewId}
-                                        onhandleEdit={handleEditReview} 
+                                        onhandleEdit={handleEditReview}
+                                        date={release?.rDate}
                                     />
                                    </View>
                                    
@@ -835,6 +838,7 @@ useEffect(() => {
                                     openProfilePopup={openProfilePopup}
                                     reviewId={reviewId} // need a change
                                     onhandleEdit={handleEditReview}  // upgrade
+                                    release={release}
                              />
                                     )}
                                    </View>

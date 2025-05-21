@@ -774,8 +774,6 @@ export const removePeopleReviewUpvote = async (peoplesReviewId, userId) => {
       
       // user checking if a user has posted a review on a theatre or digital stream
       export const hasUserPostedAnyReview = async (userId, releaseId, streamId) => {
-        console.log("Trying the process to get user review");
-        
         try {
           if (!userId || !releaseId) {
             return { 
@@ -881,7 +879,6 @@ export const updateReleaseEndDate = async (releaseId, endDate) => {
 
 /// here the functon  for direct release 
 export const hasUserPostedAnyReviewInDirect = async (userId, streamId) => {
-  console.log("Checking if user has posted direct review");
   
   try {
     if (!userId || !streamId) {

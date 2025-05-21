@@ -1,6 +1,6 @@
 import { Image, StyleSheet, Text, TouchableOpacity, View, ScrollView, Alert, Animated } from 'react-native'
 import React, { useRef, useState, useEffect } from 'react'
-import { wp, hp, stripHtmlTags } from '@/helpers/common'
+import { wp, hp } from '@/helpers/common'
 import theme from '../constants/theme'
 import { getSupabaseFileUrl } from '../services/userProfileImage'
 import RenderHtml from 'react-native-render-html'
@@ -44,7 +44,7 @@ const StreamCardInfo = ({
     const extractYear = item?.rDate ? moment(item.rDate).format('YYYY') : '';
 
     useEffect(() => {
-        if (!item?.directRelease) {
+        if (!item?.directRelease && item?.connectedId) {
             getAverageRating();
         }else{
             getAverageRatingOfDirect();
@@ -251,7 +251,10 @@ const StreamCardInfo = ({
 
     const parsedTags = item.tags ? JSON.parse(item.tags) : [];
 
-const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1);
+   const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1);
+
+   const releaseAt = item?.rDate ? moment(item.rDate).format('MMM D') : '';
+   const show = releaseAt && moment(item.rDate).isSameOrBefore(moment(), 'day');
 
     return (
         <ScreenWrapper bg="#121212">
@@ -285,7 +288,14 @@ const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1);
                 {/* Content Overlay */}
                 <View style={styles.overlay}>
                     {/* Rating Stars - Top Left - Now using avgRating */}
-                    {renderRating()}
+                    {/* {renderRating()} */}
+
+                    {show && avgRating?.average ? (
+                        renderRating()
+                        ) : (
+                            <Text style={styles.statusTextx}>
+                        </Text>
+                        )}
                     
                     {/* Bottom Content */}
                     <View style={styles.bottomContent}>
@@ -307,16 +317,25 @@ const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1);
                         
                         {/* Status */}
                         <Text style={styles.statusText}>
-                {parsedTags.length > 0
-                    ? `Status: Now Streaming on ${
-                        parsedTags.length === 1
-                        ? capitalize(parsedTags[0])
-                        : parsedTags.map(capitalize).join(' and ')
-                    }`
-                    : 'Status: Now Streaming'}
+                {show
+                    ? 'Status: Now Streaming'
+                    : 'Status: Coming Soon - Digital'}
                 </Text>
-                        
-                        {/* Action Buttons */}
+
+                    {/* platformstatus */}
+                    {parsedTags.length > 0 && (
+                          <Text style={styles.statusText}>
+                          {parsedTags.length > 0
+                              ? `Streaming Platform - ${
+                                  parsedTags.length === 1
+                                  ? capitalize(parsedTags[0])
+                                  : parsedTags.map(capitalize).join(' and ')
+                              }`
+                              : ''}
+                          </Text>
+                    )}
+                   
+                        {/* Action Buttons Status: Coming Soon - Digital*/}
                         {showReviewButton && (
                             <View style={styles.actionButtons}>
                                 {/* Read Reviews Button */}
@@ -465,7 +484,7 @@ const styles = StyleSheet.create({
     statusText: {
         color: 'white',
         fontSize: hp(1.8),
-        marginBottom: 16,
+        marginBottom: 8,
         fontWeight: '500',
     },
     // User Rating Styles - Enhanced with animation support
@@ -636,5 +655,11 @@ const styles = StyleSheet.create({
         width: 600,
         height: 800,
         zIndex: -1,
-    }
+    },
+    statusTextx: {
+        color: 'white',
+        fontSize: hp(2),
+        marginBottom: 16,
+        fontWeight: '500',
+    },
 })

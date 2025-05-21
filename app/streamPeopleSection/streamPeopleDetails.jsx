@@ -25,6 +25,8 @@ import { useReview } from "../../contexts/ReviewContext";
 import PeoplesReviewList from "../releasePeopleSection/releasePeopleReview";
 import DigitalReviewTabs from "../../components/DigitalReviewTabs";
 import ScreenWrapper from "../../components/ScreenWrapper";
+import { useToast } from "../../contexts/ToastContext";
+import moment from "moment";
 
 const MIN_CHARS = 0;
 
@@ -41,6 +43,7 @@ const StreamPeopleDetails = () => {
     const [adminReviewText, setAdminReviewText] = useState(''); // admin review text
     const reviewRef = useRef('');
     const replyRef = useRef('');
+    const { showToast } = useToast();
     const [reviewText, setReviewText] = useState('');
     const [release, setRelease] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -126,7 +129,7 @@ const StreamPeopleDetails = () => {
         const checkUserReview = async () => {
           if (!streamId) return;
           try {
-            const res = await hasUserPostedAnyReview(user.id, release.connectedId, streamId);
+            const res = await hasUserPostedAnyReview(user?.id, release?.connectedId, streamId);
             if (res.success) {
               setHasUserPostedReview(res.hasPostedReview);
             }
@@ -152,7 +155,6 @@ const StreamPeopleDetails = () => {
     // function to fetch the reviews from theatre
     const getThPeoplesReleaseDetails = async () => {
         if (!release || !release.connectedId) {
-            console.log("Release or connectedId not available yet");
             return;
         }
         
@@ -559,9 +561,8 @@ const StreamPeopleDetails = () => {
             try{
                 let res = await removeReplyPeopleReview(review?.id);
                 if(res.success){
-                    Alert.alert('Review Reply :', 'Reply deleted. Thanks! You can still view it to respond again.');
-
-                    // here is the upadtion to be done to make instant reply release functions
+                    showToast('success', 'Review Reply :', 'Reply deleted. Thanks! You can still view it to respond again.');
+                   
                 }
             }catch(err){
                 Alert.alert('Review Reply', 'Something went wrong');
@@ -706,6 +707,9 @@ const StreamPeopleDetails = () => {
 
            const isadmin =  user?.id === "a4424502-53de-4814-8882-7a4b5c09a76c"
 
+           const releaseAt = release?.rDate ? moment(release?.rDate).format('MMM D') : '';
+           const show = releaseAt && moment(release?.rDate).isSameOrBefore(moment(), 'day');
+         
           // below start the rendering part
     
         return (
@@ -911,6 +915,7 @@ const StreamPeopleDetails = () => {
       openProfilePopup={openProfilePopup}
       reviewId={reviewId}
       onhandleEdit={handleEditReview} 
+      date={release?.rDate}
     />
   </View>
   
@@ -926,6 +931,7 @@ const StreamPeopleDetails = () => {
         openProfilePopup={openProfilePopup}
         reviewId={reviewId}
         onhandleEdit={handleEditReview}
+       
       />
     ) : (
       <View style={styles.emptyState}>
@@ -943,7 +949,7 @@ const StreamPeopleDetails = () => {
                     />
                 </ScrollView>
 
-                {!hasUserPostedReview && (
+                {!hasUserPostedReview && show && (
                 <Animated.View
                     style={{
                     position: 'absolute',

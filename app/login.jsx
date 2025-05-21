@@ -13,6 +13,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useToast } from '../contexts/ToastContext'
+import { navigate } from 'expo-router/build/global-state/routing'
 
 const Login = () => {
   const router = useRouter();
@@ -109,7 +110,8 @@ const Login = () => {
       if (isNew) {
           router.replace('/auth/newuserscreens/userpreferences');
       } else {
-          router.replace('/home');
+           router.dismissAll();
+           router.replace('/home');
       }
     } catch (error) {
         showToast('error', error.message);

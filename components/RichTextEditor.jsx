@@ -9,7 +9,8 @@ const RichTextEditor = ({
   initialHeight = 184,
   placeholder = "Type something here... Use *text* to make it bold",
   containerStyle,
-  editorStyle 
+  editorStyle,
+  disableCopyPaste = false // New prop to disable copy-paste
 }) => {
 
 const ensureDivWrapped = (text) => {
@@ -23,6 +24,11 @@ const ensureDivWrapped = (text) => {
 const isHtml = (text) => /<\/?[a-z][\s\S]*>/i.test(text);
 
 const handlePaste = (pastedText) => {
+  // If copy-paste is disabled, ignore the paste event
+  if (disableCopyPaste) {
+    return;
+  }
+
   if (isHtml(pastedText.trim())) {
     const wrappedText = ensureDivWrapped(pastedText);
     editorRef.current?.insertHTML(wrappedText);

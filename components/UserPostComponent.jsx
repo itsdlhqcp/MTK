@@ -40,7 +40,7 @@ const UserPostsComponent = ({ navigation, userId }) => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [viewMode, setViewMode] = useState('list'); // Default to grid view    
+  const [viewMode, setViewMode] = useState('grid'); // Default to grid view    
   const { user } = useAuth();
   const [isConnected, setIsConnected] = useState(true);
   const [initialCheckDone, setInitialCheckDone] = useState(false);

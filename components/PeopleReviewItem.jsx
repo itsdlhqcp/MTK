@@ -1,9 +1,11 @@
-import { Alert, StyleSheet, Text, TouchableOpacity, View, Animated } from 'react-native'
+import { StyleSheet, Text, TouchableOpacity, View, Animated } from 'react-native'
 import React, { useEffect, useState, useRef } from 'react'
 import theme from '../constants/theme'
 import { hp } from '../helpers/common'
+import * as Sharing from 'expo-sharing'
 import Avatar from './Avatar'
 import Icon from '@/assets/icons'
+import { captureRef } from 'react-native-view-shot'
 import moment from 'moment'
 import { 
   createPeopleReviewDownvote, 
@@ -12,12 +14,15 @@ import {
   removePeopleReviewUpvote,  
   fetchPeopleReviewReplies,  
   removePeopleReviewReplyLike, 
-  createPeopleReviewReplyLike 
+  createPeopleReviewReplyLike, 
+  fetchPeoplesReleaseDetails
 } from '../services/releaseService'
 import { useAuth } from '../contexts/AuthContext'
 import PratingStars from './pRatingStars'
 import { userService } from '../services/helperService'
 import ReviewIndicators from './ReviewIndicator'
+import StoryShare from './StoryShare'
+import CustomAlert from './CustomAlert'
 
 const PeoplesReviewItem = ({
   item, 
@@ -28,12 +33,20 @@ const PeoplesReviewItem = ({
   onReplyReviewPress,
   onShowProfile,
   router,
-  isReply = false
+  isReply = false,
+  releaseId
 }) => {
+  const posterRef = useRef(null);
   const [replyCount, setReplyCount] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const rocketScale = useRef(new Animated.Value(1)).current
   const rocketOpacity = useRef(new Animated.Value(1)).current
+  
+  // States for custom alerts
+  const [deleteAlertVisible, setDeleteAlertVisible] = useState(false);
+  const [editAlertVisible, setEditAlertVisible] = useState(false);
+  const [errorAlertVisible, setErrorAlertVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   
   const canEdit = moment().diff(moment(item?.created_at), 'hours') <= 12;
   const createdAt = moment(item?.created_at).format('MMM D')
@@ -44,11 +57,25 @@ const PeoplesReviewItem = ({
   const [upvotes, setUpvotes] = useState([]);
   const [downvotes, setDownvotes] = useState([]);
   const [likes, setLikes] = useState([]);
+  const [isSharing, setIsSharing] = useState(false);
+  const [showPosterView, setShowPosterView] = useState(false);
+  const [release, setRelease] = useState(null);
   
   // Check if current user has upvoted, downvoted or liked
   const hasUpvoted = upvotes?.some(vote => vote?.userId === user?.id);
   const hasDownvoted = downvotes?.some(vote => vote?.userId === user?.id);
   const hasLiked = likes?.some(like => like?.userId === user?.id);
+
+  const getReleaseDetails = async () => {
+    let res = await fetchPeoplesReleaseDetails(releaseId);
+    if (res.success) setRelease(res.data);
+  };
+  
+  useEffect(() => {
+    if (releaseId) {
+      getReleaseDetails();
+    }
+  }, [releaseId]);
 
   useEffect(() => {
     if (!isReply) {
@@ -78,32 +105,71 @@ const PeoplesReviewItem = ({
     }
   }
 
-  const handleDelete = () => {
-    Alert.alert('Confirm', 'Are you sure you want to do this?', [
-      {
-        text: 'Cancel',
-        style: 'cancel'
-      },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => onDelete(item)
+  const handleShare = async () => {
+    if (isSharing) return; // Prevent multiple share requests
+    
+    try {
+      setIsSharing(true);
+      
+      // Show the poster view and wait a bit for it to render
+      setShowPosterView(true);
+      
+      // Add a small delay to ensure the view is rendered
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      if (!posterRef.current) {
+        setErrorMessage('Unable to generate poster');
+        setErrorAlertVisible(true);
+        setIsSharing(false);
+        setShowPosterView(false);
+        return;
       }
-    ])
+      
+      // Generate a high-quality image of our poster component
+      const uri = await captureRef(posterRef, {
+        format: 'jpg',
+        quality: 1,
+        result: 'file',
+      });
+      
+      // Hide the poster view after capture
+      setShowPosterView(false);
+      
+      // Check if sharing is available
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(uri, {
+          mimeType: 'image/jpeg',
+          dialogTitle: 'Share your PlotTwist',
+          UTI: 'public.jpeg'
+        });
+      } else {
+        setErrorMessage('Sharing is not available on this device');
+        setErrorAlertVisible(true);
+      }
+    } catch (error) {
+      console.error('Sharing error:', error);
+      setErrorMessage('Failed to share poster');
+      setErrorAlertVisible(true);
+      setShowPosterView(false);
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  const handleDelete = () => {
+    setDeleteAlertVisible(true);
+  }
+
+  const performDelete = () => {
+    onDelete(item);
   }
 
   const handleEditButtonPress = () => {
-    Alert.alert('Confirm', 'Are you sure! you have changed your mind?', [
-      {
-        text: 'Cancel',
-        style: 'cancel'
-      },
-      {
-        text: 'Edit',
-        style: 'destructive',
-        onPress: () => handleEdit(item)
-      }
-    ])
+    setEditAlertVisible(true);
+  }
+
+  const performEdit = () => {
+    handleEdit(item);
   }
 
   const handleUsernamePress = () => {
@@ -125,7 +191,8 @@ const PeoplesReviewItem = ({
   
       const res = await removePeopleReviewUpvote(item?.id, user?.id);
       if (!res.success) {
-        Alert.alert('Error', res.msg || 'Something went wrong');
+        setErrorMessage(res.msg || 'Something went wrong');
+        setErrorAlertVisible(true);
       }
     } else {
       // Remove downvote if exists
@@ -144,7 +211,8 @@ const PeoplesReviewItem = ({
   
       const res = await createPeopleReviewUpvote(data);
       if (!res.success) {
-        Alert.alert('Error', res.msg || 'Something went wrong');
+        setErrorMessage(res.msg || 'Something went wrong');
+        setErrorAlertVisible(true);
       }
     }
   };
@@ -157,7 +225,8 @@ const PeoplesReviewItem = ({
   
       const res = await removePeopleReviewDownvote(item?.id, user?.id);
       if (!res.success) {
-        Alert.alert('Error', res.msg || 'Something went wrong');
+        setErrorMessage(res.msg || 'Something went wrong');
+        setErrorAlertVisible(true);
       }
     } else {
       // Remove upvote if exists
@@ -176,12 +245,12 @@ const PeoplesReviewItem = ({
   
       const res = await createPeopleReviewDownvote(data);
       if (!res.success) {
-        Alert.alert('Error', res.msg || 'Something went wrong');
+        setErrorMessage(res.msg || 'Something went wrong');
+        setErrorAlertVisible(true);
       }
     }
   };
   
-
   const handleLike = async () => {
     if (hasLiked) {
       const updatedLikes = likes.filter(like => like.userId !== user?.id);
@@ -189,7 +258,8 @@ const PeoplesReviewItem = ({
       
       const res = await removePeopleReviewReplyLike(item?.id, user?.id);
       if (!res.success) {
-        Alert.alert('Error', res.msg || 'Something went wrong');
+        setErrorMessage(res.msg || 'Something went wrong');
+        setErrorAlertVisible(true);
       }
     } else {
       const data = {
@@ -201,7 +271,8 @@ const PeoplesReviewItem = ({
       const res = await createPeopleReviewReplyLike(data);
       
       if (!res.success) {
-        Alert.alert('Error', res.msg || 'Something went wrong');
+        setErrorMessage(res.msg || 'Something went wrong');
+        setErrorAlertVisible(true);
       }
     }
 
@@ -260,7 +331,8 @@ const PeoplesReviewItem = ({
                   if (userData) {
                     onShowProfile && onShowProfile(userData);
                   } else {
-                    Alert.alert('Error', 'User under this username not exists');
+                    setErrorMessage('User under this username not exists');
+                    setErrorAlertVisible(true);
                   }
                 }}
               >
@@ -276,6 +348,54 @@ const PeoplesReviewItem = ({
 
   return (
     <View style={styles.container}>
+      {/* Hidden poster view for sharing - Only create when needed */}
+      {showPosterView && (
+        <View style={styles.hiddenContainer}>
+          <StoryShare 
+            ref={posterRef} 
+            item={item} 
+            release={release} 
+          />
+        </View>
+      )}
+
+      {/* Custom Alerts */}
+      <CustomAlert
+        visible={deleteAlertVisible}
+        title="Confirm"
+        message="Are you sure you want to do this?"
+        onCancel={() => setDeleteAlertVisible(false)}
+        onConfirm={() => {
+          setDeleteAlertVisible(false);
+          performDelete();
+        }}
+        cancelText="Cancel"
+        confirmText="Delete"
+      />
+
+      <CustomAlert
+        visible={editAlertVisible}
+        title="Confirm"
+        message="Are you sure you've changed your mind and want to rewrite your review?"
+        onCancel={() => setEditAlertVisible(false)}
+        onConfirm={() => {
+          setEditAlertVisible(false);
+          performEdit();
+        }}
+        cancelText="Cancel"
+        confirmText="Edit"
+      />
+
+      <CustomAlert
+        visible={errorAlertVisible}
+        title="Error"
+        message={errorMessage}
+        onCancel={() => setErrorAlertVisible(false)}
+        onConfirm={() => setErrorAlertVisible(false)}
+        cancelText="OK"
+        confirmText="OK"
+      />
+
       <Avatar
         uri={item?.user?.image}
         onPress={handleUsernamePress}
@@ -319,12 +439,21 @@ const PeoplesReviewItem = ({
                 <Text style={styles.count}>{downvotes?.length || 0}</Text>
 
                 <TouchableOpacity 
-                   onPress={() => onReplyReviewPress(item.id)}  
+                  onPress={() => onReplyReviewPress(item.id)}  
                   style={styles.replyIcon}
                 >
                   <Icon name="bubbleChatReply" size={hp(2.5)} color={theme.colors.primary} />
                 </TouchableOpacity>
                 <Text style={styles.replyCount}>{item?.replyPeopleReviews?.length || 0}</Text>
+                {canDelete && (
+                  <TouchableOpacity 
+                  onPress={handleShare} 
+                  style={styles.replyIcon}
+                >
+                  <Icon name="insta" size={hp(2.5)} color={theme.colors.primary} />
+                </TouchableOpacity>
+                )}
+                
               </>
             )}
           </View>
@@ -530,7 +659,15 @@ const styles = StyleSheet.create({
   activeRocketCount: {
     color: '#0066ff',
   },
-})
+  hiddenContainer: {
+    position: 'absolute',
+    top: -1000, 
+    left: 0,
+    width: 600,
+    height: 800,
+    zIndex: -1,
+  }
+});
 
 
 

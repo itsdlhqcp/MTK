@@ -27,7 +27,7 @@ const NotificationItem = ({item, router}) => {
                   <Text style={styles.text}>
                       {item?.sender?.name}
                   </Text>
-                  <Text style={[styles.text, {color: theme.colors.textDark}]}>
+                  <Text style={[styles.text, {color: theme.colors.textLight}]}>
                       {item?.title}
                   </Text>
               </View>
@@ -50,9 +50,9 @@ const styles = StyleSheet.create({
         alignItems: 'center', 
         justifyContent: 'space-between', 
         gap: 12,
-        backgroundColor: 'white', 
+        backgroundColor: theme.colors.text, 
         borderWidth: 0.5,
-        borderColor: theme.colors.darkLight,
+        borderColor: theme.colors.blue,
         padding: 15,
         borderRadius: theme.radius.lg, 
         borderCurve: 'continuous' 
@@ -64,6 +64,6 @@ const styles = StyleSheet.create({
     text: {
         fontSize: hp(1.6), 
         fontWeight: theme.fonts.medium, 
-        color: theme.colors.text
+        color: theme.colors.red
     }
 })

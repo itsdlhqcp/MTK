@@ -114,8 +114,8 @@ const styles = StyleSheet.create({
   },
   toastText: {
     color: 'white',
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 12,
+    fontWeight: '400',
     textAlign: 'center',
   }
 });

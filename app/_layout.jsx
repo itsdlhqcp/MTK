@@ -57,7 +57,7 @@ const MainLayout = () => {
         router.push('/releaseDetails');
       }
       else if (url.includes('home')) {
-        router.push('/home');
+        router.replace('/home');
       }
     } catch (error) {
       console.error('Deep link handling error:', error);

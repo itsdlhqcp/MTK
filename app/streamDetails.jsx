@@ -15,6 +15,7 @@ import { useAuth } from '../contexts/AuthContext';
 import ReleaeCard from '../components/RelesaeCard';  // here you should try-out ott card - to use same card component
 import Loading from "../components/Loading";
 import FeedLoader from "../components/FeedLoader";
+import moment from "moment";
 
 const MIN_CHARS = 85;
 
@@ -309,6 +310,9 @@ const StreamDetails = () => {
                 </View>
             );
         }
+
+              const releaseAt = release?.rDate ? moment(release?.rDate).format('MMM D') : '';
+              const show = releaseAt && moment(release?.rDate).isSameOrBefore(moment(), 'day');
     
         return (
             <View style={styles.container}>
@@ -441,11 +445,19 @@ const StreamDetails = () => {
                                 </View>
                             ))
                     ) : (
-                        <View style={styles.noReviews}>
-                            <Text style={styles.noReviewsText}>
-                                Be the first to write a review!
-                            </Text>
-                        </View>
+                        show ? (
+                            <View style={styles.noReviews}>
+                                <Text style={styles.noReviewsText}>
+                                    Not released yet!
+                                </Text>
+                            </View>
+                        ) : (
+                            <View style={styles.noReviews}>
+                                <Text style={styles.noReviewsText}>
+                                    Be the first to write a review!xx
+                                </Text>
+                            </View>
+                        )
                     )}
                 </View>
                 </ScrollView>

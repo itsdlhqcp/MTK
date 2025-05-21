@@ -16,6 +16,7 @@ import Loading from "../components/Loading";
 import FeedLoader from "../components/FeedLoader";
 import Icon from '../assets/icons';
 import { Text } from "react-native";
+import moment from "moment";
 
 const MIN_CHARS = 85;
 
@@ -309,6 +310,8 @@ const ReleaseDetails = () => {
             );
         }
 
+        const releaseAt = release?.rDate ? moment(release?.rDate).format('MMM D') : '';
+        const show = releaseAt && moment(release?.rDate).isSameOrBefore(moment(), 'day'); 
     
         return (
             <View style={styles.container}>
@@ -439,11 +442,20 @@ const ReleaseDetails = () => {
                                 </View>
                             ))
                     ) : (
-                        <View style={styles.noReviews}>
-                            <Text style={styles.noReviewsText}>
-                                Be the first to write a review!
-                            </Text>
-                        </View>
+                            show ? (
+                                <View style={styles.noReviews}>
+                                    <Text style={styles.noReviewsText}>
+                                        Not released yet!
+                                    </Text>
+                                </View>
+                            ) : (
+                                <View style={styles.noReviews}>
+                                    <Text style={styles.noReviewsText}>
+                                        Be the first to write a review! xx
+                                    </Text>
+                                </View>
+                            )
+                       
                     )}
                 </View>
                 </ScrollView>

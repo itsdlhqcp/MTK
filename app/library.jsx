@@ -5,6 +5,7 @@ import Icon from '../assets/icons';
 import { hp } from '../helpers/common';
 import ScreenWrapper from '../components/ScreenWrapper';
 import { NetworkUtils } from '../utils/network';
+import { useToast } from '../contexts/ToastContext';
 export class Library extends Component {
   constructor(props) {
     super(props);
@@ -43,10 +44,10 @@ export class Library extends Component {
 
   toggleSearch = () => {
     const { isSearchVisible, isSearchEnabled } = this.state;
-    
+    const { showToast } = useToast();
     // If search is disabled due to offline status, show alert
     if (!isSearchVisible && !isSearchEnabled) {
-      Alert.alert('Offline', 'Search is only available when online');
+      showToast('success', 'Search is only available when online');
       return;
     }
     

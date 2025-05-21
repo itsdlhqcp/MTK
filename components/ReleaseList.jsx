@@ -7,8 +7,8 @@ import { hp, wp } from '../helpers/common';
 import Icon from '../assets/icons';
 import { getSupabaseFileUrl } from '../services/imageService';
 import PratingStars from './pRatingStars';
-import MLoading from './MaterialLoader';
 import { fetchAverageRating } from '../services/releaseService';
+import CustomDotIndicator from './CutomDotIndicator';
 
 // Modified header with toggle button that only shows for the first header
 const ReleaseDateHeader = ({ date, viewMode, onToggleView, isFirstHeader }) => (
@@ -80,10 +80,9 @@ const ReleaseGridCard = ({ item, router }) => {
             resizeMode="cover"
           />
           
-          {(item?.defRating > 0) &&(
-            <View style={styles.gridRatingContainer}>
 
-                 {show ? ( 
+            <View style={styles.gridRatingContainer}>
+                 {show && avgRating?.average ? ( 
                     <> <PratingStars 
                             rating={avgRating?.average} 
                             showRatingText={false} 
@@ -99,7 +98,7 @@ const ReleaseGridCard = ({ item, router }) => {
                    </Text>
                 )}
             </View>
-          )}
+      
         </View>
       )}
     </TouchableOpacity>
@@ -155,6 +154,9 @@ const ReleaseList = ({ releases, currentUser, router, loading, hasMore, onLoadMo
   }, [releases]);
 
   const getHeaderText = (date, endDate) => {
+    // If date is null, return "COMING SOON"
+    if (date === null) return 'COMING SOON';
+    
     const today = moment().startOf('day');
     const releaseDate = moment(date).startOf('day');
     const diffDays = releaseDate.diff(today, 'days');
@@ -165,10 +167,9 @@ const ReleaseList = ({ releases, currentUser, router, loading, hasMore, onLoadMo
     
     // Future dates
     if (diffDays === 1) return 'TOMORROW';
-    if (diffDays === 2) return 'AFTER TOMORROW';
     if (diffDays > 2 && diffDays <= 7) return 'THIS WEEK';
     if (diffDays > 7 && diffDays <= 14) return 'NEXT WEEK';
-    if (diffDays > 14) return 'COMING WEEKS';
+    if (diffDays > 14) return 'LATER';
     
     // Past dates
     if (diffDays >= -7) return releaseDate.format('dddd').toUpperCase();
@@ -185,7 +186,8 @@ const ReleaseList = ({ releases, currentUser, router, loading, hasMore, onLoadMo
       'AFTER TOMORROW': 2,
       'THIS WEEK': 3,
       'NEXT WEEK': 4,
-      'COMING WEEKS': 5
+      'COMING WEEKS': 5,
+      'COMING SOON': 999 // Always the last priority
     };
     
     // Return the priority (lower number = higher priority)
@@ -226,14 +228,28 @@ const ReleaseList = ({ releases, currentUser, router, loading, hasMore, onLoadMo
         }
         
         // If priorities are the same, use the original date-based sorting
-        const dateA = moment(a[1][0].rDate);
-        const dateB = moment(b[1][0].rDate);
-        return dateA.diff(dateB); // Changed to ascending order
+        // For null dates (COMING SOON), we already handled with the priority
+        if (a[0] === 'COMING SOON' || b[0] === 'COMING SOON') {
+          return 0;
+        }
+        
+        const dateA = a[1][0].rDate ? moment(a[1][0].rDate) : moment().add(1000, 'years');
+        const dateB = b[1][0].rDate ? moment(b[1][0].rDate) : moment().add(1000, 'years');
+        return dateA.diff(dateB); // Reverted to ascending order
       })
-      .map(([header, items]) => ({
-        header,
-        data: items
-      }));
+      .map(([header, items]) => {
+        // Sort items within each group in ascending date order
+        const sortedItems = [...items].sort((a, b) => {
+          const dateA = a.rDate ? moment(a.rDate) : moment().add(1000, 'years');
+          const dateB = b.rDate ? moment(b.rDate) : moment().add(1000, 'years');
+          return dateA.diff(dateB); // Sort items in ascending order
+        });
+        
+        return {
+          header,
+          data: sortedItems
+        };
+      });
   }, [releases]);
 
   // Toggle view mode between list and grid
@@ -356,7 +372,7 @@ const ReleaseList = ({ releases, currentUser, router, loading, hasMore, onLoadMo
   const renderEmptyComponent = () => (
     <View style={styles.emptyContainer}>
       <Text style={styles.noMoreText}>
-        {loading ? <MLoading /> : "No releases found!"}
+        {loading ? <CustomDotIndicator size={6}/> : "No releases found!"}
       </Text>
     </View>
   );

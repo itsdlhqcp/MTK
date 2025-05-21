@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, ActivityIndicator, TextInput, Dimensions, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, TextInput, StatusBar } from 'react-native';
 import React, { useState, useCallback } from 'react';
 import { hp, wp } from '@/helpers/common';
 import theme from '../constants/theme';
@@ -6,9 +6,12 @@ import Icon from '@/assets/icons';
 import Avatar from '../components/Avatar';
 import { friendRequestService } from '../services/requestService';
 import { supabase } from '../lib/supabase';
+import { adminIds } from '../constants/admin'
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import ScreenWrapper from '../components/ScreenWrapper';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
+import { updateUser } from '../services/userServices'; 
 
 const instaTheme = {
   ...theme,
@@ -31,9 +34,13 @@ const UserSearchTab = () => {
   const [friendships, setFriendships] = useState({});
   const [debounceTimeout, setDebounceTimeout] = useState(null);
   const [isNavigating, setIsNavigating] = useState(false);
+  const [updatingRole, setUpdatingRole] = useState(null); // Track which user's role is being updated
   const navigation = useNavigation();
+  const { showToast } = useToast();
+  const { user } = useAuth()
   const { user: currentUser } = useAuth();
-
+  const isadmin = adminIds.includes(user?.id);
+  
   useFocusEffect(
     useCallback(() => {
       if (searchTerm.length > 0) {
@@ -58,14 +65,14 @@ const UserSearchTab = () => {
 
       const { data, error } = await supabase
         .from('users')
-        .select('id, name, image, bio')
+        .select('id, name, image, bio, role') // Also select the role field
         .ilike('name', `%${searchTerm}%`)
         .neq('id', currentUserId)
         .limit(20);
 
       if (error) {
         console.error('Error searching users:', error);
-        Alert.alert('Error', error.message || 'Failed to search users');
+        showToast('success', error.message);
         return;
       }
 
@@ -82,7 +89,7 @@ const UserSearchTab = () => {
       setFriendships(friendshipData);
     } catch (error) {
       console.error('Error in searchUsers:', error);
-      Alert.alert('Error', 'Something went wrong while searching');
+      showToast('success', 'Something went wrong while searching');
     } finally {
       setLoading(false);
     }
@@ -109,20 +116,70 @@ const UserSearchTab = () => {
       const result = await friendRequestService.sendRequest(userId);
       
       if (result.success) {
-        Alert.alert('Success', 'Friend request sent successfully');
+        showToast('success', 'Friend request sent successfully');
         // Update friendship status
         setFriendships(prev => ({
           ...prev,
           [userId]: 'pending'
         }));
       } else {
-        Alert.alert('Error', result.message || 'Failed to send friend request');
+        showToast('success', result.message || 'Failed to send friend request');
       }
     } catch (error) {
       console.error('Error sending friend request:', error);
-      Alert.alert('Error', 'Something went wrong');
+      showToast('success', 'Something went wrong');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Function to handle updating user's role to sadmin
+  const handleUpdateToSadmin = async (userId) => {
+    try {
+      setUpdatingRole(userId);
+      const result = await updateUser(userId, { role: 'sadmin' });
+      
+      if (result.success) {
+        showToast('success', 'User updated to Super Admin');
+        // Update the local state to reflect the change
+        setSearchResults(prev => 
+          prev.map(user => 
+            user.id === userId ? { ...user, role: 'sadmin' } : user
+          )
+        );
+      } else {
+        showToast('error', result.msg || 'Failed to update user role');
+      }
+    } catch (error) {
+      console.error('Error updating user role:', error);
+      showToast('error', 'Something went wrong');
+    } finally {
+      setUpdatingRole(null);
+    }
+  };
+
+  // Function to handle removing sadmin role (setting to null)
+  const handleRemoveSadmin = async (userId) => {
+    try {
+      setUpdatingRole(userId);
+      const result = await updateUser(userId, { role: null });
+      
+      if (result.success) {
+        showToast('success', 'Super Admin role removed');
+        // Update the local state to reflect the change
+        setSearchResults(prev => 
+          prev.map(user => 
+            user.id === userId ? { ...user, role: null } : user
+          )
+        );
+      } else {
+        showToast('error', result.msg || 'Failed to update user role');
+      }
+    } catch (error) {
+      console.error('Error removing user role:', error);
+      showToast('error', 'Something went wrong');
+    } finally {
+      setUpdatingRole(null);
     }
   };
 
@@ -165,6 +222,9 @@ const UserSearchTab = () => {
         buttonText = 'Follow';
     }
     
+    // Check if the user is already a sadmin
+    const isSadmin = item.role === 'sadmin';
+    
     return (
       <View style={styles.userCard}>
         <TouchableOpacity 
@@ -177,21 +237,50 @@ const UserSearchTab = () => {
             rounded={hp(7) / 2} 
           />
           <View style={styles.userText}>
-            <Text style={styles.username} numberOfLines={1} ellipsizeMode="tail">{item.name}</Text>
+            <Text style={styles.username} numberOfLines={1} ellipsizeMode="tail">
+              {item.name} {isSadmin && <Text style={styles.adminBadge}>· studio</Text>}
+            </Text>
             {item.bio && (
               <Text style={styles.userBio} numberOfLines={1} ellipsizeMode="tail">
-                {item.bio}
+                {item.bio.length > 20 ? `${item.bio.substring(0, 20)}...` : item.bio}
               </Text>
             )}
+
           </View>
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.actionButton, buttonStyle]}
-          onPress={() => handleSendRequest(item.id)}
-          disabled={buttonDisabled}
-        >
-          <Text style={[styles.buttonText, buttonTextStyle]}>{buttonText}</Text>
-        </TouchableOpacity>
+        
+        <View style={styles.actionsContainer}>
+          {/* Add the + icon button for promoting to sadmin or - for removing */}
+          {isadmin && (
+          updatingRole === item.id ? (
+            <View style={styles.adminButton}>
+              <ActivityIndicator size="small" color={instaTheme.colors.primary} />
+            </View>
+          ) : isSadmin ? (
+            <TouchableOpacity 
+              style={styles.adminButton}
+              onPress={() => handleRemoveSadmin(item.id)}
+            >
+              <Icon name="saddlt" size={hp(2.2)} color="#FF375F" />
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity 
+              style={styles.adminButton}
+              onPress={() => handleUpdateToSadmin(item.id)}
+            >
+              <Icon name="plus" size={hp(2.2)} color={instaTheme.colors.primary} />
+            </TouchableOpacity>
+          )
+        )}
+
+          <TouchableOpacity 
+            style={[styles.actionButton, buttonStyle]}
+            onPress={() => handleSendRequest(item.id)}
+            disabled={buttonDisabled}
+          >
+            <Text style={[styles.buttonText, buttonTextStyle]}>{buttonText}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   };
@@ -318,10 +407,22 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
   },
+  adminBadge: {
+    color: instaTheme.colors.primary,
+    fontWeight: '500',
+  },
   userBio: {
     fontSize: 13,
     color: '#8E8E8E', 
     marginTop: hp(0.3),
+  },
+  actionsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  adminButton: {
+    padding: wp(2),
+    marginRight: wp(2),
   },
   actionButton: {
     paddingVertical: hp(0.8),
@@ -375,4 +476,3 @@ const styles = StyleSheet.create({
     marginTop: hp(1),
   },
 });
-

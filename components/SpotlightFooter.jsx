@@ -11,6 +11,7 @@ import { useFocusEffect } from 'expo-router';
 import { Image } from 'react-native';
 import { getSupabaseFileUrl } from '../services/imageService';
 import { adminIds } from '../constants/admin';
+import { removePost } from '../services/postService';
 
 // Component for generating the poster view
 const PosterView = React.forwardRef(({ item }, ref) => {
@@ -217,6 +218,34 @@ const SpotlightFooter = ({
       console.error("Router is undefined in TwistCard");
     }
   };
+
+
+  const onDeletePost = async (item) => {
+    try {
+        Alert.alert('Confirm', 'Are you sure you want to delete this Post?', [
+            {
+                text: 'Cancel',
+                style: 'cancel'
+            },
+            {
+                text: 'Delete',
+                style: 'destructive',
+                onPress: async () => {
+                    let res = await removePost(item?.id);
+                    if (res.success) {
+                        router.back();
+                    } else {
+                        Alert.alert('Error', res.msg || 'Something went wrong while deleting the post');
+                    }
+                }
+            }
+        ]);
+    } catch (error) {
+        console.error('Delete post error:', error);
+        Alert.alert('Error', 'An unexpected error occurred while deleting the post.');
+    }
+};
+
   // Share function that creates and shares an embedded poster
   const onShare = async () => {
     if (isSharing) return; // Prevent multiple share requests
@@ -283,7 +312,8 @@ const SpotlightFooter = ({
   };
 
   const isadmin = adminIds.includes(currentUser?.id);
-  
+
+
   return (
     <>
       {/* Poster view that will be captured for sharing - hidden by default but properly sized */}
@@ -322,11 +352,19 @@ const SpotlightFooter = ({
               </Animated.View>
             </TouchableOpacity>
           </View>
-            {isadmin && (
+          <View style={styles.leftActions}>
+          {isadmin && (
                   <TouchableOpacity style={styles.actionButton} onPress={onEditPost}>
                   <Icon name='edit' size={hp(2.6)} strokeWidth={2} color={theme.colors.silver} />
                 </TouchableOpacity>
             )}
+             {isadmin && (
+                  <TouchableOpacity style={styles.actionButton}  onPress={() => onDeletePost(item)}>
+                  <Icon name='delete' size={hp(2.6)} strokeWidth={2} color={theme.colors.silver} />
+                </TouchableOpacity>
+            )}
+          </View>
+            
         </View>
         
         {/* Likes count */}

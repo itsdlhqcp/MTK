@@ -1,15 +1,19 @@
-import { Alert, StyleSheet, Text, TouchableOpacity, View, Animated } from 'react-native'
+import { StyleSheet, Text, TouchableOpacity, View, Animated } from 'react-native'
 import React, { useEffect, useState, useRef } from 'react'
 import theme from '../constants/theme'
 import { hp } from '../helpers/common'
+import * as Sharing from 'expo-sharing'
 import Avatar from './Avatar'
 import Icon from '@/assets/icons'
+import { captureRef } from 'react-native-view-shot'
 import moment from 'moment'
-import { createPeopleReviewUpvote, removePeopleReviewUpvote, createPeopleReviewDownvote, removePeopleReviewDownvote, fetchPeopleReviewReplies, createPeopleReviewReplyLike, removePeopleReviewReplyLike } from "../services/ottService"
+import { createPeopleReviewUpvote, removePeopleReviewUpvote, createPeopleReviewDownvote, removePeopleReviewDownvote, fetchPeopleReviewReplies, createPeopleReviewReplyLike, removePeopleReviewReplyLike, fetchPeoplesReleaseDetails } from "../services/ottService"
 import { useAuth } from '../contexts/AuthContext'
 import PratingStars from './pRatingStars'
 import { userService } from '../services/helperService'
 import ReviewIndicators from './ReviewIndicator'
+import StoryShare from './StoryShare'
+import CustomAlert from './CustomAlert'
 
 const PeoplesPreviewItem = ({
   item,
@@ -20,14 +24,24 @@ const PeoplesPreviewItem = ({
   onReplyReviewPress,
   onShowProfile,
   router,
-  isReply = false
+  isReply = false,
+  releaseId
 }) => {
+  const posterRef = useRef(null);
   const [replyCount, setReplyCount] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const likeAnimationScale = useRef(new Animated.Value(1)).current
   const likeAnimationOpacity = useRef(new Animated.Value(1)).current
-
   const canEdit = moment().diff(moment(item?.created_at), 'hours') <= 12;
+  const [isSharing, setIsSharing] = useState(false);
+  const [showPosterView, setShowPosterView] = useState(false);
+  const [release, setRelease] = useState(null);
+
+  // States for custom alerts
+  const [deleteAlertVisible, setDeleteAlertVisible] = useState(false);
+  const [editAlertVisible, setEditAlertVisible] = useState(false);
+  const [errorAlertVisible, setErrorAlertVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const { user } = useAuth();
 
@@ -36,6 +50,17 @@ const PeoplesPreviewItem = ({
       fetchReplyCount()
     }
   }, [item.id])
+
+  useEffect(() => {
+    if (releaseId) {
+      getReleaseDetails();
+    }
+  }, [releaseId])
+
+  const getReleaseDetails = async () => {
+    let res = await fetchPeoplesReleaseDetails(releaseId);
+    if (res.success) setRelease(res.data);
+  };
 
   const fetchReplyCount = async () => {
     if (!item.id) return;
@@ -53,34 +78,73 @@ const PeoplesPreviewItem = ({
     }
   }
 
+  const handleShare = async () => {
+    if (isSharing) return; // Prevent multiple share requests
+    
+    try {
+      setIsSharing(true);
+      
+      // Show the poster view and wait a bit for it to render
+      setShowPosterView(true);
+      
+      // Add a small delay to ensure the view is rendered
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      if (!posterRef.current) {
+        setErrorMessage('Unable to generate poster');
+        setErrorAlertVisible(true);
+        setIsSharing(false);
+        setShowPosterView(false);
+        return;
+      }
+      
+      // Generate a high-quality image of our poster component
+      const uri = await captureRef(posterRef, {
+        format: 'jpg',
+        quality: 1,
+        result: 'file',
+      });
+      
+      // Hide the poster view after capture
+      setShowPosterView(false);
+      
+      // Check if sharing is available
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(uri, {
+          mimeType: 'image/jpeg',
+          dialogTitle: 'Share your PlotTwist',
+          UTI: 'public.jpeg'
+        });
+      } else {
+        setErrorMessage('Sharing is not available on this device');
+        setErrorAlertVisible(true);
+      }
+    } catch (error) {
+      console.error('Sharing error:', error);
+      setErrorMessage('Failed to share poster');
+      setErrorAlertVisible(true);
+      setShowPosterView(false);
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
   const createdAt = moment(item?.created_at).format('MMM D')
 
   const handleDelete = () => {
-    Alert.alert('Confirm', 'Are you sure you want to do this?', [
-      {
-        text: 'Cancel',
-        style: 'cancel'
-      },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => onDelete(item)
-      }
-    ])
+    setDeleteAlertVisible(true);
+  }
+  
+  const performDelete = () => {
+    onDelete(item);
   }
 
   const handleEditButtonPress = () => {
-    Alert.alert('Confirm', 'Are you sure! you have chaged your mind?', [
-      {
-        text: 'Cancel',
-        style: 'cancel'
-      },
-      {
-        text: 'Edit',
-        style: 'destructive',
-        onPress: () => handleEdit(item)
-      }
-    ])
+    setEditAlertVisible(true);
+  }
+  
+  const performEdit = () => {
+    handleEdit(item);
   }
 
   const handleUsernamePress = () => {
@@ -115,7 +179,8 @@ const PeoplesPreviewItem = ({
                   if (userData) {
                     onShowProfile && onShowProfile(userData);
                   } else {
-                    Alert.alert('Error', 'User under this username not exists');
+                    setErrorMessage('User under this username not exists');
+                    setErrorAlertVisible(true);
                   }
                 }}
               >
@@ -143,7 +208,8 @@ const PeoplesPreviewItem = ({
       setUpvotes(updatedUpvotes);
       const res = await removePeopleReviewUpvote(item?.id, user?.id);
       if (!res.success) {
-        Alert.alert('Error', res.msg || 'Something went wrong');
+        setErrorMessage(res.msg || 'Something went wrong');
+        setErrorAlertVisible(true);
       }
     } else {
       // If user had downvoted, remove downvote first
@@ -160,12 +226,12 @@ const PeoplesPreviewItem = ({
       setUpvotes([...upvotes, data]);
       const res = await createPeopleReviewUpvote(data);
       if (!res.success) {
-        Alert.alert('Error', res.msg || 'Something went wrong');
+        setErrorMessage(res.msg || 'Something went wrong');
+        setErrorAlertVisible(true);
       }
     }
   }
   
-
   const isUpvoted = upvotes?.filter(upvote => upvote?.userId === user?.id)[0] ? true : false;
 
   // Downvotes management
@@ -182,7 +248,8 @@ const PeoplesPreviewItem = ({
       setDownvotes(updatedDownvotes);
       const res = await removePeopleReviewDownvote(item?.id, user?.id);
       if (!res.success) {
-        Alert.alert('Error', res.msg || 'Something went wrong');
+        setErrorMessage(res.msg || 'Something went wrong');
+        setErrorAlertVisible(true);
       }
     } else {
       // If user had upvoted, remove upvote first
@@ -199,12 +266,12 @@ const PeoplesPreviewItem = ({
       setDownvotes([...downvotes, data]);
       const res = await createPeopleReviewDownvote(data);
       if (!res.success) {
-        Alert.alert('Error', res.msg || 'Something went wrong');
+        setErrorMessage(res.msg || 'Something went wrong');
+        setErrorAlertVisible(true);
       }
     }
   }
   
-
   const isDownvoted = downvotes?.filter(downvote => downvote?.userId === user?.id)[0] ? true : false;
 
   // Reply likes management
@@ -220,7 +287,8 @@ const PeoplesPreviewItem = ({
       setReplyLikes([...updatedLikes]);
       const res = await removePeopleReviewReplyLike(item?.id, user?.id);
       if (!res.success) {
-        Alert.alert('Error', res.msg || 'Something went wrong');
+        setErrorMessage(res.msg || 'Something went wrong');
+        setErrorAlertVisible(true);
       }
     } else {
       let data = {
@@ -230,7 +298,8 @@ const PeoplesPreviewItem = ({
       setReplyLikes([...replyLikes, data]);
       const res = await createPeopleReviewReplyLike(data);
       if (!res.success) {
-        Alert.alert('Error', res.msg || 'Something went wrong');
+        setErrorMessage(res.msg || 'Something went wrong');
+        setErrorAlertVisible(true);
       }
     }
 
@@ -272,6 +341,54 @@ const PeoplesPreviewItem = ({
 
   return (
     <View style={styles.container}>
+      {/* Hidden poster view for sharing - Only create when needed */}
+      {showPosterView && (
+        <View style={styles.hiddenContainer}>
+          <StoryShare 
+            ref={posterRef} 
+            item={item} 
+            release={release} 
+          />
+        </View>
+      )}
+
+      {/* Custom Alerts */}
+      <CustomAlert
+        visible={deleteAlertVisible}
+        title="Confirm"
+        message="Are you sure you want to do this?"
+        onCancel={() => setDeleteAlertVisible(false)}
+        onConfirm={() => {
+          setDeleteAlertVisible(false);
+          performDelete();
+        }}
+        cancelText="Cancel"
+        confirmText="Delete"
+      />
+
+      <CustomAlert
+        visible={editAlertVisible}
+        title="Confirm"
+        message="Are you sure you've changed your mind and want to rewrite your review?"
+        onCancel={() => setEditAlertVisible(false)}
+        onConfirm={() => {
+          setEditAlertVisible(false);
+          performEdit();
+        }}
+        cancelText="Cancel"
+        confirmText="Edit"
+      />
+
+      <CustomAlert
+        visible={errorAlertVisible}
+        title="Error"
+        message={errorMessage}
+        onCancel={() => setErrorAlertVisible(false)}
+        onConfirm={() => setErrorAlertVisible(false)}
+        cancelText="OK"
+        confirmText="OK"
+      />
+
       <Avatar
         uri={item?.user?.image}
         onPress={handleUsernamePress}
@@ -294,25 +411,42 @@ const PeoplesPreviewItem = ({
           <View style={styles.replySection}>
             {!isReply && (
               <>
-
-               <TouchableOpacity onPress={handleUpvote}>
-                  <Icon name="upvo" size={hp(2.4)} fill={isUpvoted ? "" : 'transparent'} color={isUpvoted ? "#4CAF50" : theme.colors.textLight} />
+                <TouchableOpacity onPress={handleUpvote}>
+                  <Icon 
+                    name="upvo" 
+                    size={hp(2.4)} 
+                    fill={isUpvoted ? "" : 'transparent'} 
+                    color={isUpvoted ? "#4CAF50" : theme.colors.textLight} 
+                  />
                 </TouchableOpacity>
                 <Text style={styles.count}>{upvotes?.length || 0}</Text>
-                <TouchableOpacity onPress={handleDownvote}>
 
-                  <Icon name="downvo" size={hp(2.4)} fill={isDownvoted ? "" : 'transparent'} color={isDownvoted ? "#F44336" : theme.colors.textLight} />
+                <TouchableOpacity onPress={handleDownvote}>
+                  <Icon 
+                    name="downvo" 
+                    size={hp(2.4)} 
+                    fill={isDownvoted ? "" : 'transparent'} 
+                    color={isDownvoted ? "#F44336" : theme.colors.textLight} 
+                  />
                 </TouchableOpacity>
                 <Text style={styles.count}>{downvotes?.length || 0}</Text>
 
                 <TouchableOpacity 
-                  onPress={() => onReplyReviewPress(item.id)} 
+                  onPress={() => onReplyReviewPress(item.id)}  
                   style={styles.replyIcon}
                 >
                   <Icon name="bubbleChatReply" size={hp(2.5)} color={theme.colors.primary} />
                 </TouchableOpacity>
-                
                 <Text style={styles.replyCount}>{item?.replydpeopreviews?.length || 0}</Text>
+                
+                {canDelete && (
+                  <TouchableOpacity 
+                    onPress={handleShare} 
+                    style={styles.replyIcon}
+                  >
+                    <Icon name="insta" size={hp(2.5)} color={theme.colors.primary} />
+                  </TouchableOpacity>
+                )}
               </>
             )}
           </View>
@@ -323,8 +457,8 @@ const PeoplesPreviewItem = ({
                 <Icon name="delete" size={15} color={theme.colors.rose} />
               </TouchableOpacity>
             )}
-
-            {canDelete && canEdit && (
+            
+            {!isReply && canDelete && canEdit && (
               <TouchableOpacity onPress={handleEditButtonPress}>
                 <Icon name="edit" size={15} color={theme.colors.gray} />
               </TouchableOpacity>
@@ -395,16 +529,10 @@ const PeoplesPreviewItem = ({
           </View>
         )}
             
-        {item?.text && (
-          <Text style={[styles.text, {fontWeight: 'normal'}]}>
-            {renderTextWithTags(item?.text)}
-          </Text>
-        )}
+        {item?.text && renderTextWithTags(item?.text)}
 
         {/* Using the new ReviewIndicators component for all indicator types */}
-        {!isReply && (
-          <ReviewIndicators item={item} />
-        )}
+        {!isReply && <ReviewIndicators item={item} />}
       </View>
     </View>
   )
@@ -495,7 +623,7 @@ const styles = StyleSheet.create({
     fontSize: hp(1.8),
     fontWeight: theme.fonts.medium
   },
-  // New styles for rocket button
+  // Styles for like button
   rocketButtonContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -526,5 +654,12 @@ const styles = StyleSheet.create({
   activeRocketCount: {
     color: '#0066ff',
   },
-})
-
+  hiddenContainer: {
+    position: 'absolute',
+    top: -1000, 
+    left: 0,
+    width: 600,
+    height: 800,
+    zIndex: -1,
+  }
+});

@@ -43,7 +43,7 @@ const OttCard = ({
 
     // Fetch the average rating when component mounts
     useEffect(() => {
-        if (!item?.directRelease) {
+        if (!item?.directRelease && item?.connectedId) {
             getAverageRating();
         }else{
             getAverageRatingOfDirect();
@@ -72,7 +72,7 @@ const OttCard = ({
               const avgRes = await fetchAverageRatingDirect(item?.id);
               setAvgRating(avgRes || 0);
             } catch (error) {
-              console.error("Error fetching average rating:", error);
+              console.error("Error fetching average rating of direct:", error);
             } finally {
               setIsLoading(false);
             }
@@ -195,7 +195,7 @@ const OttCard = ({
     const titleTagsStyles = {
         div: {
             color: 'white',
-            fontSize: hp(3.7),
+            fontSize: hp(3.1),
             textAlign: 'left',
             fontWeight: '600'
         },
@@ -208,6 +208,9 @@ const OttCard = ({
     }
 
     const isadmin = adminIds.includes(currentUser?.id);
+
+     const releaseAt = item?.rDate ? moment(item.rDate).format('MMM D') : '';
+     const show = releaseAt && moment(item.rDate).isSameOrBefore(moment(), 'day');
 
     return (
         <TouchableOpacity 
@@ -253,9 +256,17 @@ const OttCard = ({
                 <View style={styles.overlay}>
                     {/* Top section with rating, tags and more button */}
                     <View style={styles.topContainer}>
-                        <View style={styles.leftTopSection}>
+                        {/* <View style={styles.leftTopSection}>
                             {renderRating()}
-                        </View>
+                        </View> */}
+
+                         {show && avgRating?.average ? (
+                                     <View style={styles.leftTopSection}>
+                                      {renderRating()}
+                                  </View>
+                                ) : (
+                              <Text style={styles.statusText}></Text>
+                        )}
                         
                         <View style={styles.rightTopSection}>
                             <View style={styles.tagsContainer}>
@@ -285,9 +296,11 @@ const OttCard = ({
                                     tagsStyles={titleTagsStyles}
                                 />
                             )}
-                            <Text style={styles.releaseDate}>
-                                {rDate}
-                            </Text>
+                            {rDate && (
+                               <Text style={styles.releaseDate}>
+                               {rDate}
+                           </Text>
+                            )}
                             {/* Display End Date if available */}
                             {item?.endDate && isadmin && (
                                 <Text style={styles.endDateText}>

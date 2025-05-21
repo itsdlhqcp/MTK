@@ -8,6 +8,7 @@ import Icon from '../assets/icons'; // Make sure you have this Icon component
 import { getSupabaseFileUrl } from '../services/imageService';
 import PratingStars from './pRatingStars';
 import { fetchAverageRating, fetchAverageRatingDirect } from '../services/releaseService';
+import CustomDotIndicator from './CutomDotIndicator';
 
 // Modified header with toggle button that only shows for the first header
 const ReleaseDateHeader = ({ date, viewMode, onToggleView, isFirstHeader }) => (
@@ -39,7 +40,7 @@ const OttGridCard = ({ item, router }) => {
     const [isLoading, setIsLoading] = useState(true);
   
     useEffect(() => {
-      if (!item?.directRelease) {
+      if (!item?.directRelease && item?.connectedId) {
         getAverageRating();
       }else{
         getAverageRatingOfDirect();
@@ -80,6 +81,11 @@ const OttGridCard = ({ item, router }) => {
     router.push({ pathname: 'streamInfo', params: { streamId: item.id } });
   };
 
+    // Format the date as requested
+    const releaseAt = item?.rDate ? moment(item?.rDate).format('MMM D') : '';
+    const show = releaseAt && moment(item.rDate).isSameOrBefore(moment(), 'day');
+
+
   return (
     <TouchableOpacity 
       style={styles.gridItem}
@@ -93,16 +99,23 @@ const OttGridCard = ({ item, router }) => {
             style={styles.gridItemImage}
             resizeMode="cover"
           />
-          {(item?.defRating > 0) > 0 && (
               <View style={styles.gridRatingContainer}>
-                <PratingStars 
-                  rating={avgRating?.average} 
-                  showRatingText={false} 
-                  starSize={hp(1.6)}
-                />
-                <Text style={styles.gridRatingText}>{isLoading ? '...' : `${avgRating?.average}/5`}</Text>
+                    {show ? ( 
+                                      <> <PratingStars 
+                                              rating={avgRating?.average} 
+                                              showRatingText={false} 
+                                              starSize={hp(1.6)}
+                                            />
+                                            <Text style={styles.gridRatingText}>
+                                              {isLoading ? '...' : `${avgRating?.average}/5`}
+                                            </Text></>
+                                             
+                                          ) : (
+                                            <Text style={styles.gridRatingText}>
+                                            {releaseAt}
+                                     </Text>
+                                  )}
               </View>
-            )}
         </View>
       )}
     </TouchableOpacity>
@@ -111,9 +124,12 @@ const OttGridCard = ({ item, router }) => {
 
 const OttList = ({ streams, currentUser, router, loading, hasMore, onLoadMore }) => {
   // Add view mode state
-  const [viewMode, setViewMode] = useState('grid'); // 'list' or 'grid'
+  const [viewMode, setViewMode] = useState(''); // 'list' or 'grid'
   
   const getHeaderText = (date, endDate) => {
+    // If date is null, return "COMING SOON"
+    if (date === null) return 'COMING SOON';
+    
     const today = moment().startOf('day');
     const releaseDate = moment(date).startOf('day');
     const diffDays = releaseDate.diff(today, 'days');
@@ -124,10 +140,9 @@ const OttList = ({ streams, currentUser, router, loading, hasMore, onLoadMore })
     
     // Future dates
     if (diffDays === 1) return 'TOMORROW';
-    if (diffDays === 2) return 'AFTER TOMORROW';
     if (diffDays > 2 && diffDays <= 7) return 'THIS WEEK';
     if (diffDays > 7 && diffDays <= 14) return 'NEXT WEEK';
-    if (diffDays > 14) return 'COMING WEEKS';
+    if (diffDays > 14) return 'LATER';
     
     // Past dates
     // if (diffDays === 0) return 'TODAY';
@@ -146,7 +161,8 @@ const OttList = ({ streams, currentUser, router, loading, hasMore, onLoadMore })
       'AFTER TOMORROW': 2,
       'THIS WEEK': 3,
       'NEXT WEEK': 4,
-      'COMING WEEKS': 5
+      'COMING WEEKS': 5,
+      'COMING SOON': 999 // Always the last priority
     };
     
     // Return the priority (lower number = higher priority)
@@ -187,14 +203,28 @@ const OttList = ({ streams, currentUser, router, loading, hasMore, onLoadMore })
         }
         
         // If priorities are the same, use the original date-based sorting
-        const dateA = moment(a[1][0].rDate);
-        const dateB = moment(b[1][0].rDate);
-        return dateA.diff(dateB); // Changed to ascending order
+        // For null dates (COMING SOON), we already handled with the priority
+        if (a[0] === 'COMING SOON' || b[0] === 'COMING SOON') {
+          return 0;
+        }
+        
+        const dateA = a[1][0].rDate ? moment(a[1][0].rDate) : moment().add(1000, 'years');
+        const dateB = b[1][0].rDate ? moment(b[1][0].rDate) : moment().add(1000, 'years');
+        return dateA.diff(dateB); // Ascending order
       })
-      .map(([header, items]) => ({
-        header,
-        data: items
-      }));
+      .map(([header, items]) => {
+        // Sort items within each group in ascending date order
+        const sortedItems = [...items].sort((a, b) => {
+          const dateA = a.rDate ? moment(a.rDate) : moment().add(1000, 'years');
+          const dateB = b.rDate ? moment(b.rDate) : moment().add(1000, 'years');
+          return dateA.diff(dateB); // Sort items in ascending order
+        });
+        
+        return {
+          header,
+          data: sortedItems
+        };
+      });
   }, [streams]);
 
   // Toggle view mode between list and grid
@@ -312,7 +342,7 @@ const OttList = ({ streams, currentUser, router, loading, hasMore, onLoadMore })
   const renderEmptyComponent = () => (
     <View style={styles.emptyContainer}>
       <Text style={styles.noMoreText}>
-        {loading ? "Loading..." : "This is End of the Road!"}
+        {loading ? <CustomDotIndicator size={6}/> : "This is End of the Road!"}
       </Text>
     </View>
   );

@@ -1,4 +1,4 @@
-import { Text, View, StyleSheet, FlatList, Pressable, TextInput, Alert } from 'react-native'
+import { Text, View, StyleSheet, FlatList, Pressable, TextInput, Alert, RefreshControl } from 'react-native'
 import React, { useEffect, useRef, useState, memo, useCallback, useMemo } from 'react'
 import { useRouter } from 'expo-router'
 import theme from '../../constants/theme'
@@ -17,6 +17,9 @@ import { ScrollView, GestureHandlerRootView } from 'react-native-gesture-handler
 import TwistCard from '../../components/TwistCard'
 import { NetworkUtils } from '../../utils/network';
 import { adminIds } from '../../constants/admin'
+import { useToast } from '../../contexts/ToastContext'
+import { friendRequestService } from '../../services/requestService'
+import CustomDotIndicator from '../../components/CutomDotIndicator'
 
 // Convert TwistCard to a memoized component for optimized rendering
 const MemoizedTwistCard = memo(({ item, currentUser, router, isVisible }) => {
@@ -31,12 +34,12 @@ const MemoizedTwistCard = memo(({ item, currentUser, router, isVisible }) => {
 }, (prevProps, nextProps) => {
   // Custom comparison function for memo - comparing only necessary props
   return (
-    prevProps.item.id === nextProps.item.id &&
+    prevProps.item?.id === nextProps.item?.id &&
     prevProps.isVisible === nextProps.isVisible &&
     prevProps.item.body === nextProps.item.body &&
     prevProps.item.file === nextProps.item.file &&
     JSON.stringify(prevProps.item.postLikes) === JSON.stringify(nextProps.item.postLikes) &&
-    prevProps.currentUser.id === nextProps.currentUser.id
+    prevProps.currentUser?.id === nextProps.currentUser?.id
   );
 });
 
@@ -59,48 +62,56 @@ const EmptyListComponent = memo(({ loading, isSearching }) => {
   return (
     <View style={styles.loadingContainer}>
       <Text style={styles.noPosts}>
-        {loading ? <MLoading /> : isSearching ? "No results found" : "No feeds found!!"}
+        {loading ? <CustomDotIndicator size={6} startColor={theme.colors.blue}/> : isSearching ? "No results found" : "No feeds found!!"}
       </Text>
     </View>
   );
 });
 
 // Lightweight Header component
-const Header = memo(({ username, router, setIsNavigating, isNavigating, isadmin }) => (
+const Header = memo(({ username, router, setIsNavigating, isNavigating, isadmin, requestCount }) => (
   <View style={styles.header}>
     <View style={styles.welcomeContainer}>
       <Text style={styles.username}>{username}</Text>
     </View>
 
     <View style={styles.icons}>
-   
-    <Pressable 
-          disabled={isNavigating}
-           onPress={() => {
+      <Pressable 
+        disabled={isNavigating}
+        onPress={() => {
           if (!isNavigating) {
             setIsNavigating(true);
             router.push('/messenger');
           }
         }}
+        style={styles.iconContainer}
       >
         <Icon name="notsqr" size={hp(3.3)} color='white' />
+        {requestCount > 0 && (
+          <View style={styles.badgeContainer}>
+            <Text style={styles.badgeText}>
+              {requestCount > 99 ? '99+' : requestCount}
+            </Text>
+          </View>
+        )}
       </Pressable>
        
       <Pressable 
-          disabled={isNavigating}
-           onPress={() => {
+        disabled={isNavigating}
+        onPress={() => {
           if (!isNavigating) {
             setIsNavigating(true);
             router.push('library');
           }
-           }}
-          >
-            <Icon name="library" size={hp(3.2)} color='white' />
+        }}
+      >
+        <Icon name="library" size={hp(3.2)} color='white' />
       </Pressable>
-          {isadmin && (
-            <Pressable 
-            disabled={isNavigating}
-              onPress={() => {
+      
+      {isadmin && (
+        <Pressable 
+          disabled={isNavigating}
+          onPress={() => {
             if (!isNavigating) {
               setIsNavigating(true);
               router.push('addTwist');
@@ -109,7 +120,7 @@ const Header = memo(({ username, router, setIsNavigating, isNavigating, isadmin 
         >
           <Icon name="plus" size={hp(3.2)} color='white' />
         </Pressable>
-          )} 
+      )} 
     </View>
   </View>
 ));
@@ -166,7 +177,7 @@ const SearchBar = memo(({ searchQuery, setSearchQuery, onClearSearch, isSearchin
 const TrendingItem = memo(({ post, router }) => (
   <Pressable
     style={styles.trendingItem}
-    onPress={() => router.push(`post/${post.id}`)}
+    onPress={() => router.push(`post/${post?.id}`)}
   >
     <Avatar
       uri={post.file || "https://via.placeholder.com/150"}
@@ -203,7 +214,7 @@ const TrendingSection = memo(({ trendingPosts, loading, router }) => {
       >
         {displayPosts.map((post) => (
           <TrendingItem 
-            key={post.id.toString()} 
+            key={post?.id.toString()} 
             post={post} 
             router={router} 
           />
@@ -226,7 +237,59 @@ const TrendingSection = memo(({ trendingPosts, loading, router }) => {
 
 const Feeds = () => {
   const { user, navigationGuard } = useAuth();
+  const [incomingRequestCount, setIncomingRequestCount] = useState(0);
   const router = useRouter();
+
+    // Add function to fetch request count
+    const fetchIncomingRequestCount = useCallback(async () => {
+      if (!user?.id || !isConnected) return;
+      
+      try {
+        const res = await friendRequestService.getRequests();
+        if (res.success) {
+          setIncomingRequestCount(res.data.incoming.length);
+        }
+      } catch (error) {
+        console.error('Error fetching request count:', error);
+      }
+    }, [user?.id, isConnected]);
+
+    useFocusEffect(
+      useCallback(() => {
+        if (user?.id && isConnected) {
+          fetchIncomingRequestCount();
+        }
+        
+        setIsNavigating(false);
+      }, [user?.id, isConnected])
+    );
+
+      
+  // Add handling for real-time updates to friend requests
+  useEffect(() => {
+    if (!user?.id || !isConnected) return;
+    
+    let requestChannel;
+    
+    const setupRequestChannel = () => {
+      requestChannel = supabase
+        .channel('friend-requests')
+        .on('postgres_changes',
+          { event: '*', schema: 'public', table: 'friend_requests', filter: `receiver_id=eq.${user?.id}` },
+          (payload) => {
+            // Refresh the count when there's any change to friend requests
+            fetchIncomingRequestCount();
+          }
+        )
+        .subscribe();
+    };
+    
+    setupRequestChannel();
+    
+    return () => {
+      if (requestChannel) supabase.removeChannel(requestChannel);
+    };
+  }, [user?.id, isConnected]);
   
   // Optimized configuration
   const viewabilityConfig = useMemo(() => ({
@@ -239,7 +302,7 @@ const Feeds = () => {
 
   // Optimize viewability tracking to avoid state updates when not needed
   const onViewableItemsChanged = useRef(({ viewableItems }) => {
-    const newVisibleIds = viewableItems.map(item => item.item.id);
+    const newVisibleIds = viewableItems.map(item => item.item?.id);
     
     // Only update state if visible items changed significantly
     if (JSON.stringify(newVisibleIds) !== JSON.stringify(visibleItemsRef.current)) {
@@ -248,13 +311,13 @@ const Feeds = () => {
     }
   }).current;
 
-  useFocusEffect(
-    useCallback(() => {
-      if (!user) {
-        router.replace('/welcome');
-      }
-    }, [user, router])
-  );
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     if (user?.id === null) {
+  //       router.replace('/welcome');
+  //     }
+  //   }, [])
+  // );
 
   // State management
   const [posts, setPosts] = useState([]);
@@ -269,8 +332,9 @@ const Feeds = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [isConnected, setIsConnected] = useState(true);
   const [initialCheckDone, setInitialCheckDone] = useState(false);
-  const ITEMS_PER_PAGE = 6; // Increased from 4 to reduce the number of pagination events
   const [isNavigating, setIsNavigating] = useState(false);
+  const { showToast } = useToast();
+  const ITEMS_PER_PAGE = 25; 
 
   useFocusEffect(
     React.useCallback(() => {
@@ -360,16 +424,16 @@ const Feeds = () => {
       }
     }
     // Handle post deletion on real-time
-    else if (payload.eventType === 'DELETE' && payload.old.id) {
+    else if (payload.eventType === 'DELETE' && payload.old?.id) {
       setPosts(prevPosts => 
-        prevPosts.filter(post => post.id !== payload.old.id)
+        prevPosts.filter(post => post?.id !== payload.old?.id)
       );
     }
     // Handle post update on real-time
-    else if (payload.eventType === 'UPDATE' && payload.new.id) {
+    else if (payload.eventType === 'UPDATE' && payload.new?.id) {
       setPosts(prevPosts => 
         prevPosts.map(post => 
-          post.id === payload.new.id 
+          post?.id === payload.new?.id 
             ? { ...post, body: payload.new.body, file: payload.new.file } 
             : post
         )
@@ -378,7 +442,7 @@ const Feeds = () => {
   }, []);
 
   const handleNewNotification = useCallback((payload) => {
-    if (payload.eventType === 'INSERT' && payload.new.id) {
+    if (payload.eventType === 'INSERT' && payload.new?.id) {
       setNotificationCount(prev => prev + 1);
     }
   }, []);
@@ -404,7 +468,7 @@ const Feeds = () => {
       notificationChannel = supabase
         .channel('notifications')
         .on('postgres_changes',
-          { event: 'INSERT', schema: 'public', table: 'notifications', filter: `receiverId=eq.${user.id}` },
+          { event: 'INSERT', schema: 'public', table: 'notifications', filter: `receiverId=eq.${user?.id}` },
           handleNewNotification
         )
         .subscribe();
@@ -467,7 +531,7 @@ const Feeds = () => {
         } else {
           // Batch update to reduce renders
           const newPosts = res.data.filter(
-            newPost => !postsRef.current.some(existingPost => existingPost.id === newPost.id)
+            newPost => !postsRef.current.some(existingPost => existingPost?.id === newPost?.id)
           );
           
           if (newPosts.length > 0) {
@@ -477,7 +541,7 @@ const Feeds = () => {
           setPage(prev => prev + 1);
         }
       } else {
-        Alert.alert('Error', 'Failed to fetch posts');
+        showToast('success', 'Failed to fetch posts- Network Problem!!');
       }
     } catch (error) {
       console.error('Error fetching posts:', error);
@@ -506,11 +570,11 @@ const Feeds = () => {
       item={item}
       currentUser={user}
       router={router}
-      isVisible={visibleItems.includes(item.id)}
+      isVisible={visibleItems.includes(item?.id)}
     />
   ), [user, router, visibleItems]);
 
-  const keyExtractor = useCallback((item) => item.id.toString(), []);
+  const keyExtractor = useCallback((item) => item?.id.toString(), []);
 
   // Optimized end reached handler with debounce behavior
   const lastFetchTime = useRef(Date.now());
@@ -565,7 +629,7 @@ const Feeds = () => {
     },
   }), []);
 
-  const isadmin = adminIds.includes(user?.id);
+  const isadmin = adminIds.includes(user?.id) || user?.role === 'sadmin';
 
   return (
     <ScreenWrapper bg={"#121212"}>
@@ -584,6 +648,7 @@ const Feeds = () => {
            setIsNavigating={setIsNavigating}
            isNavigating={isNavigating}
            isadmin={isadmin}
+           requestCount={incomingRequestCount}
           />
 
           {/* Highly optimized FlatList */}
@@ -601,11 +666,18 @@ const Feeds = () => {
             ListHeaderComponent={ListHeaderComponent}
             ListFooterComponent={memoizedFooter}
             ListEmptyComponent={memoizedEmptyComponent}
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            initialNumToRender={10}  // first batch
-            maxToRenderPerBatch={5}  // scroll chunk
-            windowSize={5}  // active items
+            refreshControl={
+              <RefreshControl 
+                refreshing={refreshing} 
+                onRefresh={handleRefresh}
+                colors={[theme.colors.blue]}
+                tintColor={theme.colors.blue} 
+                progressBackgroundColor={theme.colors.textDark} 
+              />
+            }
+            initialNumToRender={10}
+            maxToRenderPerBatch={5}
+            windowSize={5}
             {...listProps}
           />
         </View>
@@ -624,7 +696,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: wp(4),
+    paddingHorizontal: wp(3.2),
     paddingVertical: hp(1.2),
     backgroundColor: 'rgb(19, 21, 22)',
   },
@@ -669,7 +741,7 @@ const styles = StyleSheet.create({
     marginBottom: hp(1.5),
   },
   trendingList: {
-    paddingHorizontal: wp(4),
+    paddingHorizontal: wp(2),
   },
   trendingItem: {
     marginRight: wp(3),
@@ -700,7 +772,7 @@ const styles = StyleSheet.create({
     width: wp(3),
   },
   listStyle: {
-    paddingHorizontal: wp(1.4),
+    paddingHorizontal: wp(1.2),
     paddingBottom: hp(4)
   },
   noPosts: {
@@ -742,35 +814,72 @@ const styles = StyleSheet.create({
   },
    // New styles for the library button
    libraryButton: {
-    backgroundColor: theme.colors.text, // Or any color you prefer #990000 #1C3E76
-    paddingVertical: hp(0.3),
-    paddingHorizontal: wp(7.8),
-    borderRadius: 24,
+    backgroundColor: theme.colors.text, // Customize color as needed
+    paddingVertical: hp(0.2),  // Reduced from 0.3
+    paddingHorizontal: wp(5.5), // Reduced from 7.8
+    borderRadius: 16, // Reduced from 24
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
   },
+  
   buttonTextTop: {
     color: 'white',
-    fontSize: hp(1.7),
+    fontSize: hp(1.4), // Reduced from 1.7
     fontWeight: theme.fonts.bold,
-    lineHeight: hp(2.4)
+    lineHeight: hp(2.0), // Slightly reduced
   },
+  
   buttonTextBottom: {
-    color: 'rgba(255, 255, 255, 0.9)', // Slightly transparent for hierarchy
-    fontSize: hp(2),
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontSize: hp(1.6), // Reduced from 2
     fontWeight: '500',
-    marginTop: -hp(0.5)
+    marginTop: -hp(0.4), // Slightly adjusted
   },
   offlineBar: {
     padding: hp(1),
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.colors.text, // Red color for the offline banner
+    backgroundColor: theme.colors.text, 
   },
   offlineText: {
     color: '#FFFFFF',
     fontWeight: 'bold',
     fontSize: hp(1.4),
-  }
+  },
+  iconContainer: {
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  badgeContainer: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: '#FF3B30',
+    borderRadius: 12,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 1,
+    borderColor: '#121212',
+  },
+  badgeText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  offlineBar: {
+    backgroundColor: '#FF3B30',
+    padding: hp(0.7),
+    alignItems: 'center',
+  },
+  offlineText: {
+    color: 'white',
+    fontSize: hp(1.4),
+    fontWeight: '500',
+  },
 
 });

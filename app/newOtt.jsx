@@ -407,13 +407,21 @@ const NewOtt = () => {
     //   return;
     // }
 
+    const normalizeDate = (date) => {
+      if (!date) return null;
+      // Set time to noon to avoid timezone issues with date shifts
+      const normalized = new Date(date);
+      normalized.setHours(12, 0, 0, 0);
+      return normalized;
+    };
+
     let data = {
       file, 
-      filel, // Added second file to submission data
+      filel, // Added second file to submission data selectedDate selectedEndate
       body: bodyRef.current,
       userId: user?.id,
-      rDate: selectedDate,
-      endDate: selectedEndate,
+      rDate: normalizeDate(selectedDate),
+      endDate: normalizeDate(selectedDate),
       defRating: rating,
       userRatImpact: userRatingImpact,
       tags: tags,
@@ -500,14 +508,14 @@ const NewOtt = () => {
             <View style={styles.directReleaseMessage}>
               <Text style={styles.directReleaseText}>Direct Release</Text>
             </View>
-            
 
             <View>
           <RichTextEditor 
             editorRef={editorRef} 
             onChange={handleEditorChange}
             initialHeight={136}
-            placeholder="Enter Film Title here @author ## write film name in a line ## please don't use any text alignment for this session and use default text font size ==>> like film name = Interstellar"  />
+            disableCopyPaste={true}
+            placeholder="🚫No copy/paste - respect films 🎞️📽️🎥📹🚫Enter Film Title here @author ## write film name in a line ## please don't use any text alignment for this session and use default text font size ==>> like film name = Interstellar"  />
         </View>
 
           {file && (

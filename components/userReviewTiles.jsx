@@ -21,6 +21,7 @@ import RenderHtml from 'react-native-render-html';
 import PratingStars from '../components/pRatingStars';
 import { getSupabaseFileUrl } from '../services/imageService';
 import { NetworkUtils } from '../utils/network';
+import CustomDotIndicator from './CutomDotIndicator';
 
 // Modified Month Header component with toggle button
 const MonthHeader = ({ month, viewMode, onToggleView, isFirstHeader }) => (
@@ -59,7 +60,7 @@ const UserReviewsComponent = ({ navigation, userId }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMorePages, setHasMorePages] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
-  const PAGE_SIZE = 10; // Number of reviews per page
+  const PAGE_SIZE = 12; // Number of reviews per page
   
   // Check network status on mount
   useEffect(() => {
@@ -128,7 +129,7 @@ const UserReviewsComponent = ({ navigation, userId }) => {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [user.id, isConnected]);
+  }, [user?.id, isConnected]);
 
   // Handle pull-to-refresh
   const handleRefresh = useCallback(() => {
@@ -190,18 +191,18 @@ const UserReviewsComponent = ({ navigation, userId }) => {
     
     // Check if this item is from the dpeopreviews table (digital stream)
     const isStream = item.hasOwnProperty('original_table') 
-          ? item.original_table === 'dpeopreviews'
-          : item.hasOwnProperty('streamId');
+          ? item?.original_table === 'dpeopreviews'
+          : item?.hasOwnProperty('streamId');
           
     if (isStream) {
       router.push({ 
         pathname: 'streamPeopleSection/streamPeopleDetails', 
-        params: { streamId: item.releaseId, reviewId: item.id } 
+        params: { streamId: item?.releaseId, reviewId: item?.id } 
       });
     } else {
       router.push({ 
         pathname: 'releasePeopleSection/releasePeopleDetails', 
-        params: { releaseId: item.releaseId, reviewId: item.id } 
+        params: { releaseId: item?.releaseId, reviewId: item?.id } 
       });
     }
   };
@@ -352,7 +353,7 @@ const UserReviewsComponent = ({ navigation, userId }) => {
       <View style={styles.gridRow}>
         {item.map((review, index) => (
           <TouchableOpacity
-            key={`grid-item-${review.id || index}`}
+            key={`grid-item-${review?.id || index}`}
             style={styles.gridItem}
             onPress={() => handleViewRelease(review)}
           >
@@ -450,7 +451,7 @@ const UserReviewsComponent = ({ navigation, userId }) => {
   const renderFooter = () => {
     return (
       <View style={{ marginVertical: 0, paddingBottom: 16 }}>
-        {loadingMore && <FeedLoader />}
+        {loadingMore && <CustomDotIndicator size={6}/>}
         {!hasMorePages && combinedReviews.length > 0 && (
           <Text style={styles.noPosts}>End of DLHQ review !!</Text>
         )}
@@ -462,7 +463,7 @@ const UserReviewsComponent = ({ navigation, userId }) => {
     <View style={styles.container}>
       {loading ? (
         <View style={styles.loadingContainer}>
-          <MLoading />
+          <CustomDotIndicator size={6}/>
         </View>
       ) : (
         <>
@@ -473,7 +474,7 @@ const UserReviewsComponent = ({ navigation, userId }) => {
               data={flatListData}
               renderItem={renderListItem}
               keyExtractor={(item, index) => 
-                item.isHeader ? `header-${item.month}` : `review-list-${item.id || index}`
+                item.isHeader ? `header-${item?.month}` : `review-list-${item?.id || index}`
               }
               contentContainerStyle={styles.listContainer}
               showsVerticalScrollIndicator={false}

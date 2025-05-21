@@ -1,4 +1,4 @@
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import theme from '../../constants/theme'
 import { wp, hp, stripHtmlTags } from '../../helpers/common'
@@ -9,8 +9,42 @@ import { getUserData } from '../../services/userServices';
 import { router } from 'expo-router'
 import { userService } from '../../services/helperService'
 import { createCommentLike, removeCommentLike, createCommentUnlike, removeCommentUnlike, createCommentReplylike, removeCommentReplyunlike } from '../../services/homeService'
-  
 import { useAuth } from '../../contexts/AuthContext'
+import { useToast } from '../../contexts/ToastContext'
+import { Modal } from 'react-native'
+
+// Custom Alert Component
+const CustomAlert = ({ visible, title, message, onCancel, onConfirm, cancelText, confirmText }) => {
+  return (
+    <Modal
+      visible={visible}
+      transparent={true}
+      animationType="fade"
+      onRequestClose={onCancel}
+    >
+      <View style={alertStyles.modalOverlay}>
+        <View style={alertStyles.modalContent}>
+          <Text style={alertStyles.alertTitle}>{title}</Text>
+          <Text style={alertStyles.alertMessage}>{message}</Text>
+          <View style={alertStyles.alertButtonsContainer}>
+            <TouchableOpacity
+              style={[alertStyles.alertButton, alertStyles.alertCancelButton]}
+              onPress={onCancel}
+            >
+              <Text style={alertStyles.alertCancelText}>{cancelText}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[alertStyles.alertButton, alertStyles.alertConfirmButton]}
+              onPress={onConfirm}
+            >
+              <Text style={alertStyles.alertConfirmText}>{confirmText}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+};
 
 const TcommentItem = ({
   item, 
@@ -23,19 +57,12 @@ const TcommentItem = ({
 }) => {
   const createdAt = moment(item?.created_at).format('MMM D');
   const {user} = useAuth();
+  const { showToast } = useToast();
+  const [deleteAlertVisible, setDeleteAlertVisible] = useState(false);
 
   const handleDelete = () => {
-    Alert.alert('Confirm', 'Are you sure you want to delete this comment?', [
-          {
-            text: 'Cancel',
-            style: 'cancel'
-          },
-          {
-            text: 'Delete',
-            style: 'destructive',
-            onPress: ()=> onDelete(item)
-          }
-        ]);
+    // Show custom alert instead of default Alert
+    setDeleteAlertVisible(true);
   }
 
   // Function to handle username press
@@ -76,7 +103,9 @@ const TcommentItem = ({
                     onShowProfile && onShowProfile(userData);
                   } else {
                     // Fallback to just the name if user data not found
-                    Alert.alert('Error', 'User under this username not exists');
+                    // Use custom alert for error message
+                    setErrorAlertVisible(true);
+                    setErrorMessage('User under this username not exists');
                   }
                 }}
               >
@@ -94,6 +123,8 @@ const TcommentItem = ({
   const [cmtlikes, setCmtlikes] = useState([]);
   const [cmtunlikes, setCmtunlikes] = useState([]);
   const [cmtreplylikes, setCmtreplylikes] = useState([]);
+  const [errorAlertVisible, setErrorAlertVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   
   useEffect(() => {
     setCmtlikes(item?.ctwistLikes || []);
@@ -105,6 +136,12 @@ const TcommentItem = ({
   const cmtunliked = cmtunlikes?.filter(cmtunlike => cmtunlike?.userId === user?.id)[0] ? true : false;
   const cmtreplyliked = cmtreplylikes?.filter(cmtreplylike => cmtreplylike?.userId === user?.id)[0] ? true : false;
 
+  // Updated function to show error alert
+  const showErrorAlert = (message) => {
+    setErrorMessage(message);
+    setErrorAlertVisible(true);
+  };
+
   // Updated function to handle comment like with mutual exclusivity
   const handleCommentLike = async () => {
     // If already liked, just remove the like
@@ -113,7 +150,7 @@ const TcommentItem = ({
       setCmtlikes([...updatedCmtLikes]);
       const res = await removeCommentLike(item?.id, user?.id);
       if(!res.success){
-        Alert.alert('Error', res.msg || 'Something went wrong');
+        showErrorAlert(res.msg || 'Something went wrong');
         // Revert state if API fails
         setCmtlikes(cmtlikes);
       }
@@ -136,7 +173,7 @@ const TcommentItem = ({
       
       const res = await createCommentLike(data);
       if(!res.success){
-        Alert.alert('Error', res.msg || 'Something went wrong');
+        showErrorAlert(res.msg || 'Something went wrong');
         // Revert state if API fails
         setCmtlikes(cmtlikes);
         if(cmtunliked) {
@@ -154,7 +191,7 @@ const TcommentItem = ({
       setCmtunlikes([...updatedCmtUnlikes]);
       const res = await removeCommentUnlike(item?.id, user?.id);
       if(!res.success){
-        Alert.alert('Error', res.msg || 'Something went wrong');
+        showErrorAlert(res.msg || 'Something went wrong');
         // Revert state if API fails
         setCmtunlikes(cmtunlikes);
       }
@@ -177,7 +214,7 @@ const TcommentItem = ({
       
       const res = await createCommentUnlike(data);
       if(!res.success){
-        Alert.alert('Error', res.msg || 'Something went wrong');
+        showErrorAlert(res.msg || 'Something went wrong');
         // Revert state if API fails
         setCmtunlikes(cmtunlikes);
         if(cmtliked) {
@@ -194,7 +231,7 @@ const TcommentItem = ({
       setCmtreplylikes([...updatedCmtReplylikes]);
       const res = await removeCommentReplyunlike(item?.id, user?.id);
       if(!res.success){
-        Alert.alert('Error', res.msg || 'Something went wrong');
+        showErrorAlert(res.msg || 'Something went wrong');
         // Revert state if API fails
         setCmtreplylikes(cmtreplylikes);
       }
@@ -206,7 +243,7 @@ const TcommentItem = ({
       setCmtreplylikes([...cmtreplylikes, data]);
       const res = await createCommentReplylike(data);
       if(!res.success){
-        Alert.alert('Error', res.msg || 'Something went wrong');
+        showErrorAlert(res.msg || 'Something went wrong');
         // Revert state if API fails
         setCmtreplylikes(cmtreplylikes);
       }
@@ -322,6 +359,33 @@ const TcommentItem = ({
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Custom Delete Alert */}
+      <CustomAlert
+        visible={deleteAlertVisible}
+        title="Confirm"
+        message="Are you sure you want to delete this comment?"
+        onCancel={() => setDeleteAlertVisible(false)}
+        onConfirm={() => {
+          setDeleteAlertVisible(false);
+          onDelete(item);
+          // Show success toast after comment deletion
+          showToast('success', 'Your comment was deleted successfully, but you can still view it in case you change your mind.');
+        }}
+        cancelText="Cancel"
+        confirmText="Delete"
+      />
+
+      {/* Custom Error Alert */}
+      <CustomAlert
+        visible={errorAlertVisible}
+        title="Error"
+        message={errorMessage}
+        onCancel={() => setErrorAlertVisible(false)}
+        onConfirm={() => setErrorAlertVisible(false)}
+        cancelText="Cancel"
+        confirmText="OK"
+      />
     </View>
   )
 }
@@ -392,3 +456,64 @@ const styles = StyleSheet.create({
     fontWeight: theme.fonts.medium,
   }
 })
+
+// Styles for the custom alert
+const alertStyles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: '80%',
+    backgroundColor: '#121212', // Dark background
+    borderRadius: 8,
+    padding: 20,
+    alignItems: 'center',
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: '#262626',
+  },
+  alertTitle: {
+    fontSize: hp(2.5),
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  alertMessage: {
+    fontSize: hp(2),
+    color: '#8E8E8E',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  alertButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  alertButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 4,
+    alignItems: 'center',
+    marginHorizontal: 5,
+  },
+  alertCancelButton: {
+    backgroundColor: '#262626',
+  },
+  alertConfirmButton: {
+    backgroundColor: theme.colors.error || '#FF375F', // Fallback to a common error color if theme doesn't have it
+  },
+  alertCancelText: {
+    color: '#FFFFFF',
+    fontWeight: '500',
+    fontSize: hp(1.8),
+  },
+  alertConfirmText: {
+    color: '#FFFFFF',
+    fontWeight: '500',
+    fontSize: hp(1.8),
+  },
+});
