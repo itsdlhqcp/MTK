@@ -1,4 +1,4 @@
-import { View, Text, LogBox, Linking, Platform } from 'react-native'
+import { View, Text, LogBox, Linking, Platform, DevSettings } from 'react-native'
 import React, { useEffect } from 'react'
 import { SplashScreen, Stack, useRouter, useSegments } from 'expo-router'
 import { AuthProvider, useAuth } from '../contexts/AuthContext'
@@ -94,6 +94,7 @@ const MainLayout = () => {
           // Don't redirect to home for password recovery
         }else if (_event === 'TOKEN_REFRESHED' && session){
           console.log("Token refreshed successfully, updating session...");
+          DevSettings.reload();
           await UserStorageService.storeUserData(session.user); // Store new session data
           await setAuth(session.user); // Update state
           return; // Prevent unnecessary re-execution
@@ -157,12 +158,10 @@ const MainLayout = () => {
 
         if (event === 'TOKEN_REFRESHED' && session?.user) {
             console.log('Token refreshed, updating session...');
-            
-            // Ensure session updates properly
+            DevSettings.reload();
             await setAuth(session.user);
             await updatedUserData(session.user, session.user.email);
-            
-            setLoading(false); // Ensure loading state is reset
+            setLoading(false);
         }
         else if (event === 'SIGNED_IN') {
              await updatedUserData(session.user, session.user.email);
