@@ -36,6 +36,10 @@ const PeoplesPreviewItem = ({
   const [isSharing, setIsSharing] = useState(false);
   const [showPosterView, setShowPosterView] = useState(false);
   const [release, setRelease] = useState(null);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [showReadMore, setShowReadMore] = useState(false);
+  const [fullText, setFullText] = useState('');
+  const [truncatedText, setTruncatedText] = useState('');
 
   // States for custom alerts
   const [deleteAlertVisible, setDeleteAlertVisible] = useState(false);
@@ -44,6 +48,40 @@ const PeoplesPreviewItem = ({
   const [errorMessage, setErrorMessage] = useState('');
 
   const { user } = useAuth();
+
+    // Function to process text and determine if read more is needed
+    useEffect(() => {
+      if (item?.text) {
+        const maxChars = 720;
+        
+        if (item.text.length > maxChars) {
+          setShowReadMore(true);
+          // Find a good break point (preferably at word boundary)
+          let truncateAt = maxChars;
+          const lastSpaceIndex = item.text.lastIndexOf(' ', maxChars);
+          const lastNewlineIndex = item.text.lastIndexOf('\n', maxChars);
+          
+          // Use the last space or newline before the 720 char limit for cleaner truncation
+          if (lastSpaceIndex > maxChars - 50) {
+            truncateAt = lastSpaceIndex;
+          } else if (lastNewlineIndex > maxChars - 50) {
+            truncateAt = lastNewlineIndex;
+          }
+          
+          setTruncatedText(item.text.substring(0, truncateAt));
+          setFullText(item.text);
+        } else {
+          setShowReadMore(false);
+          setFullText(item.text);
+          setTruncatedText(item.text);
+        }
+      }
+    }, [item?.text]);
+    
+    // Function to toggle read more/less
+    const toggleReadMore = () => {
+      setIsExpanded(!isExpanded);
+    };
 
   useEffect(() => {
     if (!isReply) {
@@ -339,6 +377,29 @@ const PeoplesPreviewItem = ({
     onReplyReviewPress && onReplyReviewPress(item.id, item?.user?.name);
   }
 
+    const renderTextContent = () => {
+      if (!item?.text) return null;
+  
+      const textToShow = isExpanded ? fullText : truncatedText;
+      
+      return (
+        <View>
+          {renderTextWithTags(textToShow)}
+          {showReadMore && (
+            <TouchableOpacity 
+              onPress={toggleReadMore}
+              style={styles.readMoreButton}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.readMoreText}>
+                {isExpanded ? 'Read Less' : 'Read Full Review'}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      );
+    };
+
   return (
     <View style={styles.container}>
       {/* Hidden poster view for sharing - Only create when needed */}
@@ -529,7 +590,8 @@ const PeoplesPreviewItem = ({
           </View>
         )}
             
-        {item?.text && renderTextWithTags(item?.text)}
+         {/* Text content with read more functionality */}
+         {renderTextContent()}
 
         {/* Using the new ReviewIndicators component for all indicator types */}
         {!isReply && <ReviewIndicators item={item} />}
@@ -661,5 +723,16 @@ const styles = StyleSheet.create({
     width: 600,
     height: 800,
     zIndex: -1,
+  },
+  readMoreButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    alignSelf: 'flex-start',
+    marginTop: 5,
+  },
+  readMoreText: {
+    color: theme.colors.primary,
+    fontSize: hp(1.6),
+    fontWeight: '600',
   }
 });
