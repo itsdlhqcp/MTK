@@ -47,7 +47,8 @@
         "expo-splash-screen",
         {
           "image": "./assets/images/booking.png",
-          "imageWidth": 500,
+          "imageWidth": 1000,
+          "enableFullScreenImage_legacy": true,
           "resizeMode": "contain",
           "backgroundColor": "#000000"
         }

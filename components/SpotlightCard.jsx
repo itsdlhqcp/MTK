@@ -4,7 +4,7 @@ import theme from '../constants/theme'
 import { wp, hp } from '../helpers/common'
 import Icon from '../assets/icons'
 import moment from 'moment/moment'
-import { Video } from 'expo-av';
+import { VideoView, useVideoPlayer } from 'expo-video';
 import RenderHtml from 'react-native-render-html';
 import { getSupabaseFileUrl } from '../services/userProfileImage'
 import SpotlightFooter from './SpotlightFooter'
@@ -37,12 +37,18 @@ const SpotlightCard = ({
   isVisible
 }) => {
   const { registerPost } = usePost();
-  const videoRef = useRef(null);
   const appState = useRef(AppState.currentState);
   const [appStateVisible, setAppStateVisible] = useState(appState.current);
   const [showReplayButton, setShowReplayButton] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
+
+  // Create video player for video posts
+  const videoSource = item?.file?.includes('postVideo') ? getSupabaseFileUrl(item.file) : null;
+  const player = useVideoPlayer(videoSource, player => {
+    player.loop = false;
+    player.muted = false;
+  });
 
    useFocusEffect(
      React.useCallback(() => {
@@ -50,15 +56,31 @@ const SpotlightCard = ({
      }, [])
    );
 
+  // Handle video playback based on visibility
   useEffect(() => {
-    if (videoRef.current) {
+    if (player && item?.file?.includes('postVideo')) {
       if (isVisible) {
-        videoRef.current.playAsync();
+        player.play();
       } else {
-        videoRef.current.pauseAsync();
+        player.pause();
       }
     }
-  }, [isVisible]);
+  }, [isVisible, player]);
+
+  // Handle video end event
+  useEffect(() => {
+    if (player) {
+      const subscription = player.addListener('playbackStatusUpdate', (status) => {
+        if (status.isLoaded && status.didJustFinish) {
+          setShowReplayButton(true);
+        }
+      });
+
+      return () => {
+        subscription?.remove();
+      };
+    }
+  }, [player]);
 
   // Register this post with the context when it's mounted
   useEffect(() => {
@@ -82,8 +104,8 @@ const SpotlightCard = ({
       ) {
         // App has gone to the background
         console.log('App has gone to the background!');
-        if (videoRef.current) {
-          videoRef.current.pauseAsync();
+        if (player && item?.file?.includes('postVideo')) {
+          player.pause();
         }
       }
 
@@ -94,7 +116,7 @@ const SpotlightCard = ({
     return () => {
       subscription.remove();
     };
-  }, []);
+  }, [player]);
 
   // Handle screen focus changes
   useFocusEffect(
@@ -102,11 +124,11 @@ const SpotlightCard = ({
       // Component is focused
       return () => {
         // Component is unfocused
-        if (videoRef.current) {
-          videoRef.current.pauseAsync();
+        if (player && item?.file?.includes('postVideo')) {
+          player.pause();
         }
       };
-    }, [])
+    }, [player])
   );
   
   // Add null checks for item
@@ -156,6 +178,15 @@ const SpotlightCard = ({
     openPostDetails();
   };
 
+  // Handle replay button press
+  const handleReplay = (e) => {
+    e.stopPropagation(); // Prevent parent touchable from firing
+    if (player) {
+      player.replay();
+      setShowReplayButton(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       {/* Touchable section for images/videos */}
@@ -170,42 +201,20 @@ const SpotlightCard = ({
           />
         )}
 
-        {/* Keep the original Video component */}
+        {/* Updated Video component using expo-video */}
         {item?.file?.includes('postVideo') && (
           <View style={styles.videoContainer}>
-            <Video
-              ref={videoRef}
+            <VideoView
               style={styles.postMedia}
-              source={getSupabaseFileUrl(item.file)}
-              useNativeControls 
-              resizeMode='cover'
-              isLooping={false}
-              onPlaybackStatusUpdate={(status) => {
-                if (status.isLoaded && status.didJustFinish) {
-                  setShowReplayButton(true);
-                }
-              }}
-              onFullscreenUpdate={({ fullscreenUpdate }) => {
-                if (fullscreenUpdate === Video.FULLSCREEN_UPDATE_PLAYER_DID_DISMISS) {
-                  if (appStateVisible !== 'active') {
-                    videoRef.current?.pauseAsync();
-                  }
-                }
-              }}
+              player={player}
+              allowsFullscreen
+              allowsPictureInPicture
+              showsTimecodes
             />
             {showReplayButton && (
               <TouchableOpacity 
                 style={styles.replayButton}
-                onPress={(e) => {
-                  e.stopPropagation(); // Prevent parent touchable from firing
-                  if (videoRef.current) {
-                    videoRef.current.replayAsync({
-                      shouldPlay: true,
-                      positionMillis: 0
-                    });
-                    setShowReplayButton(false);
-                  }
-                }}
+                onPress={handleReplay}
               >
                 <Icon 
                   name='reload'
@@ -422,7 +431,7 @@ const styles = StyleSheet.create({
   postMedia: {
     height: hp(35), 
     width: '100%',
-    backgroundColor: '#2c2c2c',
+    backgroundColor: '#121212',
   },
   imageContainer: {
     width: '100%',

@@ -288,6 +288,29 @@ export const createPeopleReleaseReview = async (reviewpeople) => {
 }
 
 
+// export const fetchPeoplesReleaseDetails = async (postId) => {
+//   try {
+//     const { data, error } = await supabase
+//       .from('releases')
+//       .select(`*,
+//         user: users (id, name, image),
+//         peoplesReview(*, user: users(id, name, image),
+//          threviewupvote(*),threviewdownvote(*),replyPeopleReviews(*))
+//         `
+//        )
+//       .eq('id', postId)
+//       .order("created_at", { ascending: false, foreignTable: "peoplesReview", foreignColumn: "created_at" })
+//       .single();
+//     if (error) {
+//       console.log('Fetch peoples releases details error: ', error);
+//       return { success: false, msg: 'Could not peoplw fetch releases' };
+//     }
+//     return { success: true, data };
+//   } catch (error) {
+//     return { success: false, msg: 'Could not fetch the peoples reviews releases'};
+//   }
+// };
+
 export const fetchPeoplesReleaseDetails = async (postId) => {
   try {
     const { data, error } = await supabase
@@ -299,14 +322,77 @@ export const fetchPeoplesReleaseDetails = async (postId) => {
         `
        )
       .eq('id', postId)
-      .order("created_at", { ascending: false, foreignTable: "peoplesReview", foreignColumn: "created_at" })
       .single();
+      
     if (error) {
       console.log('Fetch peoples releases details error: ', error);
-      return { success: false, msg: 'Could not peoplw fetch releases' };
+      return { success: false, msg: 'Could not fetch releases' };
     }
+
+    // Sort reviews by vote score (upvotes - downvotes) in descending order
+    if (data?.peoplesReview) {
+      data.peoplesReview = data.peoplesReview.sort((a, b) => {
+        const aScore = (a.threviewupvote?.length || 0) - (a.threviewdownvote?.length || 0);
+        const bScore = (b.threviewupvote?.length || 0) - (b.threviewdownvote?.length || 0);
+        
+        // Primary sort: by vote score (highest first)
+        if (bScore !== aScore) {
+          return bScore - aScore;
+        }
+        
+        // Secondary sort: by creation date (newest first) if vote scores are equal
+        return new Date(b.created_at) - new Date(a.created_at);
+      });
+    }
+
     return { success: true, data };
   } catch (error) {
+    console.log('Fetch error: ', error);
+    return { success: false, msg: 'Could not fetch the peoples reviews releases'};
+  }
+};
+
+// Alternative approach using a database view or RPC function (recommended for better performance)
+export const fetchPeoplesReleaseDetailsOptimized = async (postId) => {
+  try {
+    // First, get the release data
+    const { data, error } = await supabase
+      .from('releases')
+      .select(`*,
+        user: users (id, name, image)
+        `
+       )
+      .eq('id', postId)
+      .single();
+      
+    if (error) {
+      console.log('Fetch peoples releases details error: ', error);
+      return { success: false, msg: 'Could not fetch releases' };
+    }
+
+    // Then, get reviews ordered by vote score using RPC function
+    const { data: reviewsData, error: reviewsError } = await supabase
+      .rpc('get_reviews_by_vote_score', { 
+        release_id: postId 
+      });
+
+    if (reviewsError) {
+      console.log('Fetch reviews error: ', reviewsError);
+      // Fall back to unordered reviews if RPC fails
+      const { data: fallbackReviews } = await supabase
+        .from('peoplesReview')
+        .select(`*, user: users(id, name, image),
+         threviewupvote(*),threviewdownvote(*),replyPeopleReviews(*)`)
+        .eq('release_id', postId);
+      
+      data.peoplesReview = fallbackReviews || [];
+    } else {
+      data.peoplesReview = reviewsData || [];
+    }
+
+    return { success: true, data };
+  } catch (error) {
+    console.log('Fetch error: ', error);
     return { success: false, msg: 'Could not fetch the peoples reviews releases'};
   }
 };
@@ -564,8 +650,6 @@ export const removePeopleReviewUpvote = async (peoplesReviewId, userId) => {
       }
 
 
-
-
       // create and remove people review reply likes 
 
       // Review downvote service threviewdownvote
@@ -668,7 +752,30 @@ export const removePeopleReviewUpvote = async (peoplesReviewId, userId) => {
         }
       };
 
+     // api fetching without sorting
 
+      // export const fetchPeoplesReleaseDetailsx = async (postId) => {
+      //   try {
+      //     const { data, error } = await supabase
+      //       .from('releases')
+      //       .select(`*,
+      //         user: users (id, name, image),
+      //         peoplesReview(*, user: users(id, name, image),
+      //          threviewupvote(*),threviewdownvote(*),replyPeopleReviews(*))
+      //         `
+      //        )
+      //       .eq('id', postId)
+      //       .order("created_at", { ascending: false, foreignTable: "peoplesReview", foreignColumn: "created_at" })
+      //       .single();
+      //     if (error) {
+      //       console.log('Fetch peoples releases details error: ', error);
+      //       return { success: false, msg: 'Could not peoplw fetch releases' };
+      //     }
+      //     return { success: true, data };
+      //   } catch (error) {
+      //     return { success: false, msg: 'Could not fetch the peoples reviews releases'};
+      //   }
+      // };
 
       export const fetchPeoplesReleaseDetailsx = async (postId) => {
         try {
@@ -681,14 +788,37 @@ export const removePeopleReviewUpvote = async (peoplesReviewId, userId) => {
               `
              )
             .eq('id', postId)
-            .order("created_at", { ascending: false, foreignTable: "peoplesReview", foreignColumn: "created_at" })
             .single();
+            
           if (error) {
             console.log('Fetch peoples releases details error: ', error);
-            return { success: false, msg: 'Could not peoplw fetch releases' };
+            return { success: false, msg: 'Could not fetch releases' };
           }
+      
+          // Sort reviews by vote score (upvotes - downvotes) in descending order
+          if (data?.peoplesReview && Array.isArray(data.peoplesReview)) {
+            data.peoplesReview = data.peoplesReview.sort((a, b) => {
+              const aUpvotes = a.threviewupvote?.length || 0;
+              const aDownvotes = a.threviewdownvote?.length || 0;
+              const aScore = aUpvotes - aDownvotes;
+              
+              const bUpvotes = b.threviewupvote?.length || 0;
+              const bDownvotes = b.threviewdownvote?.length || 0;
+              const bScore = bUpvotes - bDownvotes;
+              
+              // Primary sort: by vote score (highest first)
+              if (bScore !== aScore) {
+                return bScore - aScore;
+              }
+              
+              // Secondary sort: by creation date (newest first) if vote scores are equal
+              return new Date(b.created_at) - new Date(a.created_at);
+            });
+          }
+      
           return { success: true, data };
         } catch (error) {
+          console.log('Fetch error: ', error);
           return { success: false, msg: 'Could not fetch the peoples reviews releases'};
         }
       };

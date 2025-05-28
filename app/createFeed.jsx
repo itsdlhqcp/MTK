@@ -11,7 +11,7 @@ import { useAuth } from '../contexts/AuthContext'
 import RichTextEditor from '../components/RichTextEditor'
 import Button from '@/components/Button'
 import { getSupabaseFileUrl } from '../services/imageService'
-import { Video } from 'expo-av';
+import { VideoView, useVideoPlayer } from 'expo-video';
 import { createOrUpdatePost } from '../services/postService'
 import * as ImagePicker from 'expo-image-picker';
 import { useToast } from '../contexts/ToastContext'
@@ -28,6 +28,36 @@ const CreateFeed = () => {
   const [tags, setTags] = useState(['official']);  
   const [currentTag, setCurrentTag] = useState('');
   const { showToast } = useToast();
+  
+  // Define helper functions first
+  const isLocalFile = file => {
+    if (!file) return null;
+    if (typeof file === 'object') return true;
+    return false;
+  }
+
+  const getFileType = file => {
+    if (!file) return null;
+    if (isLocalFile(file)) {
+      return file.type || 'image'; // Provide a default type
+    }
+    // For remote files
+    return file.includes('postImage') ? 'image' : 'video';
+  };
+
+  const getFileUri = file => {
+    if (!file) return null;
+    if (isLocalFile(file)) {
+      return file.uri;
+    }
+    return getSupabaseFileUrl(file)?.uri;
+  }
+
+  // Create video player instance
+  const player = useVideoPlayer(file && getFileType(file) === 'video' ? getFileUri(file) : null, player => {
+    player.loop = true;
+    player.muted = false;
+  });
   
   // Predefined tags for the bubble selector
   const predefinedTags = [ 'official', 'rumour','anime','kdrama'];
@@ -75,6 +105,16 @@ const CreateFeed = () => {
     }
   }, []); 
 
+  // Update video player source when file changes
+  useEffect(() => {
+    if (file && getFileType(file) === 'video') {
+      const videoUri = getFileUri(file);
+      if (videoUri) {
+        player.replace(videoUri);
+      }
+    }
+  }, [file]);
+
   const onPick = async (isImage) => {
     try {
       let mediaConfig = {
@@ -108,28 +148,7 @@ const CreateFeed = () => {
     }
   };
 
-  const isLocalFile = file=>{
-    if(!file) return null;
-    if(typeof file === 'object') return true;
-    return false;
-  }
 
-  const getFileType = file => {
-    if (!file) return null;
-    if (isLocalFile(file)) {
-      return file.type || 'image'; // Provide a default type
-    }
-    // For remote files
-    return file.includes('postImage') ? 'image' : 'video';
-  };
-
-  const getFileUri = file => {
-    if(!file) return null;
-    if(isLocalFile(file)){
-      return file.uri;
-    }
-    return getSupabaseFileUrl(file)?.uri;
-  }
 
   const addTag = () => {
     if (currentTag.trim() !== '') {
@@ -234,16 +253,12 @@ const CreateFeed = () => {
           {file && (
             <View style={styles.file}>
               {getFileType(file) === 'video' ? (
-                <Video
-                  source={{ uri: getFileUri(file) }}
-                  style={{ width: '100%', height: '122%' }}
-                  resizeMode="cover"
-                  borderRadius={7}
-                  onError={(error) => console.log('Video loading error:', error)}
-                  useNativeControls 
-                  positionMillis
-                  isLooping
-                  audioPan
+                <VideoView
+                  style={{ width: '100%', height: '122%', borderRadius: 7 }}
+                  player={player}
+                  allowsFullscreen
+                  allowsPictureInPicture
+                  showsTimecodes
                 />
               ) : (
                 <Image
@@ -325,9 +340,9 @@ const CreateFeed = () => {
               <TouchableOpacity onPress={() => onPick(true)}>
                 <Icon name="image" size={30} color={theme.colors.dark} />
               </TouchableOpacity>
-              {/* <TouchableOpacity onPress={() => onPick(false)}>
+              <TouchableOpacity onPress={() => onPick(false)}>
                 <Icon name="video" size={37} color={theme.colors.dark} />
-              </TouchableOpacity> */}
+              </TouchableOpacity>
             </View>
           </View>
         </ScrollView>

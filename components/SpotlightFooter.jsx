@@ -337,7 +337,7 @@ const SpotlightFooter = ({
               <Icon name='comment' size={hp(2.8)} strokeWidth={2} color={theme.colors.silver} />
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.actionButton} onPress={onShare}>
+            {/* <TouchableOpacity style={styles.actionButton} onPress={onShare}>
               <Animated.View
                 style={{
                   transform: [{ scale: isSharing ? 1.1 : 1 }]
@@ -350,7 +350,7 @@ const SpotlightFooter = ({
                   color={isSharing ? theme.colors.bmw : theme.colors.silver} 
                 />
               </Animated.View>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
           <View style={styles.leftActions}>
           {isadmin && (
