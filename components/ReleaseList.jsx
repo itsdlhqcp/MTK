@@ -107,7 +107,7 @@ const ReleaseGridCard = ({ item, router }) => {
 
 const ReleaseList = ({ releases, currentUser, router, loading, hasMore, onLoadMore }) => {
   // Add view mode state
-  const [viewMode, setViewMode] = useState(''); // 'list' or 'grid'
+  const [viewMode, setViewMode] = useState('grid'); 
   // Map to store average ratings for each release
   const [ratingsMap, setRatingsMap] = useState({});
   // Loading state for ratings

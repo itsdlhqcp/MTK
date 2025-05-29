@@ -17,7 +17,7 @@ export const profileService = {
       
       // Fetch post count
       const { count: postCount, error: postError } = await supabase
-        .from('posts')
+        .from('twists')
         .select('id', { count: 'exact' })
         .eq('userId', userId);
         

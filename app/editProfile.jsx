@@ -233,8 +233,8 @@ const EditProfile = () => {
                 address: currentUser.address || '',
                 image: currentUser.image || null,
                 bio: currentUser.bio || '',
-                tags: userTags, // Set the parsed tags
-                orgname: currentUser.orgname || 'your name', // Get orgname from currentUser or default
+                tags: userTags, 
+                orgname: currentUser.orgname || '', 
             });
         }
     }, [currentUser]);
@@ -247,7 +247,7 @@ const EditProfile = () => {
         bio: '',
         image: '',
         tags: '',
-        orgname: '', // Added validation for orgname
+        orgname: '',
       };
 
       // Name validation

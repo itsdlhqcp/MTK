@@ -223,7 +223,7 @@ const Profile = () => {
       
       // Fetch post count
       const { data, error, count } = await supabase
-        .from('posts')
+        .from('twists')
         .select('id', { count: 'exact' })
         .eq('userId', userId);
       

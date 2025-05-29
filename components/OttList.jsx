@@ -124,7 +124,7 @@ const OttGridCard = ({ item, router }) => {
 
 const OttList = ({ streams, currentUser, router, loading, hasMore, onLoadMore }) => {
   // Add view mode state
-  const [viewMode, setViewMode] = useState(''); // 'list' or 'grid'
+  const [viewMode, setViewMode] = useState('grid'); 
   
   const getHeaderText = (date, endDate) => {
     // If date is null, return "COMING SOON"
