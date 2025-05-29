@@ -94,6 +94,7 @@ const MainLayout = () => {
           // Don't redirect to home for password recovery
         }else if (_event === 'TOKEN_REFRESHED' && session){
           console.log("Token refreshed successfully, updating session...");
+          // temporary solution as need to handle the refesh token passing
           DevSettings.reload();
           await UserStorageService.storeUserData(session.user); // Store new session data
           await setAuth(session.user); // Update state
@@ -158,6 +159,7 @@ const MainLayout = () => {
 
         if (event === 'TOKEN_REFRESHED' && session?.user) {
             console.log('Token refreshed, updating session...');
+            // temporary solution as need to handle the refesh token passing
             DevSettings.reload();
             await setAuth(session.user);
             await updatedUserData(session.user, session.user.email);

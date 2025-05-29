@@ -91,7 +91,7 @@ const StreamPeopleDetails = () => {
 
     // use effect which fetch the reviews from theatre
     useEffect(() => {
-        if (release && release.connectedId) {
+        if (release && release?.connectedId) {
             getThPeoplesReleaseDetails();
         }   
     }, [release]);
@@ -268,7 +268,7 @@ const StreamPeopleDetails = () => {
                 userId: user.id,
                 text: replyRef.current,
                 parentReviewId: parentReviewId,
-                releaseId: release.id // Add releaseId for the filter in subscription
+                releaseId: release?.id // Add releaseId for the filter in subscription
             };
     
             setLoading(true);
@@ -279,7 +279,7 @@ const StreamPeopleDetails = () => {
                     const newReply = {
                         ...res.data,
                         user: {
-                            id: user.id,
+                            id: user?.id,
                             ...user
                         }
                     };
@@ -295,12 +295,12 @@ const StreamPeopleDetails = () => {
                     // setOpenReplyBox(null);
     
                     // Handle notification
-                    if (user.id !== arelease.userId) {
+                    if (user?.id !== arelease?.userId) {
                         let notify = {
-                            senderId: user.id,
-                            receiverId: arelease.userId,
+                            senderId: user?.id,
+                            receiverId: arelease?.userId,
                             title: 'replied to your review',
-                            data: JSON.stringify({ releaseId: arelease.id, streamId: parentReviewId })
+                            data: JSON.stringify({ releaseId: arelease?.id, streamId: parentReviewId })
                         };
                         createNotifications(notify);
                     }
@@ -447,23 +447,23 @@ const StreamPeopleDetails = () => {
               year: release?.rDate ? release?.rDate : '',
               id: release?.id || '',
               image: release?.filel,
-              isFavorite: item.favour || false
+              isFavorite: item?.favour || false
             };
             
             // Prepare the review state object
             const reviewState = {
-              rating: item.userRating || 0,
-              cupOfTea: item.cupOfTea || null,
-              prefer: item.prefer || null,
-              predict: item.predict || null,
-              repeat: item.repeat || null
+              rating: item?.userRating || 0,
+              cupOfTea: item?.cupOfTea || null,
+              prefer: item?.prefer || null,
+              predict: item?.predict || null,
+              repeat: item?.repeat || null
             };
             
             // Update the review context with the review text  
             updateReviewData({
-              reviewText: item.text || '',
-              reviewDate: item.createdAt ? item.createdAt : '',
-              isFavorite: item.favour || false
+              reviewText: item?.text || '',
+              reviewDate: item?.createdAt ? item?.createdAt : '',
+              isFavorite: item?.favour || false
             });
             
             // Navigate to the CreateReview page with the review data
@@ -474,9 +474,9 @@ const StreamPeopleDetails = () => {
                 movieId: release?.id || '',
                 reviewState: JSON.stringify(reviewState),
                 review: JSON.stringify({
-                  body: item.text || '',
-                  date: item.createdAt ? item.createdAt : '',
-                  id: item.id
+                  body: item?.text || '',
+                  date: item?.createdAt ? item?.createdAt : '',
+                  id: item?.id
                 }),
                source: 'stream'
               }
@@ -485,8 +485,8 @@ const StreamPeopleDetails = () => {
 
         const handleFinalReviewSubmit = async (rating, cupOfTea, prefer, predict, repeat, reviewTextFromSheet, favour) => {
             let data = {
-                userId: user.id,
-                releaseId: release.id,
+                userId: user?.id,
+                releaseId: release?.id,
                 text: reviewTextFromSheet,
                 userRating: rating,
                 cupOfTea: cupOfTea, 
@@ -503,7 +503,7 @@ const StreamPeopleDetails = () => {
                     const newReview = {
                         ...res.data,
                         user: {
-                            id: user.id,
+                            id: user?.id,
                             ...user
                         }
                     };
@@ -513,12 +513,12 @@ const StreamPeopleDetails = () => {
                         dpeopreviews: [newReview, ...prevRelease.dpeopreviews]
                     }));
         
-                    if(user.id !== release.userId){
+                    if(user.id !== release?.userId){
                         let notify = {
-                            senderId: user.id,
+                            senderId: user?.id,
                             receiverId: release.userId,
                             title: 'reviewed on your release',
-                            data: JSON.stringify({releaseId: release.id, streamId: res?.data?.id})
+                            data: JSON.stringify({releaseId: release?.id, streamId: res?.data?.id})
                         }
                         createNotifications(notify);
                     }
@@ -627,7 +627,7 @@ const StreamPeopleDetails = () => {
                             // Update state directly instead of reloading
                             setAreviewReplies(prevRelease => ({
                                 ...prevRelease,
-                                preview: prevRelease.preview?.filter(r => r.id !== areview.id)
+                                preview: prevRelease?.preview?.filter(r => r.id !== areview?.id)
                             }));
                         } else {
                             Alert.alert('Preview', res.msg || 'Something went wrong');
@@ -656,8 +656,8 @@ const StreamPeopleDetails = () => {
                               if(!adminReviewRef.current || !user?.id || !arelease?.id) return null;
                               
                               let data = {
-                                  userId: user.id,
-                                  streamId: arelease.id,
+                                  userId: user?.id,
+                                  streamId: arelease?.id,
                                   text: adminReviewRef.current
                               }
                               
@@ -669,7 +669,7 @@ const StreamPeopleDetails = () => {
                                       const newReview = {
                                           ...res.data,
                                           user: {
-                                              id: user.id,
+                                              id: user?.id,
                                               // Add any other user fields that are displayed in ReviewItem
                                               ...user
                                           }
@@ -681,12 +681,12 @@ const StreamPeopleDetails = () => {
                                           preview: [newReview, ...prevRelease.preview]
                                       }));
                       
-                                      if(user.id !== arelease.userId){
+                                      if(user?.id !== arelease?.userId){
                                           let notify = {
-                                              senderId: user.id,
-                                              receiverId: arelease.userId,
+                                              senderId: user?.id,
+                                              receiverId: arelease?.userId,
                                               title: 'reviewed on your release',
-                                              data: JSON.stringify({releaseId: arelease.id, streamId: res?.data?.id})
+                                              data: JSON.stringify({releaseId: arelease?.id, streamId: res?.data?.id})
                                           }
                                           createNotifications(notify);
                                       }
@@ -842,14 +842,14 @@ const StreamPeopleDetails = () => {
                         {arelease?.preview && (
                                 <View style={styles.reviewsContainer}>
                                 {arelease?.preview?.length > 0 ? (
-                                    arelease.preview
+                                    arelease?.preview
                                         .filter(review => !review.parentReviewId)
                                         .map(review => (
                                             <View key={review?.id?.toString()}>
                                                 <ReviewItem
                                                     item={review}
                                                     onDelete={onDeleteAreview}
-                                                    canDelete={user.id === review.userId || user.id === arelease.userId}
+                                                    canDelete={user.id === review.userId || user.id === arelease?.userId}
                                                     onReplyReviewPress={() => toggleReplyBox(review.id)}
                                                     replyCount={areviewReplies[review.id]?.length || 0}
                                                     isReply={false}
@@ -863,7 +863,7 @@ const StreamPeopleDetails = () => {
                                                         <ReviewItem
                                                             item={reply}
                                                             onDelete={onDeleteAreview}
-                                                            canDelete={user.id === reply.userId || user.id === arelease.userId}
+                                                            canDelete={user.id === reply.userId || user.id === arelease?.userId}
                                                             replyCount={areviewReplies[review.id]?.length || 0}
                                                             isReply={true}
                                                         />

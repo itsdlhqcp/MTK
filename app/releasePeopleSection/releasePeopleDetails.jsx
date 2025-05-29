@@ -141,7 +141,7 @@ useEffect(() => {
   }, [route.params?.updatedReview]);
 
         useEffect(() => {
-                if (release && release.sconnectedId) {
+                if (release && release?.sconnectedId) {
                     getThPeoplesReleaseDetails();
                 }
             }, [release]);
@@ -166,9 +166,9 @@ useEffect(() => {
          const checkUserReview = async () => {
             if (!releaseId) return;
             try {
-              const res = await hasUserPostedAnyReview(user.id, releaseId);
+              const res = await hasUserPostedAnyReview(user?.id, releaseId);
               if (res.success) {
-                setHasUserPostedReview(res.hasPostedReview);
+                setHasUserPostedReview(res?.hasPostedReview);
               }
             } catch (error) {
               console.error("Error checking user review:", error);
@@ -245,10 +245,10 @@ useEffect(() => {
                 if (!replyRef.current || !user?.id) return null;
         
                 let data = {
-                    userId: user.id,
+                    userId: user?.id,
                     text: replyRef.current,
                     parentReviewId: parentReviewId,
-                    releaseId: release.id // Add releaseId for the filter in subscription
+                    releaseId: release?.id // Add releaseId for the filter in subscription
                 };
         
                 setLoading(true);
@@ -275,12 +275,12 @@ useEffect(() => {
                         // setOpenReplyBox(null);
         
                         // Handle notification
-                        if (user.id !== arelease.userId) {
+                        if (user?.id !== arelease?.userId) {
                             let notify = {
-                                senderId: user.id,
-                                receiverId: arelease.userId,
+                                senderId: user?.id,
+                                receiverId: arelease?.userId,
                                 title: 'replied to your review',
-                                data: JSON.stringify({ releaseId: arelease.id, releaseId: parentReviewId })
+                                data: JSON.stringify({ releaseId: arelease?.id, releaseId: parentReviewId })
                             };
                             createNotifications(notify);
                         }
@@ -423,23 +423,23 @@ useEffect(() => {
               year: release?.rDate ? release?.rDate : '',
               id: release?.id || '',
               image: release?.filel,
-              isFavorite: item.favour || false
+              isFavorite: item?.favour || false
             };
             
             // Prepare the review state object
             const reviewState = {
-              rating: item.userRating || 0,
-              cupOfTea: item.cupOfTea || null,
-              prefer: item.prefer || null,
-              predict: item.predict || null,
-              repeat: item.repeat || null
+              rating: item?.userRating || 0,
+              cupOfTea: item?.cupOfTea || null,
+              prefer: item?.prefer || null,
+              predict: item?.predict || null,
+              repeat: item?.repeat || null
             };
             
             // Update the review context with the review text  
             updateReviewData({
-              reviewText: item.text || '',
-              reviewDate: item.createdAt ? item.createdAt : '',
-              isFavorite: item.favour || false
+              reviewText: item?.text || '',
+              reviewDate: item?.createdAt ? item?.createdAt : '',
+              isFavorite: item?.favour || false
             });
             
             // Navigate to the CreateReview page with the review data
@@ -450,9 +450,9 @@ useEffect(() => {
                 movieId: release?.id || '',
                 reviewState: JSON.stringify(reviewState),
                 review: JSON.stringify({
-                  body: item.text || '',
-                  date: item.createdAt ? item.createdAt : '',
-                  id: item.id
+                  body: item?.text || '',
+                  date: item?.createdAt ? item?.createdAt : '',
+                  id: item?.id
                 }),
                 source: 'release'
               }
@@ -463,8 +463,8 @@ useEffect(() => {
 
             const finalReviewText = reviewTextFromSheet || reviewRef.current;
             let data = {
-                userId: user.id,
-                releaseId: release.id,
+                userId: user?.id,
+                releaseId: release?.id,
                 text:finalReviewText,
                 userRating: rating,
                 cupOfTea: cupOfTea, 
@@ -609,12 +609,12 @@ useEffect(() => {
             // on submit admin review 
 
                  const onAdminReviewSubmit = async () => {
-                        if(!adminReviewRef.current || !user?.id || !arelease?.id) return null;
+                        if(!adminReviewRef?.current || !user?.id || !arelease?.id) return null;
                         
                         let data = {
-                            userId: user.id,
-                            releaseId: arelease.id,
-                            text: adminReviewRef.current
+                            userId: user?.id,
+                            releaseId: arelease?.id,
+                            text: adminReviewRef?.current
                         }
                         
                         setLoading(true);
@@ -625,7 +625,7 @@ useEffect(() => {
                                 const newReview = {
                                     ...res.data,
                                     user: {
-                                        id: user.id,
+                                        id: user?.id,
                                         // Add any other user fields that are displayed in ReviewItem
                                         ...user
                                     }
@@ -637,12 +637,12 @@ useEffect(() => {
                                     reviews: [newReview, ...prevRelease.reviews]
                                 }));
                 
-                                if(user.id !== arelease.userId){
+                                if(user.id !== arelease?.userId){
                                     let notify = {
                                         senderId: user.id,
-                                        receiverId: arelease.userId,
+                                        receiverId: arelease?.userId,
                                         title: 'reviewed on your release',
-                                        data: JSON.stringify({releaseId: arelease.id, reviewId: res?.data?.id})
+                                        data: JSON.stringify({releaseId: arelease?.id, reviewId: res?.data?.id})
                                     }
                                     createNotifications(notify);
                                 }
@@ -729,39 +729,39 @@ useEffect(() => {
                    {arelease?.reviews && (
                              <View style={styles.reviewsContainer}>
                              {arelease?.reviews?.length > 0 ? (
-                                 arelease.reviews
+                                 arelease?.reviews
                                      .filter(review => !review.parentReviewId)
                                      .map(review => (
                                          <View key={review?.id?.toString()}>
                                              <ReviewItem
                                                  item={review}
                                                  onDelete={onDeleteReview}
-                                                 canDelete={user.id === review.userId || user.id === arelease.userId}
-                                                 onReplyReviewPress={() => toggleReplyBox(review.id)}
-                                                 replyCount={areviewReplies[review.id]?.length || 0}
+                                                 canDelete={user?.id === review?.userId || user?.id === arelease?.userId}
+                                                 onReplyReviewPress={() => toggleReplyBox(review?.id)}
+                                                 replyCount={areviewReplies[review?.id]?.length || 0}
                                                  isReply={false}
                                                  // openProfilePopup={() => openProfilePopup(review.user)}
                                                  onShowProfile={() => openProfilePopup(review.user)}
                                              />
                                              
                                              {/* Render replies when reply box is open */}
-                                             {openReplyBox === review.id && areviewReplies[review.id]?.map(reply => (
+                                             {openReplyBox === review?.id && areviewReplies[review?.id]?.map(reply => (
                                                  <View key={reply.id} style={styles.replyContainer}>
                                                      <ReviewItem
                                                          item={reply}
                                                          onDelete={onDeleteReview}
                                                          canDelete={user.id === reply.userId || user.id === arelease.userId}
-                                                         replyCount={areviewReplies[review.id]?.length || 0}
+                                                         replyCount={areviewReplies[review?.id]?.length || 0}
                                                          isReply={true}
                                                      />
                                                  </View>
                                              ))}
                                              
                                              {/* Reply input box */}
-                                             {openReplyBox === review.id && (
+                                             {openReplyBox === review?.id && (
                                                  <View style={styles.replyInputContainer}>
                                                      <Input
-                                                         placeholder={`Reply to @${review.user.name}...`}
+                                                         placeholder={`Reply to @${review?.user.name}...`}
                                                          onChangeText={value => replyRef.current = value}
                                                          placeholderTextColor={theme.colors.textLight}
                                                          containerStyle={{
@@ -777,7 +777,7 @@ useEffect(() => {
                                                      ) : (
                                                          <TouchableOpacity
                                                              style={styles.replySendIcon}
-                                                             onPress={() => onSubmitReply(review.id)}
+                                                             onPress={() => onSubmitReply(review?.id)}
                                                          >
                                                              <Icon name="send" size={hp(2)} color={theme.colors.primaryDark} />
                                                          </TouchableOpacity>
@@ -795,8 +795,8 @@ useEffect(() => {
                               {!release?.sconnectedId && (
                                      <PeoplesReviewList
                                      reviews={release?.peoplesReview || []}
-                                     releaseId={release.id}
-                                     releaseUserId={release.userId}
+                                     releaseId={release?.id}
+                                     releaseUserId={release?.userId}
                                      currentUser={user}
                                      onDeleteReview={onDeleteReview}
                                      openProfilePopup={openProfilePopup}

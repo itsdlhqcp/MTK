@@ -276,7 +276,9 @@ const TcommentItem = ({
             </Text>
           </View>
 
-          {canDelete && (
+
+           {/* "isReply" is a temporary solution as dlt not working for replies */}
+          {canDelete && isReply && (
             <TouchableOpacity onPress={handleDelete}>
               <Icon name="delete" size={18} color={theme.colors.rose} strokeWidth={1.4}/>
             </TouchableOpacity>
@@ -301,7 +303,7 @@ const TcommentItem = ({
                   name="commentlike"
                   size={hp(2.5)} 
                   color={cmtreplyliked ? "#0066ff" : "#CCCCCC"} 
-                  fill={cmtreplyliked ? theme.colors.rose : 'transparent'}
+                  fill={cmtreplyliked ? 'transparent' : 'transparent'}
                 />
                 <Text style={styles.count}>
                   {cmtreplylikes.length}
@@ -319,7 +321,7 @@ const TcommentItem = ({
                   name="commentlike"
                   size={hp(2.5)} 
                   color={cmtliked ? "#0066ff" : "#CCCCCC"} 
-                  fill={cmtliked ? 'Transparent' : 'transparent'}
+                  fill={cmtliked ? 'transparent' : 'transparent'}
                 />
                 <Text style={styles.count}>
                   {cmtlikes.length}  
@@ -334,7 +336,7 @@ const TcommentItem = ({
                   name="commentunlike"
                   size={hp(2.5)} 
                   color={cmtunliked ? "#0066ff" : "#CCCCCC"} 
-                  fill={cmtunliked ? 'Transparent' : 'transparent'}
+                  fill={cmtunliked ? 'transparent' : 'transparent'}
                 />
                 <Text style={styles.count}>
                   {cmtunlikes.length}

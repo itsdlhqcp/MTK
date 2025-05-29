@@ -248,7 +248,9 @@ const CommentItem = ({
             </Text>
           </View>
 
-          {canDelete && (
+
+           {/* isreply is a temporary solution as dlt not working for replies */}
+          {canDelete && isReply && (
             <TouchableOpacity onPress={handleDelete}>
               <Icon name="delete" size={18} color={theme.colors.rose} strokeWidth={1.4}/>
             </TouchableOpacity>
