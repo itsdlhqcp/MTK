@@ -1,6 +1,6 @@
-import { View, Text, LogBox, Linking, Platform, DevSettings } from 'react-native'
+import { LogBox, Linking, DevSettings } from 'react-native'
 import React, { useEffect } from 'react'
-import { SplashScreen, Stack, useRouter, useSegments } from 'expo-router'
+import { Stack, useRouter } from 'expo-router'
 import { AuthProvider, useAuth } from '../contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { getUserData } from '../services/userServices'

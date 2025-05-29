@@ -1,4 +1,4 @@
-import { Text, Alert, View, StyleSheet, Pressable, FlatList, RefreshControl } from 'react-native'
+import { Text, Alert, View, StyleSheet, FlatList, RefreshControl } from 'react-native'
 import React, { useEffect, useRef, useState, memo, useCallback, useMemo } from 'react'
 import { useRouter } from 'expo-router'
 import theme from '../../constants/theme'
@@ -8,15 +8,12 @@ import { supabase } from '../../lib/supabase'
 import { wp, hp } from '@/helpers/common'
 import { fetchPosts, markPostAsViewed, getUnwatchedPostsCount, syncPendingViews } from '../../services/postService'
 import { getUserData } from '../../services/userServices'
-import MLoading from '../../components/MaterialLoader'
 import FeedLoader from '../../components/FeedLoader'
 import { useFocusEffect } from '@react-navigation/native';
 import SpotlightCard from '../../components/SpotlightCard';
 import { NetworkUtils } from '../../utils/network';
 import { useToast } from '../../contexts/ToastContext'
 import CustomDotIndicator from '../../components/CutomDotIndicator';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import Icon from 'react-native-vector-icons/Feather';
 
 // Convert PostCard to a memoized component for optimized rendering
 const MemoizedPostCard = memo(({ item, currentUser, router, isVisible, onPostViewed }) => {

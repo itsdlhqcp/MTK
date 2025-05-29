@@ -1,4 +1,4 @@
-import { Text, View, StyleSheet, FlatList, Pressable, TextInput, Alert, RefreshControl } from 'react-native'
+import { Text, View, StyleSheet, FlatList, Pressable, TextInput, RefreshControl } from 'react-native'
 import React, { useEffect, useRef, useState, memo, useCallback, useMemo } from 'react'
 import { useRouter } from 'expo-router'
 import theme from '../../constants/theme'

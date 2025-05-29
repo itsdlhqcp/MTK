@@ -3,7 +3,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { StyleSheet, TouchableOpacity, Alert, Animated, RefreshControl, Easing } from "react-native";
 import Input from '../../components/Input';
 import { fetchPeopleReviewReplies, removeReplyPeopleReview, fetchPeoplesReleaseDetailsx, hasUserPostedAnyReview, fetchReleaseDetailsx, hasUserPostedAnyReviewInDirect } from "../../services/releaseService";
-import { createReviewReply, removeReview, fetchReviewReplies, fetchReleaseDetails, createReleaseReview, fetchPeoplesReleaseDetails, createPeopleReleaseReview, removePeopleReview, createPeopleReviewReply } from "../../services/ottService"
+import { createReviewReply, removeReview, fetchReviewReplies, fetchReleaseDetails, createReleaseReview, fetchPeoplesReleaseDetails, createPeopleReleaseReview, removePeopleReview} from "../../services/ottService"
 import { View } from "react-native";
 import { createNotifications } from '../../services/notificationService'
 import ReviewItem from "../../components/ReviewItem";

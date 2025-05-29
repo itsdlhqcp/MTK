@@ -264,33 +264,33 @@ const toggleReplyBox = (reviewId, username = null) => {
   return (
     <View style={styles.reviewsContainer}>
       {reviews
-        .filter(peoplesReview => !peoplesReview.parentReviewId)
+        .filter(peoplesReview => !peoplesReview?.parentReviewId)
         .map(peoplesReview => (
           <View key={peoplesReview?.id?.toString()}>
             <PeoplesReviewItem
               item={peoplesReview}
               releaseId={releaseId}
               onDelete={onDeleteReview}
-              canDelete={currentUser.id === peoplesReview.userId || currentUser.id === releaseUserId}
+              canDelete={currentUser?.id === peoplesReview?.userId || currentUser?.id === releaseUserId}
               // onReplyReviewPress={() => toggleReplyBox(peoplesReview.id)}
               onReplyReviewPress={(id, username) => toggleReplyBox(id, username)}
-              replyCount={reviewReplies[peoplesReview.id]?.length || 0}
+              replyCount={reviewReplies[peoplesReview?.id]?.length || 0}
               isReply={false}
               onShowProfile={openProfilePopup}
-              highlight={reviewId == peoplesReview.id} 
+              highlight={reviewId == peoplesReview?.id} 
               handleEdit={onhandleEdit}
             />
             
             {/* Render replies when reply box is open */}
-            {openReplyBox === peoplesReview.id && reviewReplies[peoplesReview.id]?.map(reply => (
+            {openReplyBox === peoplesReview?.id && reviewReplies[peoplesReview?.id]?.map(reply => (
               <View key={reply.id} style={styles.replyContainer}>
                 <PeoplesReviewItem
                   item={reply}
                   releaseId={releaseId}
                   onDelete={onDeleteReviewReply}
                   canDelete={currentUser.id === reply.userId || currentUser.id === releaseUserId}
-                  onReplyReviewPress={(id, username) => toggleReplyBox(peoplesReview.id, username)} 
-                  replyCount={reviewReplies[peoplesReview.id]?.length || 0}
+                  onReplyReviewPress={(id, username) => toggleReplyBox(peoplesReview?.id, username)} 
+                  replyCount={reviewReplies[peoplesReview?.id]?.length || 0}
                   isReply={true}
                   onShowProfile={openProfilePopup}
                 />
@@ -298,12 +298,12 @@ const toggleReplyBox = (reviewId, username = null) => {
             ))}
             
             {/* Reply input box */}
-            {openReplyBox === peoplesReview.id && (
+            {openReplyBox === peoplesReview?.id && (
               <View style={styles.replyInputContainer}>
                 <Input
                   placeholder={`Reply to @${peoplesReview?.user?.name}...`}
-                  onChangeText={value => handleReplyInputChange(peoplesReview.id, value)}
-                  value={replyInputValues[peoplesReview.id] || ''}
+                  onChangeText={value => handleReplyInputChange(peoplesReview?.id, value)}
+                  value={replyInputValues[peoplesReview?.id] || ''}
                   placeholderTextColor={theme.colors.textLight}
                   containerStyle={{
                     flex: 1,
@@ -312,14 +312,14 @@ const toggleReplyBox = (reviewId, username = null) => {
                   }}
                 />
 
-                {replyLoading[peoplesReview.id] ? (
+                {replyLoading[peoplesReview?.id] ? (
                   <View style={styles.loading}>
                     <FeedLoader size="small" color={theme.colors.primaryDark} />
                   </View>
                 ) : (
                   <TouchableOpacity
                     style={styles.replySendIcon}
-                    onPress={() => onSubmitReply(peoplesReview.id)}
+                    onPress={() => onSubmitReply(peoplesReview?.id)}
                   >
                     <Icon name="send" size={hp(2)} color={theme.colors.primaryDark} />
                   </TouchableOpacity>

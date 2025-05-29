@@ -1,12 +1,10 @@
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import theme from '../../constants/theme'
-import { wp, hp, stripHtmlTags } from '../../helpers/common'
+import {hp} from '../../helpers/common'
 import Avatar from '../Avatar'
 import Icon from '@/assets/icons'
 import moment from 'moment'
-import { getUserData } from '../../services/userServices';
-import { router } from 'expo-router'
 import { userService } from '../../services/helperService'
 import { createCommentLike, removeCommentLike, createCommentUnlike, removeCommentUnlike, createCommentReplylike, removeCommentReplyunlike } from '../../services/homeService'
 import { useAuth } from '../../contexts/AuthContext'

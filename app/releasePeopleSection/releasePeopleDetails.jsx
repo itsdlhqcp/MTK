@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StyleSheet, TouchableOpacity, Alert, Animated, RefreshControl, Easing } from "react-native";
 import Input from '../../components/Input';
-import { createReleaseReview, createPeopleReleaseReview, fetchPeoplesReleaseDetails, removePeopleReview , removeReplyPeopleReview, fetchReleaseDetailsx, fetchReviewReplies, createReviewReply, hasUserPostedAnyReview, fetchAverageRating} from "../../services/releaseService";
+import { createReleaseReview, createPeopleReleaseReview, fetchPeoplesReleaseDetails, removePeopleReview , removeReplyPeopleReview, fetchReleaseDetailsx, fetchReviewReplies, createReviewReply, hasUserPostedAnyReview} from "../../services/releaseService";
 import { View } from "react-native";
 import { createNotifications } from '../../services/notificationService'
 import ReviewItem from "../../components/PreviewItem";
@@ -23,7 +23,6 @@ import { useReview } from '../../contexts/ReviewContext';
 import { useRoute } from "@react-navigation/native";
 import { fetchPeoplesStreamDetailsx } from "../../services/ottService";
 import TheatreReviewTabs from "../../components/TheatreReviewTabs";
-import { adminIds } from "../../constants/admin";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import moment from "moment";
 import { useToast } from "../../contexts/ToastContext";

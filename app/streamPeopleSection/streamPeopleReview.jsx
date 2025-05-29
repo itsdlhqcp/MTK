@@ -118,7 +118,7 @@ const toggleReplyBox = (reviewId, username = null) => {
     if (!replyRef.current || !currentUser?.id) return null;
 
     let data = {
-      userId: currentUser.id,
+      userId: currentUser?.id,
       text: replyRef.current,
       parentReviewId: parentReviewId,
       streamId: releaseId  
@@ -156,9 +156,9 @@ const toggleReplyBox = (reviewId, username = null) => {
         }));
 
         // Handle notification
-        if (currentUser.id !== releaseUserId) {
+        if (currentUser?.id !== releaseUserId) {
           let notify = {
-            senderId: currentUser.id,
+            senderId: currentUser?.id,
             receiverId: releaseUserId,
             title: 'replied to your review',
             data: JSON.stringify({ releaseId: releaseId, reviewId: parentReviewId })
@@ -187,11 +187,11 @@ const toggleReplyBox = (reviewId, username = null) => {
         
         // Update state to remove the reply
         setReviewReplies(prev => {
-          const parentId = review.parentReviewId;
+          const parentId = review?.parentReviewId;
           if (prev[parentId]) {
             return {
               ...prev,
-              [parentId]: prev[parentId].filter(reply => reply.id !== review.id)
+              [parentId]: prev[parentId].filter(reply => reply.id !== review?.id)
             };
           }
           return prev;
@@ -202,7 +202,7 @@ const toggleReplyBox = (reviewId, username = null) => {
     }
   };
 
-    if (reviews.length === 0) {
+    if (reviews?.length === 0) {
       return (
             show? ( <View style={styles.noReviews}>
                   <Text style={styles.noReviewsText}>
@@ -268,27 +268,27 @@ const toggleReplyBox = (reviewId, username = null) => {
             <PeoplesPreviewItem
               item={dpeoplesReview}
               onDelete={onDeleteReview}
-              canDelete={currentUser.id === dpeoplesReview.userId || currentUser.id === releaseUserId}
+              canDelete={currentUser.id === dpeoplesReview?.userId || currentUser.id === releaseUserId}
               // onReplyReviewPress={() => toggleReplyBox(peoplesReview.id)}
               onReplyReviewPress={(id, username) => toggleReplyBox(id, username)}
-              replyCount={reviewReplies[dpeoplesReview.id]?.length || 0}
+              replyCount={reviewReplies[dpeoplesReview?.id]?.length || 0}
               isReply={false}
               onShowProfile={openProfilePopup}
-              highlight={reviewId == dpeoplesReview.id}  
+              highlight={reviewId == dpeoplesReview?.id}  
               handleEdit={onhandleEdit}
               releaseId={releaseId}
               // highlight="true"
             />
             
             {/* Render replies when reply box is open */}
-            {openReplyBox === dpeoplesReview.id && reviewReplies[dpeoplesReview.id]?.map(reply => (
+            {openReplyBox === dpeoplesReview?.id && reviewReplies[dpeoplesReview?.id]?.map(reply => (
               <View key={reply.id} style={styles.replyContainer}>
                 <PeoplesPreviewItem
                   item={reply}
                   onDelete={onDeleteReviewReply}
                   canDelete={currentUser.id === reply.userId || currentUser.id === releaseUserId}
-                  onReplyReviewPress={(id, username) => toggleReplyBox(dpeoplesReview.id, username)} 
-                  replyCount={reviewReplies[dpeoplesReview.id]?.length || 0}
+                  onReplyReviewPress={(id, username) => toggleReplyBox(dpeoplesReview?.id, username)} 
+                  replyCount={reviewReplies[dpeoplesReview?.id]?.length || 0}
                   isReply={true}
                   onShowProfile={openProfilePopup}
                   // highlight={reviewId === dpeoplesReview.id}  
@@ -298,11 +298,11 @@ const toggleReplyBox = (reviewId, username = null) => {
             ))}
             
             {/* Reply input box */}
-            {openReplyBox === dpeoplesReview.id && (
+            {openReplyBox === dpeoplesReview?.id && (
               <View style={styles.replyInputContainer}>
                 <Input
                   placeholder={`Reply to @${dpeoplesReview?.user?.name}...`}
-                  onChangeText={value => handleReplyInputChange(dpeoplesReview.id, value)}
+                  onChangeText={value => handleReplyInputChange(dpeoplesReview?.id, value)}
                   value={replyInputValues[dpeoplesReview?.id] || ''}
                   placeholderTextColor={theme.colors.textLight}
                   containerStyle={{

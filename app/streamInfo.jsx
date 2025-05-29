@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { StyleSheet, View, Alert, Text } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { hp, wp } from '../helpers/common';
+import { hp} from '../helpers/common';
 import theme from '../constants/theme';
 import Loading from "../components/Loading";
 import { fetchAverageRating, fetchPeoplesReleaseDetails } from "../services/ottService";
