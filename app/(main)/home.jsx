@@ -4,6 +4,8 @@ import { useRouter } from 'expo-router'
 import theme from '../../constants/theme'
 import { useAuth } from '../../contexts/AuthContext'
 import ScreenWrapper from '@/components/ScreenWrapper'
+import PollCard from '../../components/PollCard';
+import { fetchPolls } from '../../services/pollservice';
 import { supabase } from '../../lib/supabase'
 import { wp, hp } from '@/helpers/common'
 import Avatar from '../../components/Avatar'
@@ -21,7 +23,6 @@ import { useToast } from '../../contexts/ToastContext'
 import { friendRequestService } from '../../services/requestService'
 import CustomDotIndicator from '../../components/CutomDotIndicator'
 
-// Convert TwistCard to a memoized component for optimized rendering
 const MemoizedTwistCard = memo(({ item, currentUser, router, isVisible }) => {
   return (
     <TwistCard
@@ -32,7 +33,6 @@ const MemoizedTwistCard = memo(({ item, currentUser, router, isVisible }) => {
     />
   );
 }, (prevProps, nextProps) => {
-  // Custom comparison function for memo - comparing only necessary props
   return (
     prevProps.item?.id === nextProps.item?.id &&
     prevProps.isVisible === nextProps.isVisible &&
@@ -121,6 +121,19 @@ const Header = memo(({ username, router, setIsNavigating, isNavigating, isadmin,
           <Icon name="plus" size={hp(3.2)} color='white' />
         </Pressable>
       )} 
+            {isadmin && (
+                 <Pressable 
+                 disabled={isNavigating}
+                 onPress={() => {
+                   if (!isNavigating) {
+                     setIsNavigating(true);
+                     router.push('pollScreen');
+                   }
+                 }}
+               >
+                 <Icon name="rocket" size={hp(3.2)} color={theme.colors.blue} />
+               </Pressable>
+               )}
     </View>
   </View>
 ));
@@ -264,8 +277,6 @@ const Feeds = () => {
       }, [user?.id, isConnected])
     );
 
-      
-  // Add handling for real-time updates to friend requests
   useEffect(() => {
     if (!user?.id || !isConnected) return;
     
@@ -277,7 +288,6 @@ const Feeds = () => {
         .on('postgres_changes',
           { event: '*', schema: 'public', table: 'friend_requests', filter: `receiver_id=eq.${user?.id}` },
           (payload) => {
-            // Refresh the count when there's any change to friend requests
             fetchIncomingRequestCount();
           }
         )
@@ -311,15 +321,6 @@ const Feeds = () => {
     }
   }).current;
 
-  // useFocusEffect(
-  //   useCallback(() => {
-  //     if (user?.id === null) {
-  //       router.replace('/welcome');
-  //     }
-  //   }, [])
-  // );
-
-  // State management
   const [posts, setPosts] = useState([]);
   const [trendingPosts, setTrendingPosts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -333,6 +334,8 @@ const Feeds = () => {
   const [isConnected, setIsConnected] = useState(true);
   const [initialCheckDone, setInitialCheckDone] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
+  const [polls, setPolls] = useState([]);
+  const [allFeedItems, setAllFeedItems] = useState([]);
   const { showToast } = useToast();
   const ITEMS_PER_PAGE = 25; 
 
@@ -405,6 +408,54 @@ const Feeds = () => {
     setSearchResults([]);
   }, []);
 
+  // Add these new handler functions
+const handlePollEvent = useCallback(async (payload) => {
+  if (payload.eventType === 'INSERT' && payload?.new?.id) {
+    let newPoll = { ...payload.new, type: 'poll' };
+    
+    try {
+      let res = await getUserData(newPoll.user_id);
+      if (res.success) {
+        newPoll.user = res.data;
+        setPolls(prevPolls => [newPoll, ...prevPolls]);
+      }
+    } catch (error) {
+      console.error('Error fetching user data for poll:', error);
+    }
+  }
+  else if (payload.eventType === 'DELETE' && payload.old?.id) {
+    setPolls(prevPolls => 
+      prevPolls.filter(poll => poll?.id !== payload.old?.id)
+    );
+  }
+}, []);
+
+const handlePollVoteEvent = useCallback((payload) => {
+  if (payload.eventType === 'INSERT') {
+    const { poll_id, option_id } = payload.new;
+    
+    setPolls(prevPolls => 
+      prevPolls.map(poll => {
+        if (poll.id === poll_id) {
+          const updatedOptions = poll.poll_options.map(option => {
+            if (option.id === option_id) {
+              return { ...option, vote_count: option.vote_count + 1 };
+            }
+            return option;
+          });
+          
+          return {
+            ...poll,
+            poll_options: updatedOptions,
+            total_votes: poll.total_votes + 1
+          };
+        }
+        return poll;
+      })
+    );
+  }
+}, []);
+
   // Handle real-time post updates with optimized functions
   const handlePostEvent = useCallback(async (payload) => {
     // handle insert new post on main stream
@@ -447,16 +498,17 @@ const Feeds = () => {
     }
   }, []);
 
-  // Set up Supabase real-time subscription with cleanup
+// Update the existing useEffect that sets up Supabase channels
   useEffect(() => {
     if (!user?.id || !isConnected) return;
     
     let isMounted = true;
     let postChannel;
     let notificationChannel;
+    let pollChannel; // Add this line
     
     const setupChannels = async () => {
-      // Create channels
+      // Existing post channel setup
       postChannel = supabase
         .channel('twists')
         .on('postgres_changes',
@@ -465,6 +517,7 @@ const Feeds = () => {
         )
         .subscribe();
 
+      // Existing notification channel setup
       notificationChannel = supabase
         .channel('notifications')
         .on('postgres_changes',
@@ -473,10 +526,24 @@ const Feeds = () => {
         )
         .subscribe();
 
-      // Initial posts fetch
+      // Add poll channel setup
+      pollChannel = supabase
+        .channel('polls-home')
+        .on('postgres_changes',
+          { event: '*', schema: 'public', table: 'polls' },
+          handlePollEvent
+        )
+        .on('postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'poll_votes' },
+          handlePollVoteEvent
+        )
+        .subscribe();
+
+      // Initial data fetch
       if (isMounted) {
         await getPosts();
         await getTrendingPosts();
+        await getPolls(); // Add this line
       }
     };
     
@@ -486,8 +553,22 @@ const Feeds = () => {
       isMounted = false;
       if (postChannel) supabase.removeChannel(postChannel);
       if (notificationChannel) supabase.removeChannel(notificationChannel);
+      if (pollChannel) supabase.removeChannel(pollChannel); // Add this line
     };
   }, [user?.id, isConnected]);
+
+  // Add this useEffect to combine and sort posts and polls by date
+  useEffect(() => {
+    const combinedItems = [
+      ...posts.map(post => ({ ...post, type: 'post', sortDate: new Date(post.created_at) })),
+      ...polls.map(poll => ({ ...poll, type: 'poll', sortDate: new Date(poll.created_at) }))
+    ];
+    
+    // Sort by date (newest first)
+    const sortedItems = combinedItems.sort((a, b) => b.sortDate - a.sortDate);
+    
+    setAllFeedItems(sortedItems);
+  }, [posts, polls]);
 
   // Fetch trending posts with loading state management
   const getTrendingPosts = useCallback(async () => {
@@ -509,6 +590,26 @@ const Feeds = () => {
       setLoading(false);
     }
   }, [isConnected]);
+
+
+  // Add this function after getTrendingPosts
+const getPolls = useCallback(async () => {
+  if (!isConnected) {
+    console.log('Skipping polls fetch - device is offline');
+    return;
+  }
+  
+  try {
+    const res = await fetchPolls(50);
+    if (res.success) {
+      // Add type identifier to polls
+      const pollsWithType = res.data.map(poll => ({ ...poll, type: 'poll' }));
+      setPolls(pollsWithType);
+    }
+  } catch (error) {
+    console.error('Error fetching polls:', error);
+  }
+}, [isConnected]);
 
   // Optimized post fetching with proper state management
   const getPosts = useCallback(async () => {
@@ -552,6 +653,7 @@ const Feeds = () => {
   }, [loading, hasMore, page, isConnected]);
 
   // Handle pull-to-refresh
+  // Update the existing handleRefresh function
   const handleRefresh = useCallback(() => {
     if (isSearching) {
       handleClearSearch();
@@ -560,26 +662,48 @@ const Feeds = () => {
     setRefreshing(true);
     setPage(1);
     setPosts([]);
+    setPolls([]); // Add this line
     setHasMore(true);
-    getPosts();
-  }, [getPosts, isSearching, handleClearSearch]);
+    
+    // Fetch both posts and polls
+    Promise.all([getPosts(), getPolls()]).finally(() => {
+      setRefreshing(false);
+    });
+  }, [getPosts, getPolls, isSearching, handleClearSearch]);
 
-  // Optimized renderItem for FlatList
-  const renderItem = useCallback(({ item }) => (
-    <MemoizedTwistCard
-      item={item}
-      currentUser={user}
-      router={router}
-      isVisible={visibleItems.includes(item?.id)}
-    />
-  ), [user, router, visibleItems]);
+ // Replace the existing renderItem function
+  const renderItem = useCallback(({ item }) => {
+    if (item.type === 'poll') {
+      return (
+        <PollCard 
+          item={item} 
+          onVoteUpdate={(pollId, updatedPollData) => {
+            setPolls(prevPolls => 
+              prevPolls.map(poll => 
+                poll.id === pollId ? updatedPollData : poll
+              )
+            );
+          }}
+        />
+      );
+    } else {
+      return (
+        <MemoizedTwistCard
+          item={item}
+          currentUser={user}
+          router={router}
+          isVisible={visibleItems.includes(item?.id)}
+        />
+      );
+    }
+  }, [user, router, visibleItems]);
 
-  const keyExtractor = useCallback((item) => item?.id.toString(), []);
+  // Update keyExtractor to handle both posts and polls
+const keyExtractor = useCallback((item) => `${item.type}-${item?.id.toString()}`, []);
 
   // Optimized end reached handler with debounce behavior
   const lastFetchTime = useRef(Date.now());
   const handleEndReached = useCallback(() => {
-    // Don't load more if in search mode
     if (isSearching) return;
     
     const now = Date.now();
@@ -590,9 +714,10 @@ const Feeds = () => {
   }, [hasMore, loading, getPosts, isConnected, isSearching]);
 
   // Get the current posts to display (search results or all posts)
-  const displayPosts = useMemo(() => {
-    return isSearching ? searchResults : posts;
-  }, [isSearching, searchResults, posts]);
+ // Update the displayPosts logic
+const displayPosts = useMemo(() => {
+  return isSearching ? searchResults : allFeedItems;
+}, [isSearching, searchResults, allFeedItems]);
 
   // Memoize components to prevent unnecessary recreations
   const memoizedFooter = useMemo(() => (
@@ -812,28 +937,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12
   },
-   // New styles for the library button
    libraryButton: {
-    backgroundColor: theme.colors.text, // Customize color as needed
-    paddingVertical: hp(0.2),  // Reduced from 0.3
-    paddingHorizontal: wp(5.5), // Reduced from 7.8
-    borderRadius: 16, // Reduced from 24
+    backgroundColor: theme.colors.text,
+    paddingVertical: hp(0.2), 
+    paddingHorizontal: wp(5.5),
+    borderRadius: 16, 
     alignItems: 'center',
     justifyContent: 'center',
   },
   
   buttonTextTop: {
     color: 'white',
-    fontSize: hp(1.4), // Reduced from 1.7
+    fontSize: hp(1.4),
     fontWeight: theme.fonts.bold,
-    lineHeight: hp(2.0), // Slightly reduced
+    lineHeight: hp(2.0),
   },
   
   buttonTextBottom: {
     color: 'rgba(255, 255, 255, 0.9)',
-    fontSize: hp(1.6), // Reduced from 2
+    fontSize: hp(1.6), 
     fontWeight: '500',
-    marginTop: -hp(0.4), // Slightly adjusted
+    marginTop: -hp(0.4),
   },
   offlineBar: {
     padding: hp(1),
@@ -881,5 +1005,4 @@ const styles = StyleSheet.create({
     fontSize: hp(1.4),
     fontWeight: '500',
   },
-
 });

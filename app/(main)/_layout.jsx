@@ -103,7 +103,7 @@ export default function TabLayout() {
           marginTop: hp(2.5)
         }}
       />
-      {!focused && (
+      {/* {!focused && (
         <View 
           style={{
             width: 5,
@@ -113,7 +113,7 @@ export default function TabLayout() {
             marginTop: 2,
           }}
         />
-      )}
+      )} */}
     </View>
   );
  
