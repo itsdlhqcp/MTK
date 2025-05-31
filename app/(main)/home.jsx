@@ -841,7 +841,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginHorizontal: wp(0.4),
     marginVertical: hp(0.7),
-    backgroundColor: '#222',
+    backgroundColor: 'rgba(33, 149, 243, 0.03)',
     borderRadius: 24,
     alignItems: 'center',
   },

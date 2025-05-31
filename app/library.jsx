@@ -44,10 +44,10 @@ export class Library extends Component {
 
   toggleSearch = () => {
     const { isSearchVisible, isSearchEnabled } = this.state;
-    const { showToast } = useToast();
+   // const { showToast } = useToast();
     // If search is disabled due to offline status, show alert
     if (!isSearchVisible && !isSearchEnabled) {
-      showToast('success', 'Search is only available when online');
+    //  showToast('success', 'Search is only available when online');
       return;
     }
     
