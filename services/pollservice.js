@@ -198,7 +198,6 @@ export const fetchPollById = async (pollId) => {
     }
   };
 
-
 // Get user's vote for a specific poll
 export const getUserVote = async (pollId, userId) => {
   try {

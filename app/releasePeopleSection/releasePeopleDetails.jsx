@@ -532,7 +532,6 @@ useEffect(() => {
             }
         }
 
-
         const onDeleteReviewReply = async (review) => {
             // Remove the reply from the state
             try{
@@ -978,8 +977,6 @@ const styles = StyleSheet.create({
         opacity: 0.7
     },
     reviewsContainer: {
-     //   marginVertical: hp(2),
-      //  gap: hp(2),
         borderWidth: 0,
         marginHorizontal: hp(1)
     },
