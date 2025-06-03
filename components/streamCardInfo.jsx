@@ -234,7 +234,7 @@ const StreamCardInfo = ({
     const filmDetails = [
         { label: 'Language', value: item?.lang || 'N/A' },
         { label: 'Genre', value: item?.genre || 'N/A' },
-        { label: 'Duration', value: item?.duration || 'N/A' },
+        { label: 'Duration', value: (item?.duration === '00:00:00' ? 'N/A' : item?.duration) || 'N/A' },
         { label: 'Director', value: item?.director || 'N/A' },
         { label: 'Writer', value: item?.writer || 'N/A' },
         { label: 'Music', value: item?.music || 'N/A' },
