@@ -8,7 +8,7 @@ import { supabase } from '../../lib/supabase'
 import { wp, hp } from '@/helpers/common'
 import { fetchPosts, markPostAsViewed, getUnwatchedPostsCount, syncPendingViews } from '../../services/postService'
 import { getUserData } from '../../services/userServices'
-import FeedLoader from '../../components/FeedLoader'
+import FeedLoader from '../../components/FeedLoader';
 import { useFocusEffect } from '@react-navigation/native';
 import SpotlightCard from '../../components/SpotlightCard';
 import { NetworkUtils } from '../../utils/network';
@@ -83,7 +83,7 @@ const EmptyListComponent = memo(({ loading }) => {
   return (
     <View style={styles.loadingContainer}>
       <Text style={styles.noPosts}>
-        {loading ? <CustomDotIndicator count={3} /> : "No Network found!!"}
+         {loading ? <CustomDotIndicator count={3} /> : "No Network found!!"}
       </Text>
     </View>
   );

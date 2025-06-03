@@ -47,7 +47,7 @@ const NewOtt = () => {
    // Film information fields as individual state variables
    const [lang, setLang] = useState('');
    const [genre, setGenre] = useState('');
-   const [duration, setDuration] = useState('');
+   const [duration, setDuration] = useState('00:00:00');
    const [director, setDirector] = useState('');
    const [writer, setWriter] = useState('');
    const [music, setMusic] = useState('');
