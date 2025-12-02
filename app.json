@@ -1,42 +1,83 @@
 {
-  "expo": {
-    "name": "xxx1",
-    "slug": "xxx1",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "xxx1",
-    "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
-    "ios": {
-      "supportsTablet": true
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "edgeToEdgeEnabled": true
-    },
-    "web": {
-      "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
-    },
-    "plugins": [
-      "expo-router",
-      [
-        "expo-splash-screen",
+  "name": "PlotTwist",
+  "slug": "MediaTalk",
+  "description": "PlotTwist for cinemaphiles",
+  "version": "1.0.0",
+  "backgroundColor": "#000000",
+  "orientation": "portrait",
+  "icon": "./assets/last-test.png",
+  "scheme": "plotwist",
+  "userInterfaceStyle": "automatic",
+  "newArchEnabled": true,
+  "runtimeVersion": "1.0.0",
+  "splash": {
+    "backgroundColor": "#131516"
+  },
+  "ios": {
+    "supportsTablet": true,
+    "bundleIdentifier": "com.mediatalk.plotwist"
+  },
+  "android": {
+  "intentFilters": [
+    {
+      "action": "VIEW",
+      "autoVerify": true,
+      "data": [
         {
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "scheme": "https",
+          "host": "plotwist-site.vercel.app",
+          "pathPrefix": "/auth/onpasswordless" 
         }
-      ]
-    ],
-    "experiments": {
-      "typedRoutes": true
+      ],
+      "category": ["BROWSABLE", "DEFAULT"]
     }
+  ],
+  "package": "com.mediatalk.plotwist",
+  "adaptiveIcon": {
+    "foregroundImage": "./assets/last-test.png",
+    "backgroundColor": "#000000"
+   }
+  },
+  "web": {
+    "bundler": "metro",
+    "output": "static",
+    "favicon": "./assets/last-test.png"
+  },
+  "plugins": [
+    "expo-router",
+    [
+      "react-native-google-mobile-ads",
+      {
+        "androidAppId": "ca-app-pub-7806969239829181~9318981034",
+        "iosAppId": "ca-app-pub-7806969239829181~9318981034"
+      }
+    ],
+    "expo-font"
+  ],
+  "react-native-google-mobile-ads": {
+    "android_app_id": "ca-app-pub-7806969239829181~9318981034",
+    "ios_app_id": "ca-app-pub-7806969239829181~9318981034"
+  },
+  "experiments": {
+    "typedRoutes": true
+  },
+  "extra": {
+    "router": {
+      "origin": false
+    },
+    "eas": {
+      "projectId": "914fa909-af2f-4ae4-951d-30b3a259f8d3"
+    }
+  },
+  "updates": {
+    "url": "https://u.expo.dev/914fa909-af2f-4ae4-951d-30b3a259f8d3"
+  },
+  "platforms": [
+    "ios",
+    "android",
+    "web"
+  ],
+  "androidStatusBar": {
+    "backgroundColor": "#000000"
   }
 }

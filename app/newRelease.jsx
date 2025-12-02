@@ -1,0 +1,816 @@
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Image, Pressable, TextInput } from 'react-native'
+import React, { useRef, useState, useEffect } from 'react'
+import ScreenWrapper from '../components/ScreenWrapper'
+import Header from '../components/Header'
+import { useLocalSearchParams, useRouter } from 'expo-router'
+import { hp, wp } from '@/helpers/common'
+import theme from '../constants/theme'
+import Icon from '@/assets/icons'
+import Avatar from '../components/Avatar'
+import { useAuth } from '../contexts/AuthContext'
+import RichTextEditor from '../components/RichTextEditor'
+import Button from '@/components/Button'
+import { getSupabaseFileUrl } from '../services/imageService'
+import { Video } from 'expo-av';
+import * as ImagePicker from 'expo-image-picker';
+import DatePicker from '../components/DatePicker'
+import RatingInput from '../components/RatingInput'
+import UserRatingImpact from '../components/userRatingImpact'
+import { createOrUpdateRelease } from '../services/releaseService'
+import TagInput from '../components/OttTagInput'  
+
+const NewRelease = () => {
+
+  const post = useLocalSearchParams();
+  const { user } = useAuth();
+  const bodyRef = useRef(''); 
+  const editorRef = useRef(null);
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [file, setFile] = useState(null);
+  const [filel, setFilel] = useState(null); 
+  const [rating, setRating] = useState(null);
+  const [userRatingImpact, setUserRatingImpact] = useState(0);
+  const [tags, setTags] = useState([]); 
+  
+  // Film information fields as individual state variables
+  const [lang, setLang] = useState('');
+  const [genre, setGenre] = useState('');
+  const [duration, setDuration] = useState('');
+  const [durationError, setDurationError] = useState('');
+  const [director, setDirector] = useState('');
+  const [writer, setWriter] = useState('');
+  const [music, setMusic] = useState('');
+  const [dop, setDop] = useState('');
+  const [edit, setEdit] = useState('');
+  const [cast, setCast] = useState('');
+  const [selectedEndate, setselectedEndate] = useState(null);
+
+  // Available platform options
+  const platformOptions = [
+    'malayalam', 'tamil', 'canada', 'hindi', 'anime', 'kdrama'
+  ];
+
+  const handleDateSelect = (date) => {
+    console.log('Selected date:', date);
+    setSelectedDate(date); // This will now properly store the date
+  };
+
+  const handleEnddateSelect = (date) => {
+    console.log('Selected date:', date);
+    setselectedEndate(date); // This will now properly store the date
+  };
+
+  useEffect(() => {
+    if(post && post.id){
+      bodyRef.current = post.body; 
+      setFile(post.file || null);
+      setFilel(post.filel || null); // Load second file if it exists
+      
+      // Load film info if it exists
+      if (post.lang) setLang(post.lang);
+      if (post.genre) setGenre(post.genre);
+      if (post.duration) setDuration(post.duration);
+      if (post.director) setDirector(post.director);
+      if (post.writer) setWriter(post.writer);
+      if (post.music) setMusic(post.music);
+      if (post.dop) setDop(post.dop);
+      if (post.edit) setEdit(post.edit);
+      if (post.cast) setCast(post.cast);
+      if (post.tags) {
+        const tagArray = Array.isArray(post.tags) ? post.tags : 
+                       (typeof post.tags === 'string' ? [post.tags] : []);
+        setTags(tagArray);
+      }
+      if (post.defRating) setRating(post.defRating);
+      if (post.userRatImpact) setUserRatingImpact(post.userRatImpact);
+      if (post.rDate) setSelectedDate(new Date(post.rDate));
+      if (post.endDate) setselectedEndate(new Date(post.endDate));
+      
+      setTimeout(() => {
+        if (editorRef?.current?.setContentHTML && post.body) {
+          editorRef.current.setContentHTML(post.body);
+        }
+      }, 300);
+    }
+  }, [post.id]);
+
+  // Validate duration format (hh:mm:ss)
+  const validateDuration = (value) => {
+    if (!value) {
+      setDurationError('');
+      return true; // Empty is valid as we're allowing film info to be optional
+    }
+    
+    const timeFormat = /^([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])$/;
+    const isValid = timeFormat.test(value);
+    
+    if (isValid) {
+      setDurationError('');
+      return true;
+    } else {
+      setDurationError('Please use format HH:MM:SS (e.g., 02:30:45)');
+      return false;
+    }
+  };
+
+  const handleDurationChange = (text) => {
+    setDuration(text);
+    validateDuration(text);
+  };
+
+  const onPick = async (isImage, allowEditing = true) => {
+    try {
+      let mediaConfig = {
+        mediaTypes: isImage 
+          ? ['images']
+          : ['videos'],
+        allowsEditing: allowEditing,
+        editable: 'true',
+        aspect: [4, 3],
+        quality: 1,
+        base64: false,
+        exif: false
+      };
+  
+      let result = await ImagePicker.launchImageLibraryAsync(mediaConfig);
+  
+      if (!result.canceled) {
+        const asset = result.assets[0];
+        // Add better type checking
+        const fileType = asset.type || (asset.uri.match(/\.(jpg|jpeg|png|gif)$/i) 
+          ? 'image' 
+          : 'video');
+        
+        setFile({
+          uri: asset.uri,
+          type: fileType,
+          name: asset.uri.split('/').pop()
+        });
+      }
+    } catch (error) {
+      console.error('Error picking media:', error);
+      Alert.alert('Error', 'Failed to pick media file');
+    }
+  };
+
+  // Added second file picker function
+  const onPickSecond = async (isImage) => {
+    try {
+      let mediaConfig = {
+        mediaTypes: isImage 
+          ? ['images']
+          : ['videos'],
+        allowsEditing: false,
+        quality: 1,
+        base64: false,
+        exif: false
+      };
+  
+      let result = await ImagePicker.launchImageLibraryAsync(mediaConfig);
+  
+      if (!result.canceled) {
+        const asset = result.assets[0];
+        
+        setFilel({
+          uri: asset.uri,
+          type: isImage ? 'image' : 'video',
+          name: asset.uri.split('/').pop(),
+        });
+      }
+    } catch (error) {
+      console.error('Error picking media:', error);
+      Alert.alert('Error', 'Failed to pick second media file');
+    }
+  };
+
+  const isLocalFile = file => {
+    if(!file) return null;
+    if(typeof file === 'object') return true;
+    return false;
+  }
+
+  const getFileType = file => {
+    if (!file) return null;
+    if (isLocalFile(file)) {
+      return file.type || 'image'; // Provide a default type
+    }
+    // For remote files
+    return file.includes('postImage') ? 'image' : 'video';
+  };
+
+  const getFileUri = file => {
+    if(!file) return null;
+    if(isLocalFile(file)){
+      return file.uri;
+    }
+    return getSupabaseFileUrl(file)?.uri;
+  }
+
+  const handleRatingChange = (value) => {
+    console.log('Rating changed:', value);
+    setRating(value);
+  };
+
+  const handleuserRatingImpactChange = (value) => {
+    console.log('Impact Rating changed:', value);
+    setUserRatingImpact(value);
+  };
+
+  // Function to add or toggle a platform tag
+  const addPlatformTag = (platform) => {
+    if (tags.includes(platform)) {
+      // If platform is already in tags, remove it (toggle off)
+      setTags(tags.filter(tag => tag !== platform));
+    } else {
+      // If platform is not in tags, add it (toggle on)
+      setTags([...tags, platform]);
+    }
+  };
+
+  const onSubmit = async () => {
+    // Basic validation for required fields
+    if (!file && !bodyRef.current) {
+      Alert.alert('Error', 'Please provide at least release date, poster image, title, and rating');
+      return;
+    }
+    
+    // if (!rating) {
+    //   Alert.alert('Error', 'Please enter Rating of release!!');
+    //   return;
+    // }
+
+    // Check duration format if it's provided
+    if (duration && !validateDuration(duration)) {
+      return; // Stop submission if duration format is invalid
+    }
+
+    const normalizeDate = (date) => {
+      if (!date) return null;
+      // Set time to noon to avoid timezone issues with date shifts
+      const normalized = new Date(date);
+      normalized.setHours(12, 0, 0, 0);
+      return normalized;
+    };
+
+    let data = {
+      ...(post?.id && { id: post.id }),
+      file, 
+      filel, // Added second file to submission data
+      body: bodyRef.current,
+      userId: user?.id,
+      rDate: normalizeDate(selectedDate),
+      defRating: rating,
+      userRatImpact: userRatingImpact,
+      type: tags, 
+      endDate: normalizeDate(selectedEndate)
+    }
+    
+    // Add film information only if provided
+    if (lang) data.lang = lang;
+    if (genre) data.genre = genre;
+    if (duration) data.duration = duration;
+    if (director) data.director = director;
+    if (writer) data.writer = writer;
+    if (music) data.music = music;
+    if (dop) data.dop = dop;
+    if (edit) data.edit = edit;
+    if (cast) data.cast = cast;
+
+    // CREATING A NEW RELEASE 
+    setLoading(true);
+    let res = await createOrUpdateRelease(data);
+    setLoading(false);
+    if(res.success){
+      setFile(null); 
+      setFilel(null); // Clear second file on success
+      bodyRef.current = ''; 
+      editorRef.current?.setContentHTML('');
+      setTags([]); // Clear tags
+      // Reset film info fields
+      setLang('');
+      setGenre('');
+      setDuration('');
+      setDirector('');
+      setWriter('');
+      setMusic('');
+      setDop('');
+      setEdit('');
+      setCast('');
+      
+      Alert.alert('Release uploaded successfully');
+      router.push('/upcoming');
+    }else{
+      Alert.alert('Release', res.msg);
+    }
+  };
+
+  const handleEditorChange = (body) => {
+    bodyRef.current = body;
+  };
+
+  return (
+    <ScreenWrapper bg="white">
+      <Header title={post?.id ? "Edit Release" : "Create Release"}
+         showBackButton={true} />
+      <View style={styles.container}>
+        <ScrollView contentContainerStyle={{ gap: 20 }} showsVerticalScrollIndicator={false}>
+          <View style={styles.header}>
+            <Avatar
+              uri={user?.image}
+              size={hp(6.5)}
+              rounded={theme.radius.xl}
+            />
+            <View style={{ gap: 2 }}>
+              <Text style={styles.username}>
+                {user?.name}
+              </Text>
+              <Text style={styles.publicText}>
+                Public
+              </Text>
+            </View>
+          </View>
+          
+        <View>
+          <RichTextEditor 
+            editorRef={editorRef} 
+            onChange={handleEditorChange}
+            disableCopyPaste={true}
+            initialHeight={136}
+            placeholder="🚫No copy/paste - respect films 🎞️📽️🎥📹🚫 Enter Film Title here @author ## write film name in a line ## please don't use any text alignment for this session and use default text font size ==>> like film name = Interstellar"  />
+        </View>
+
+          {file && (
+            <View style={styles.file}>
+              {getFileType(file) === 'video' ? (
+                <Video
+                  source={{ uri: getFileUri(file) }}
+                  style={{ width: '100%', height: '122%' }}
+                  resizeMode="cover"
+                  borderRadius={7}
+                  onError={(error) => console.log('Video loading error:', error)}
+                  useNativeControls 
+                  positionMillis
+                  isLooping
+                  audioPan
+                />
+              ) : (
+                <Image
+                  source={{ uri: getFileUri(file) }}
+                  style={{ width: '100%', height: '122%' }}
+                  resizeMode="cover"
+                  borderRadius={6}
+                  onError={(error) => console.log('Image loading error:', error)}
+                />
+              )}
+              <Pressable style={styles.closeIcon} onPress={() => setFile(null)}>
+                <Icon name="delete" size={22} color={"red"} />
+              </Pressable>
+            </View>
+          )}
+
+          <View style={styles.media}>
+            <Text style={styles.addImageText}>Landscape poster HERE</Text>
+            <View style={styles.mediaIcons}>
+              <TouchableOpacity onPress={() => onPick(true)}>
+                <Icon name="crop" size={30} color={theme.colors.dark} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => onPick(true, false)}>
+                <Icon name="image" size={30} color={theme.colors.dark} />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Added second image preview */}
+          {filel && (
+            <View style={styles.file}>
+              {getFileType(filel) === 'video' ? (
+                <Text>Video not allowed for second image</Text>
+              ) : (
+                <Image
+                  source={{ uri: getFileUri(filel) }}
+                  style={{ width: '100%', height: '122%' }}
+                  resizeMode="cover"
+                  borderRadius={6}
+                  onError={(error) => console.log('Image loading error:', error)}
+                />
+              )}
+              <Pressable style={styles.closeIcon} onPress={() => setFilel(null)}>
+                <Icon name="delete" size={22} color={"red"} />
+              </Pressable>
+            </View>
+          )}
+
+          {/* Added second image picker */}
+          <View style={styles.media}>
+            <Text style={styles.addImageText}>Portrait Poster HERE</Text>
+            <View style={styles.mediaIcons}>
+              <TouchableOpacity onPress={() => onPickSecond(true)}>
+                <Icon name="image" size={30} color={theme.colors.dark} />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {!post?.id && (
+          <View style={styles.platformsContainer}>
+          <Text style={styles.platformsTitle}>Film Type (Very Important $$)</Text>
+          <View style={styles.platformsScrollContainer}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View style={styles.platformPills}>
+                {platformOptions.map((platform, index) => (
+                  <TouchableOpacity 
+                    key={index} 
+                    style={[
+                      styles.platformPill,
+                      tags.includes(platform) && styles.platformPillSelected
+                    ]}
+                    onPress={() => addPlatformTag(platform)}
+                  >
+                    <Text 
+                      style={[
+                        styles.platformPillText,
+                        tags.includes(platform) && styles.platformPillTextSelected
+                      ]}
+                    >
+                      {platform}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+          )}
+        
+          {/* Tag Input for custom tags or displaying selected tags */}
+          {!post?.id && (
+            <TagInput tags={tags} setTags={setTags} />
+          )}
+          
+
+          {/* Film Information Section */}
+          <View style={styles.sectionDivider}>
+            <Text style={styles.sectionTitle}>Film Information (If present looks gd)</Text>
+          </View>
+
+          {/* Language Field */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Language</Text>
+            <TextInput
+              style={styles.input}
+              value={lang}
+              onChangeText={(text) => setLang(text)}
+              placeholder="Enter film language"
+            />
+          </View>
+
+          {/* Genre Field */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Genre</Text>
+            <TextInput
+              style={styles.input}
+              value={genre}
+              onChangeText={(text) => setGenre(text)}
+              placeholder="Enter film genre"
+            />
+          </View>
+
+          {/* Duration Field */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Duration</Text>
+            <TextInput
+              style={[styles.input, durationError ? styles.inputError : null]}
+              value={duration}
+              onChangeText={handleDurationChange}
+              placeholder="Enter film duration (HH:MM:SS)"
+              keyboardType="default"
+            />
+            {durationError ? (
+              <Text style={styles.errorText}>{durationError}</Text>
+            ) : null}
+          </View>
+
+          {/* Director Field */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Director</Text>
+            <TextInput
+              style={styles.input}
+              value={director}
+              onChangeText={(text) => setDirector(text)}
+              placeholder="Enter film director"
+            />
+          </View>
+
+          {/* Writer Field */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Writer</Text>
+            <TextInput
+              style={styles.input}
+              value={writer}
+              onChangeText={(text) => setWriter(text)}
+              placeholder="Enter film writer"
+            />
+          </View>
+
+          {/* Music Field */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Music</Text>
+            <TextInput
+              style={styles.input}
+              value={music}
+              onChangeText={(text) => setMusic(text)}
+              placeholder="Enter music composer"
+            />
+          </View>
+
+          {/* DOP Field */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Director of Photography</Text>
+            <TextInput
+              style={styles.input}
+              value={dop}
+              onChangeText={(text) => setDop(text)}
+              placeholder="Enter DOP"
+            />
+          </View>
+
+          {/* Edit Field */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Editor</Text>
+            <TextInput
+              style={styles.input}
+              value={edit}
+              onChangeText={(text) => setEdit(text)}
+              placeholder="Enter film editor"
+            />
+          </View>
+
+          {/* Cast Field */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Cast</Text>
+            <TextInput
+              style={[styles.input, styles.multilineInput]}
+              value={cast}
+              onChangeText={(text) => setCast(text)}
+              placeholder="Enter cast members"
+              multiline={true}
+              numberOfLines={4}
+            />
+          </View>
+
+          <View style={styles.sectionDivider}>
+            <Text style={styles.sectionTitle}>Release Information</Text>
+          </View>
+
+          <View>
+          <DatePicker 
+            onDateSelect={(date) => handleDateSelect(date)}
+            initialDate={selectedDate}
+          />
+          </View>
+
+          <View>
+          <DatePicker 
+            onDateSelect={(date) => handleEnddateSelect(date)}
+            initialDate={selectedEndate}
+            label="Select End Date"
+          />
+        </View>
+
+          {/* <RatingInput
+            onRatingChange={handleRatingChange}
+            initialValue={post?.rating}
+          />
+
+         <UserRatingImpact
+            onRatingChange={handleuserRatingImpactChange}
+            initialValue={post?.rating}
+          /> */}
+
+        </ScrollView>
+        <Button
+          buttonStyle={{ height: hp(6.2) }}
+          title={post?.id ? "Edit" : "Post New Release"}
+          loading={loading}
+          onPress={onSubmit}
+          hasShadow={false}
+        />
+      </View>
+    </ScreenWrapper>
+  );
+};
+
+export default NewRelease
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1, 
+    marginTop: 14,
+    marginBottom: 10,
+    paddingHorizontal: wp(4), 
+    gap: 15,
+  },
+  file: {
+    height: hp(32),
+    width: '100%',
+    overflow: 'hidden',
+    borderCurve: 'continuous',
+    paddingVertical: wp(8),
+    borderWidth: 1,
+    borderColor: theme.colors.gray,
+    borderRadius: theme.radius.md,
+    padding: 7,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative'
+  },
+  media: {
+    flexDirection: 'row', 
+    justifyContent: 'space-between',
+    alignItems: 'center', 
+    borderWidth: 1, 
+    padding: 12, 
+    paddingHorizontal: wp(4),
+    borderRadius: theme.radius.md, 
+    borderCurve: 'continuous', 
+    borderColor: theme.colors.gray
+  },
+  title: {
+    fontSize: hp(2.5),
+    fontWeight: theme.fonts.semibold,
+    color: theme.colors.text,
+    textAlign: 'center'
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  username: {
+    fontSize: hp(2.2),
+    fontWeight: theme.fonts.semibold,
+    color: theme.colors.text,
+  },
+  mediaIcons: {
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 8,
+    marginLeft: 10
+  },
+  addImageText: {
+    fontSize: hp(2),
+    fontWeight: theme.fonts.semibold,
+    color: theme.colors.text,
+  },
+  avatar: {
+    height: hp(6.5),
+    width: hp(6.5),
+    borderRadius: theme.radius.xl,
+    borderCurve: 'continuous',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.1)'
+  },
+  publicText: {
+    fontSize: hp(1.7),
+    fontWeight: theme.fonts.medium,
+    color: theme.colors.textLight,
+  },
+  closeIcon: {
+    position: 'absolute',
+    top: 16,
+    right: 12,
+    padding: 6,
+    borderRadius: 50,
+    backgroundColor: 'rgba(97, 35, 35, 0.14)',
+  },
+  label: {
+    fontSize: hp(2),
+    fontWeight: hp(4.5),
+    paddingStart: 10,
+    color: theme.colors.text,
+    paddingBottom: 5
+  },
+  dateInput: {
+    fontSize: hp(2),
+    fontWeight: theme.fonts.semibold,
+    color: theme.colors.text,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: theme.colors.gray,
+    borderRadius: theme.radius.md,
+    borderCurve: 'continuous',
+    marginTop: 10,
+  },
+  // Styles for Film Information Section
+  sectionDivider: {
+    marginVertical: 10,
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderColor: theme.colors.gray,
+  },
+  sectionTitle: {
+    fontSize: hp(2.2),
+    fontWeight: theme.fonts.bold,
+    color: theme.colors.primary,
+  },
+  inputContainer: {
+    marginBottom: 10,
+  },
+  inputLabel: {
+    fontSize: hp(1.8),
+    fontWeight: theme.fonts.medium,
+    color: theme.colors.text,
+    marginBottom: 4,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: theme.colors.gray,
+    borderRadius: theme.radius.sm,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: hp(1.8),
+  },
+  multilineInput: {
+    minHeight: hp(10),
+    textAlignVertical: 'top',
+  },
+  // New styles for platform pills - copied from NewOtt
+  platformsContainer: {
+    marginVertical: 5
+  },
+  platformsTitle: {
+    fontSize: hp(2),
+    fontWeight: theme.fonts.semibold,
+    color: theme.colors.text,
+    marginBottom: 10
+  },
+  platformsScrollContainer: {
+    borderWidth: 1,
+    borderColor: theme.colors.gray,
+    borderRadius: theme.radius.md,
+    padding: 10,
+    borderCurve: 'continuous',
+  },
+  platformPills: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingVertical: 5,
+  },
+  platformPill: {
+    backgroundColor: '#f0f0f0',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  platformPillSelected: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  platformPillText: {
+    fontSize: hp(1.8),
+    fontWeight: theme.fonts.medium,
+    color: theme.colors.textLight,
+  },
+  platformPillTextSelected: {
+    color: '#ffffff',
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: theme.colors.dark,
+  },
+  inputContainer: {
+    marginBottom: 12,
+  },
+  inputLabel: {
+    fontSize: 15,
+    marginBottom: 5,
+    color: theme.colors.dark,
+  },
+  input: {
+    height: hp(6),
+    borderWidth: 0.5,
+    borderColor: theme.colors.blue,
+    borderRadius: theme.radius.md,
+    paddingHorizontal: 12,
+    fontSize: 15,
+  },
+  inputError: {
+    borderColor: 'red',
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 12,
+    marginTop: 4,
+  },
+  multilineInput: {
+    height: hp(12),
+    textAlignVertical: 'top',
+    paddingTop: 12,
+  },
+})

@@ -1,0 +1,43 @@
+# Node modules (already excluded by default, but can include to be safe)
+node_modules/
+
+# Build and cache artifacts
+*.log
+.expo/
+.expo-shared/
+dist/
+build/
+web-build/
+ios/build/
+android/app/build/
+android/.gradle/
+android/.idea/
+
+# Test files
+__tests__/
+coverage/
+*.test.js
+*.spec.js
+
+# Environment files
+.env.local
+.env.development
+.env.production
+
+# Git files
+.git/
+.gitignore
+
+# IDE/editor files
+.vscode/
+.idea/
+*.swp
+
+# Media or misc
+*.mp4
+*.mov
+*.psd
+*.ai
+*.sketch
+*.zip
+*.tar.gz
