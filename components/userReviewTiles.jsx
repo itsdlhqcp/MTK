@@ -8,7 +8,8 @@ import {
   Image, 
   Dimensions 
 } from 'react-native';
-import { fetchAllUserReviews } from '../services/ProfileTilesService';
+import { fetchAllUserReviews, fetchRateNowSuggestions } from '../services/ProfileTilesService';
+import RateNowSuggestionCard from './RateNowSuggestionCard';
 import { wp, hp } from '../helpers/common';
 import MLoading from '../components/MaterialLoader';
 import FeedLoader from '../components/FeedLoader';
@@ -22,6 +23,7 @@ import PratingStars from '../components/pRatingStars';
 import { getSupabaseFileUrl } from '../services/imageService';
 import { NetworkUtils } from '../utils/network';
 import CustomDotIndicator from './CutomDotIndicator';
+import WatchListSkeleton from './WatchListSkeleton';
 
 // Modified Month Header component with toggle button
 const MonthHeader = ({ month, viewMode, onToggleView, isFirstHeader }) => (
@@ -55,6 +57,8 @@ const UserReviewsComponent = ({ navigation, userId }) => {
   const { user } = useAuth();
   const [isConnected, setIsConnected] = useState(true);
   const [initialCheckDone, setInitialCheckDone] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -84,8 +88,37 @@ const UserReviewsComponent = ({ navigation, userId }) => {
   useEffect(() => {
     if (initialCheckDone) {
       loadReviews(1, true); // Load first page on initial load
+      // Load suggestions only for authenticated user viewing their own profile
+      if (user?.id && (!userId || userId === user.id)) {
+        loadSuggestions();
+      }
     }
-  }, [initialCheckDone]);
+  }, [initialCheckDone, user?.id, userId]);
+
+  // Load rate now suggestions
+  const loadSuggestions = useCallback(async () => {
+    if (!user?.id || loadingSuggestions) return;
+    
+    setLoadingSuggestions(true);
+    try {
+      if (!isConnected) {
+        console.log('Skipping suggestions fetch - device is offline');
+        setLoadingSuggestions(false);
+        return;
+      }
+      
+      const result = await fetchRateNowSuggestions(user.id);
+      if (result.success) {
+        setSuggestions(result.data || []);
+      } else {
+        console.error('Failed to load suggestions:', result.msg);
+      }
+    } catch (error) {
+      console.error('Error loading suggestions:', error);
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  }, [user?.id, isConnected]);
 
   // Load reviews with pagination
   const loadReviews = useCallback(async (page = 1, reset = false) => {
@@ -306,8 +339,14 @@ const UserReviewsComponent = ({ navigation, userId }) => {
                 </View>
 
                 <View style={styles.dayContainer}>
-                  <Text style={styles.dayText}>{monName}</Text>
-                  <Text style={styles.dayText}>{day}</Text> 
+                  <View style={styles.dayRow}>
+                    <Text style={styles.dayText}>{monName}</Text>
+                    <Text style={styles.dayText}>{day}</Text>
+                  </View>
+                  {/* Show Theatre or Digital label below date */}
+                  <Text style={styles.reviewTypeLabel}>
+                    {item.original_table === 'peoplesReview' ? 'THEATRE' : 'DIGITAL'}
+                  </Text>
                 </View>
               </View>
             </TouchableOpacity>
@@ -462,9 +501,7 @@ const UserReviewsComponent = ({ navigation, userId }) => {
   return (
     <View style={styles.container}>
       {loading ? (
-        <View style={styles.loadingContainer}>
-          <CustomDotIndicator size={6}/>
-        </View>
+        <WatchListSkeleton count={3} />
       ) : (
         <>
           {viewMode === 'list' ? (
@@ -478,12 +515,29 @@ const UserReviewsComponent = ({ navigation, userId }) => {
               }
               contentContainerStyle={styles.listContainer}
               showsVerticalScrollIndicator={false}
+              ListHeaderComponent={
+                // Only show suggestions for authenticated user viewing their own profile
+                user?.id && (!userId || userId === user.id) && suggestions.length > 0 ? (
+                  <View style={styles.suggestionsContainer}>
+                    <Text style={styles.suggestionsTitle}>Rate Now</Text>
+                    <FlatList
+                      horizontal
+                      data={suggestions}
+                      renderItem={({ item }) => <RateNowSuggestionCard suggestion={item} />}
+                      keyExtractor={(item, index) => `suggestion-${item.releaseId}-${index}`}
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={styles.suggestionsList}
+                    />
+                  </View>
+                ) : null
+              }
               ListEmptyComponent={renderEmptyComponent}
               ListFooterComponent={renderFooter}
               onRefresh={handleRefresh}
               refreshing={loading}
               onEndReached={handleLoadMore}
               onEndReachedThreshold={0.3}
+              nestedScrollEnabled={true}
             />
           ) : (
             // Grid View with month sections
@@ -492,10 +546,27 @@ const UserReviewsComponent = ({ navigation, userId }) => {
               data={groupedReviews}
               renderItem={renderGridSection}
               keyExtractor={(item) => `month-section-${item.month}`}
+              nestedScrollEnabled={true}
               contentContainerStyle={styles.gridContainer}
               showsVerticalScrollIndicator={false}
               ListEmptyComponent={renderEmptyComponent}
               ListFooterComponent={renderFooter}
+              ListHeaderComponent={
+                // Only show suggestions for authenticated user viewing their own profile
+                user?.id && (!userId || userId === user.id) && suggestions.length > 0 ? (
+                  <View style={styles.suggestionsContainer}>
+                    <Text style={styles.suggestionsTitle}>Rate Now</Text>
+                    <FlatList
+                      horizontal
+                      data={suggestions}
+                      renderItem={({ item }) => <RateNowSuggestionCard suggestion={item} />}
+                      keyExtractor={(item, index) => `suggestion-${item.releaseId}-${index}`}
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={styles.suggestionsList}
+                    />
+                  </View>
+                ) : null
+              }
               onRefresh={handleRefresh}
               refreshing={loading}
               onEndReached={handleLoadMore}
@@ -574,7 +645,7 @@ const styles = StyleSheet.create({
   },
   // List view styles
   reviewCard: {
-    marginBottom: hp(1),
+    marginBottom: hp(0.5),
     backgroundColor: '#111',
     borderRadius: 0,
   },
@@ -715,17 +786,45 @@ const styles = StyleSheet.create({
     marginLeft: wp(1),
   },
   dayContainer: {
-    paddingTop: hp(0.8),
     display: 'flex',
-    flexDirection: 'row',
+    flexDirection: 'column',
     alignItems: 'center', 
-    justifyContent: 'center', 
-    height: '100%',
+    justifyContent: 'flex-start',
+    paddingTop: hp(0.3),
+  },
+  dayRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: hp(0.4),
   },
   dayText: {
     color: theme.colors.textLight,
     marginRight: 4, 
     alignSelf: 'center',
+  },
+  reviewTypeLabel: {
+    color: '#FF0000', // Red color
+    fontSize: hp(1.2),
+    fontWeight: '500',
+    marginTop: hp(0.2),
+    alignSelf: 'center',
+    lineHeight: hp(1.4),
+  },
+  suggestionsContainer: {
+    marginBottom: hp(2),
+    paddingHorizontal: wp(1.4),
+    paddingTop: hp(1),
+  },
+  suggestionsTitle: {
+    fontSize: hp(2.2),
+    fontWeight: '600',
+    color: theme.colors.textLight,
+    marginBottom: hp(1.5),
+    paddingLeft: wp(1),
+  },
+  suggestionsList: {
+    paddingLeft: wp(1),
   },
   both: {
     flexDirection: 'row',

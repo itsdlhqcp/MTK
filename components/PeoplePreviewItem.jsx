@@ -35,7 +35,8 @@ const PeoplesPreviewItem = ({
   const [isLoading, setIsLoading] = useState(false)
   const likeAnimationScale = useRef(new Animated.Value(1)).current
   const likeAnimationOpacity = useRef(new Animated.Value(1)).current
-  const canEdit = moment().diff(moment(item?.created_at), 'hours') <= 12;
+  // Removed 12-hour time limit - reviews can now be edited anytime by the owner
+  const canEdit = true;
   const [isSndSharing, setIsSndSharing] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [showPosterView, setShowPosterView] = useState(false);

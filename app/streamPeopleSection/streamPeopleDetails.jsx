@@ -31,7 +31,7 @@ import moment from "moment";
 const MIN_CHARS = 0;
 
 const StreamPeopleDetails = () => {
-    const { streamId, reviewId } = useLocalSearchParams();
+    const { streamId, reviewId, openReview } = useLocalSearchParams();
     const { user } = useAuth();
     const router = useRouter();
     const [startLoading, setStartLoading] = useState(false);
@@ -67,28 +67,45 @@ const StreamPeopleDetails = () => {
 
     const buttonSlideAnim = useRef(new Animated.Value(100)).current;
 
+    // Animate button sliding in from the side based on hasUserPostedReview flag (no delay)
     useEffect(() => {
-        // Set a timeout to animate the button after 5 seconds
-        const timer = setTimeout(() => {
+        // If user hasn't posted a review, slide the button in from the side immediately
+        if (!hasUserPostedReview && release) {
           Animated.timing(buttonSlideAnim, {
             toValue: 0,
             duration: 500,
             easing: Easing.out(Easing.back(1.5)),
             useNativeDriver: true,
           }).start();
-        }, 5300); // 5 seconds
-      
-        return () => clearTimeout(timer); // Clean up on component unmount
-      }, []);
+        } else {
+          // If user has posted a review, hide the button by sliding it out
+          Animated.timing(buttonSlideAnim, {
+            toValue: 100,
+            duration: 300,
+            useNativeDriver: true,
+          }).start();
+        }
+      }, [hasUserPostedReview, release]);
 
-      // seperate useffetct for checking user reviewed
+      // Removed separate useEffect for checking user review - now handled in getReleaseDetails
+      // For non-direct releases, also check connected release reviews
       useEffect(() => {
-        if (!release?.directRelease) {
-            checkUserReview();
-          }else{
-            checkUserReviewDirect();
+        if (release && !release?.directRelease && release?.connectedId) {
+          // For non-direct releases, check both stream and connected release
+          const streamHasReview = release?.hasUserReviewed || false;
+          // Also check theatre review if needed
+          if (thReview?.hasUserReviewed !== undefined) {
+            setHasUserPostedReview(streamHasReview || thReview.hasUserReviewed);
+          } else {
+            setHasUserPostedReview(streamHasReview);
           }
-    }, [release]);
+        } else if (release?.directRelease) {
+          // For direct releases, flag is already set in getReleaseDetails
+          if (release?.hasUserReviewed !== undefined) {
+            setHasUserPostedReview(release.hasUserReviewed);
+          }
+        }
+      }, [release, thReview]);
 
     // use effect which fetch the reviews from theatre
     useEffect(() => {
@@ -122,45 +139,7 @@ const StreamPeopleDetails = () => {
         };
     }, [streamId]);
 
-      // Add this function to check if the user has posted reviews
-    //   const checkUserReview = async () => {
-    //     if (!streamId) return;
-    //     try {
-    //       const res = await hasUserPostedAnyReview(user.id, release.connectedId, streamId);
-    //       if (res.success) {
-    //         setHasUserPostedReview(res.hasPostedReview);
-    //       }
-    //     } catch (error) {
-    //       console.error("Error checking user review:", error);
-    //     }
-    //   };
-
-    // if(!release?.directRelease){
-        const checkUserReview = async () => {
-          if (!streamId) return;
-          try {
-            const res = await hasUserPostedAnyReview(user?.id, release?.connectedId, streamId);
-            if (res.success) {
-              setHasUserPostedReview(res.hasPostedReview);
-            }
-          } catch (error) {
-            console.error("Error checking user review:", error);
-          }
-        };
-    //   } else {
-        // For direct relationships, use the specific API function
-        const checkUserReviewDirect = async () => {
-          if (!streamId) return;
-          try {
-            const res = await hasUserPostedAnyReviewInDirect(user.id, streamId);
-            if (res.success) {
-              setHasUserPostedReview(res.hasPostedReview);
-            }
-          } catch (error) {
-            console.error("Error checking user direct review:", error);
-          }
-        };
-    //   }
+      // Removed checkUserReview and checkUserReviewDirect functions - now handled with hasUserReviewed flag
 
     // function to fetch the reviews from theatre
     const getThPeoplesReleaseDetails = async () => {
@@ -170,8 +149,14 @@ const StreamPeopleDetails = () => {
         
       //  setStartLoading(true);
         try {
-            let res = await fetchPeoplesReleaseDetailsx(release.connectedId);
-            if (res.success) setThReview(res.data);
+            let res = await fetchPeoplesReleaseDetailsx(release.connectedId, user?.id);
+            if (res.success) {
+                setThReview(res.data);
+                // Update hasUserPostedReview if user reviewed the connected release
+                if (!release?.directRelease && res.data?.hasUserReviewed) {
+                    setHasUserPostedReview(true);
+                }
+            }
         } catch (error) {
             console.error("Error fetching people's release details:", error);
         } finally {
@@ -235,9 +220,23 @@ const StreamPeopleDetails = () => {
 
     const getReleaseDetails = async () => {
         setStartLoading(true);
-        let res = await fetchPeoplesReleaseDetails(streamId);
-        if (res.success) setRelease(res.data);
+        let res = await fetchPeoplesReleaseDetails(streamId, user?.id);
+        if (res.success) {
+            setRelease(res.data);
+            // Set hasUserPostedReview flag from the response (for direct releases)
+            if (res.data?.hasUserReviewed !== undefined) {
+                setHasUserPostedReview(res.data.hasUserReviewed);
+            }
+        }
         setStartLoading(false);
+        
+        // Open rating modal if openReview param is present
+        if (openReview === 'true' && user?.id) {
+            // Small delay to ensure page is fully loaded
+            setTimeout(() => {
+                setRatingModalVisible(true);
+            }, 500);
+        }
     };
 
     // below is the code to handle review replies 
@@ -510,8 +509,11 @@ const StreamPeopleDetails = () => {
         
                     setRelease(prevRelease => ({
                         ...prevRelease,
-                        dpeopreviews: [newReview, ...prevRelease.dpeopreviews]
+                        dpeopreviews: [newReview, ...prevRelease.dpeopreviews],
+                        hasUserReviewed: true  // Update flag when review is created
                     }));
+                    // Update hasUserPostedReview flag
+                    setHasUserPostedReview(true);
         
                     if(user.id !== release?.userId){
                         let notify = {
@@ -545,8 +547,11 @@ const StreamPeopleDetails = () => {
                     // Update state directly instead of reloading
                     setRelease(prevRelease => ({
                         ...prevRelease,
-                        dpeopreviews: prevRelease.dpeopreviews.filter(r => r.id !== review.id)   
+                        dpeopreviews: prevRelease.dpeopreviews.filter(r => r.id !== review.id),
+                        hasUserReviewed: false  // Update flag when review is deleted
                     }));
+                    // Update hasUserPostedReview flag
+                    setHasUserPostedReview(false);
                 } else {
                     Alert.alert('Preview', res.msg || 'Something went wrong');
                 }

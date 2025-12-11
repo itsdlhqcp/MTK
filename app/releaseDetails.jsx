@@ -17,6 +17,9 @@ import Icon from '../assets/icons';
 import { Text } from "react-native";
 import moment from "moment";
 import CustomDotIndicator from "../components/CutomDotIndicator";
+// import { BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
+// import { getBannerAdUnitId } from '../constants/ads';
+import { getUserData } from '../services/userServices';
 
 const MIN_CHARS = 85;
 
@@ -320,6 +323,17 @@ const ReleaseDetails = () => {
                     showReviewButton={false}
                 />
 
+                {/* Banner Ad */}
+                {/* <View style={styles.adContainer}>
+                    <BannerAd
+                        unitId={getBannerAdUnitId()}
+                        size={BannerAdSize.FULL_BANNER}
+                        requestOptions={{
+                            requestNonPersonalizedAdsOnly: true,
+                        }}
+                    />
+                </View> */}
+
                 <Animated.View style={[
                     styles.inputContainer,
                     { transform: [{ translateX: shakeAnimation }] }
@@ -581,5 +595,10 @@ const styles = StyleSheet.create({
         borderCurve: 'continuous',
         height: Math.round(hp(4.8)),
         width: Math.round(hp(4.8))
+    },
+    adContainer: {
+        alignItems: 'center',
+        marginVertical: hp(2),
+        width: '100%',
     }
 });

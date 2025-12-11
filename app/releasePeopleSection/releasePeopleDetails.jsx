@@ -34,6 +34,7 @@ const ReleasePeopleDetails = () => {
     const releaseId = params.releaseId;
     const reviewId = params.reviewId;
     const lib = params.lib === 'true' || params.lib === true;
+    const openReview = params.openReview;
     const { user } = useAuth();
     const router = useRouter();
     const [startLoading, setStartLoading] = useState(false);
@@ -68,19 +69,25 @@ const ReleasePeopleDetails = () => {
 
     const buttonSlideAnim = useRef(new Animated.Value(100)).current;
 
+    // Animate button sliding in from the side based on hasUserPostedReview flag (no delay)
     useEffect(() => {
-        // Set a timeout to animate the button after 5 seconds
-        const timer = setTimeout(() => {
+        // If user hasn't posted a review, slide the button in from the side immediately
+        if (!hasUserPostedReview && release) {
           Animated.timing(buttonSlideAnim, {
             toValue: 0,
             duration: 500,
             easing: Easing.out(Easing.back(1.5)),
             useNativeDriver: true,
           }).start();
-        }, 5300); // 5 seconds
-      
-        return () => clearTimeout(timer); // Clean up on component unmount
-      }, []);
+        } else {
+          // If user has posted a review, hide the button by sliding it out
+          Animated.timing(buttonSlideAnim, {
+            toValue: 100,
+            duration: 300,
+            useNativeDriver: true,
+          }).start();
+        }
+      }, [hasUserPostedReview, release]);
 
     const handleRefresh = useCallback(() => {
         setRefreshing(true);
@@ -142,12 +149,7 @@ useEffect(() => {
                 }
             }, [release]);
 
-             // seperate useffetct for checking user reviewed
-            useEffect(() => {
-                if (release) {
-                    checkUserReview();
-                }
-            }, [release]);
+             // Removed separate useEffect for checking user review - now handled in getReleaseDetails
 
             useEffect(() => {
                 getAreleaseDetails();
@@ -165,18 +167,7 @@ useEffect(() => {
                 };
             }, []);
 
-         // Add this function to check if the user has posted reviews
-         const checkUserReview = async () => {
-            if (!releaseId) return;
-            try {
-              const res = await hasUserPostedAnyReview(user?.id, releaseId);
-              if (res.success) {
-                setHasUserPostedReview(res?.hasPostedReview);
-              }
-            } catch (error) {
-              console.error("Error checking user review:", error);
-            }
-          };
+         // Removed checkUserReview function - now handled in getReleaseDetails with hasUserReviewed flag
 
           const getThPeoplesReleaseDetails = async () => {
                 if (!release || !release.sconnectedId) {
@@ -184,7 +175,7 @@ useEffect(() => {
                 }
                 
                 try {
-                    let res = await fetchPeoplesStreamDetailsx(release?.sconnectedId);
+                    let res = await fetchPeoplesStreamDetailsx(release?.sconnectedId, user?.id);
                     if (res.success) setThReview(res.data);
                 } catch (error) {
                     console.error("Error fetching people's release details:", error);
@@ -208,9 +199,23 @@ useEffect(() => {
 
     const getReleaseDetails = async () => {
         setStartLoading(true);
-        let res = await fetchPeoplesReleaseDetails(releaseId);
-        if (res.success) setRelease(res.data);
+        let res = await fetchPeoplesReleaseDetails(releaseId, user?.id);
+        if (res.success) {
+            setRelease(res.data);
+            // Set hasUserPostedReview flag from the response
+            if (res.data?.hasUserReviewed !== undefined) {
+                setHasUserPostedReview(res.data.hasUserReviewed);
+            }
+        }
         setStartLoading(false);
+        
+        // Open rating modal if openReview param is present
+        if (openReview === 'true' && user?.id) {
+            // Small delay to ensure page is fully loaded
+            setTimeout(() => {
+                setRatingModalVisible(true);
+            }, 500);
+        }
     };
 
     // below is the code to handle review replies 
@@ -483,8 +488,11 @@ useEffect(() => {
         
                     setRelease(prevRelease => ({
                         ...prevRelease,
-                        peoplesReview: [newReview, ...prevRelease.peoplesReview]
+                        peoplesReview: [newReview, ...prevRelease.peoplesReview],
+                        hasUserReviewed: true  // Update flag when review is created
                     }));
+                    // Update hasUserPostedReview flag
+                    setHasUserPostedReview(true);
         
                     if(user.id !== release.userId){
                         let notify = {
@@ -518,8 +526,11 @@ useEffect(() => {
                     // Update state directly instead of reloading
                     setRelease(prevRelease => ({
                         ...prevRelease,
-                        peoplesReview: prevRelease.peoplesReview.filter(r => r.id !== review.id)
+                        peoplesReview: prevRelease.peoplesReview.filter(r => r.id !== review.id),
+                        hasUserReviewed: false  // Update flag when review is deleted
                     }));
+                    // Update hasUserPostedReview flag
+                    setHasUserPostedReview(false);
                 } else {
                     Alert.alert('Review', res.msg || 'Something went wrong');
                 }
@@ -851,7 +862,7 @@ useEffect(() => {
                    </ScrollView>
                  {/* Adding the floating button */}
 
-                 {!lib && !hasUserPostedReview && show &&(
+                 {!hasUserPostedReview && show &&(
                         <Animated.View
                             style={{
                             position: 'absolute',

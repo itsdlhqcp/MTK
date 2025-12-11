@@ -55,7 +55,8 @@ const PeoplesReviewItem = ({
   const [errorAlertVisible, setErrorAlertVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   
-  const canEdit = moment().diff(moment(item?.created_at), 'hours') <= 12;
+  // Removed 12-hour time limit - reviews can now be edited anytime by the owner
+  const canEdit = true;
   const createdAt = moment(item?.created_at).format('MMM D')
 
   const {user} = useAuth();

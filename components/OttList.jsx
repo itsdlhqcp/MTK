@@ -11,24 +11,38 @@ import { fetchAverageRating, fetchAverageRatingDirect } from '../services/releas
 import CustomDotIndicator from './CutomDotIndicator';
 
 // Modified header with toggle button that only shows for the first header
-const ReleaseDateHeader = ({ date, viewMode, onToggleView, isFirstHeader }) => (
+const ReleaseDateHeader = ({ date, viewMode, onToggleView, isFirstHeader, onFilterPress, filterLabel }) => (
   <View style={styles.headerContainer}>
     <View style={styles.headerPillContainer}>
       <View style={styles.headerPill}>
         <Text style={styles.headerText}>{date}</Text>
       </View>
-      {/* Toggle button for grid/list view - only shown for first header */}
+      {/* Filter and Toggle buttons - only shown for first header */}
       {isFirstHeader && (
-        <TouchableOpacity 
-          style={styles.toggleButton} 
-          onPress={onToggleView}
-        >
-          <Icon 
-            name={viewMode === 'grid' ? 'list' : 'grid'} 
-            size={hp(2.6)} 
-            color="#FFFFFF" 
-          />
-        </TouchableOpacity>
+        <View style={styles.headerButtonsContainer}>
+          {/* Filter Button */}
+          <TouchableOpacity 
+            style={styles.filterButton} 
+            onPress={onFilterPress}
+          >
+            <Icon name="filter" size={hp(1.8)} color='white' />
+            <Text style={styles.filterButtonText}>
+              {filterLabel}
+            </Text>
+            <Icon name="chevrondown" size={hp(1.2)} color='white' />
+          </TouchableOpacity>
+          {/* Toggle button for grid/list view */}
+          <TouchableOpacity 
+            style={styles.toggleButton} 
+            onPress={onToggleView}
+          >
+            <Icon 
+              name={viewMode === 'grid' ? 'list' : 'grid'} 
+              size={hp(2.6)} 
+              color="#FFFFFF" 
+            />
+          </TouchableOpacity>
+        </View>
       )}
     </View>
   </View>
@@ -78,7 +92,13 @@ const OttGridCard = ({ item, router }) => {
 
   const handleCardPress = () => {
     if (!item?.id) return null;
-    router.push({ pathname: 'streamInfo', params: { streamId: item.id } });
+    
+    // Check if this is a series item
+    if (item.isSeries && item.originalId) {
+      router.push({ pathname: 'seriesDetails', params: { seriesId: item.originalId } });
+    } else {
+      router.push({ pathname: 'streamInfo', params: { streamId: item.id } });
+    }
   };
 
     // Format the date as requested
@@ -122,7 +142,7 @@ const OttGridCard = ({ item, router }) => {
   );
 };
 
-const OttList = ({ streams, currentUser, router, loading, hasMore, onLoadMore }) => {
+const OttList = ({ streams, currentUser, router, loading, hasMore, onLoadMore, onFilterPress, filterLabel, onDelete }) => {
   // Add view mode state
   const [viewMode, setViewMode] = useState('grid'); 
   
@@ -138,18 +158,36 @@ const OttList = ({ streams, currentUser, router, loading, hasMore, onLoadMore })
       return 'NOW STREAMING';
     }
     
+    // Calculate week boundaries (Monday to Sunday)
+    // Get current week's Monday (start of ISO week)
+    const currentWeekMonday = moment().startOf('isoWeek'); // Monday of current week
+    const currentWeekSunday = moment().endOf('isoWeek'); // Sunday of current week
+    
+    // Get next week's Monday (day after next Sunday)
+    const nextWeekMonday = currentWeekSunday.clone().add(1, 'day'); // Monday of next week
+    const nextWeekSunday = nextWeekMonday.clone().endOf('isoWeek'); // Sunday of next week
+    
     // Future dates
     if (diffDays === 1) return 'TOMORROW';
-    if (diffDays > 2 && diffDays <= 7) return 'THIS WEEK';
-    if (diffDays > 7 && diffDays <= 14) return 'NEXT WEEK';
+    
+    // Check if date is in current week (Monday to Sunday)
+    if (releaseDate.isSameOrAfter(currentWeekMonday, 'day') && releaseDate.isSameOrBefore(currentWeekSunday, 'day')) {
+      return 'THIS WEEK';
+    }
+    
+    // Check if date is in next week (Monday to Sunday after current week)
+    if (releaseDate.isSameOrAfter(nextWeekMonday, 'day') && releaseDate.isSameOrBefore(nextWeekSunday, 'day')) {
+      return 'NEXT WEEK';
+    }
+    
     if (diffDays > 14) return 'LATER';
     
     // Past dates
     // if (diffDays === 0) return 'TODAY';
     // if (diffDays === -1) return 'YESTERDAY';
-    if (diffDays >= -7) return releaseDate.format('dddd').toUpperCase();
+    if (diffDays >= -7) return 'COMING STREAMS';
     if (diffDays < -7) return 'COMING STREAMS';
-    return releaseDate.format('MMMM YYYY').toUpperCase(); // RENOVE THIS LINE IF NOT WORKS
+    return releaseDate.format('MMMM YYYY').toUpperCase();
   };
 
   // Helper function for header priority
@@ -253,6 +291,8 @@ const OttList = ({ streams, currentUser, router, loading, hasMore, onLoadMore })
           viewMode={viewMode} 
           onToggleView={toggleViewMode}
           isFirstHeader={isFirstHeader}
+          onFilterPress={onFilterPress}
+          filterLabel={filterLabel}
         />
       );
     }
@@ -262,6 +302,12 @@ const OttList = ({ streams, currentUser, router, loading, hasMore, onLoadMore })
         item={item}
         currentUser={currentUser}
         router={router}
+        onDelete={(itemId, seriesId) => {
+          // Remove the deleted item from the list
+          if (onDelete && typeof onDelete === 'function') {
+            onDelete(itemId, seriesId);
+          }
+        }}
       />
     );
   };
@@ -303,6 +349,8 @@ const OttList = ({ streams, currentUser, router, loading, hasMore, onLoadMore })
           viewMode={viewMode} 
           onToggleView={toggleViewMode}
           isFirstHeader={isFirstHeader}
+          onFilterPress={onFilterPress}
+          filterLabel={filterLabel}
         />
         <FlatList
           data={chunk(item.data, 3)}
@@ -418,10 +466,31 @@ const styles = StyleSheet.create({
     color: '#fff',
     textAlign: 'center',
   },
-  toggleButton: {
-    padding: hp(0.5),
+  headerButtonsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: wp(2),
     position: 'absolute',
     right: wp(4),
+  },
+  filterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: wp(1),
+    paddingHorizontal: wp(2),
+    paddingVertical: hp(0.3),
+    backgroundColor: '#1E1E1E',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#333333',
+  },
+  filterButtonText: {
+    color: '#FFFFFF',
+    fontSize: hp(1.3),
+    fontWeight: '600',
+  },
+  toggleButton: {
+    padding: hp(0.5),
   },
   noMoreText: {
     fontSize: 14,

@@ -90,6 +90,34 @@ export const fetchReleases = async (limit=10) => {
   }
 }
 
+/**
+ * Delete a release (theatre) by ID
+ * @param {string|number} releaseId - The ID of the release to delete
+ * @returns {Promise<Object>} - Object containing success status and data/error message
+ */
+export const deleteRelease = async (releaseId) => {
+  try {
+    if (!releaseId) {
+      return { success: false, msg: "Release ID is required" };
+    }
+
+    const { error } = await supabase
+      .from('releases')
+      .delete()
+      .eq('id', releaseId);
+
+    if (error) {
+      console.error("Error in deleteRelease:", error);
+      return { success: false, msg: "Could not delete release", error: error.message };
+    }
+
+    return { success: true, msg: "Release deleted successfully" };
+  } catch (error) {
+    console.error("Error in deleteRelease:", error);
+    return { success: false, msg: "Could not delete release", error: error.message };
+  }
+};
+
 export const fetchReleaseDetailsx = async (postId) => {
   try {
     const { data, error } = await supabase
@@ -311,7 +339,7 @@ export const createPeopleReleaseReview = async (reviewpeople) => {
 //   }
 // };
 
-export const fetchPeoplesReleaseDetails = async (postId) => {
+export const fetchPeoplesReleaseDetails = async (postId, userId = null) => {
   try {
     const { data, error } = await supabase
       .from('releases')
@@ -343,6 +371,13 @@ export const fetchPeoplesReleaseDetails = async (postId) => {
         // Secondary sort: by creation date (newest first) if vote scores are equal
         return new Date(b.created_at) - new Date(a.created_at);
       });
+    }
+    
+    // Add hasUserReviewed flag if userId is provided
+    if (userId && data?.peoplesReview) {
+      data.hasUserReviewed = data.peoplesReview.some(review => review.userId === userId);
+    } else {
+      data.hasUserReviewed = false;
     }
 
     return { success: true, data };
@@ -777,7 +812,7 @@ export const removePeopleReviewUpvote = async (peoplesReviewId, userId) => {
       //   }
       // };
 
-      export const fetchPeoplesReleaseDetailsx = async (postId) => {
+      export const fetchPeoplesReleaseDetailsx = async (postId, userId = null) => {
         try {
           const { data, error } = await supabase
             .from('releases')
@@ -814,6 +849,13 @@ export const removePeopleReviewUpvote = async (peoplesReviewId, userId) => {
               // Secondary sort: by creation date (newest first) if vote scores are equal
               return new Date(b.created_at) - new Date(a.created_at);
             });
+          }
+      
+          // Add hasUserReviewed flag if userId is provided
+          if (userId && data?.peoplesReview) {
+            data.hasUserReviewed = data.peoplesReview.some(review => review.userId === userId);
+          } else {
+            data.hasUserReviewed = false;
           }
       
           return { success: true, data };

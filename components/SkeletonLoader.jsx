@@ -3,7 +3,7 @@ import { View, StyleSheet, Animated, useColorScheme } from 'react-native';
 import { wp, hp } from '../helpers/common';
 import theme from '../constants/theme';
 
-const SkeletonLoader = ({ width, height, borderRadius = 8, style }) => {
+const SkeletonLoader = ({ width, height, borderRadius = 8, style, shimmerColor: customShimmerColor }) => {
   const colorScheme = useColorScheme();
   const animatedValue = useRef(new Animated.Value(0)).current;
 
@@ -30,7 +30,7 @@ const SkeletonLoader = ({ width, height, borderRadius = 8, style }) => {
   });
 
   const backgroundColor = colorScheme === 'dark' ? '#262626' : '#E1E1E1';
-  const shimmerColor = colorScheme === 'dark' ? '#333333' : '#F0F0F0';
+  const shimmerColor = customShimmerColor || (colorScheme === 'dark' ? '#333333' : '#F0F0F0');
 
   return (
     <View style={[styles.container, { width, height, borderRadius }, style]}>

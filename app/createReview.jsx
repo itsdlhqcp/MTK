@@ -496,9 +496,6 @@ function CreateReviewFunctional() {
             <Text style={styles.noteText}>
               Note: You can post only one review per movie.
             </Text>
-            <Text style={styles.noteText}>
-              Reviews can be edited or deleted within 12 hours of submission. After that, reviews are locked to maintain authenticity.
-            </Text>
           </View>
         </ScrollView>
       </View>
@@ -1023,7 +1020,6 @@ const styles = StyleSheet.create({
 //               Note: You can post only one review per movie.
 //             </Text>
 //             <Text style={styles.noteText}>
-//               Reviews can be edited or deleted within 12 hours of submission. After that, reviews are locked to maintain authenticity.
 //             </Text>
 //           </View>
 //         </ScrollView>

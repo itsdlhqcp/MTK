@@ -18,8 +18,8 @@ export function useProtectedRoute() {
             // Redirect to login page
             router.replace('/onboardingGrid');
         } else if (user && inAuthGroup) {
-            // Redirect to spotlight page (feeds)
-            router.replace('/feeds');
+            // Redirect to home page
+            router.replace('/home');
         }
     }, [user, segments, navigationState?.key, router]);
 

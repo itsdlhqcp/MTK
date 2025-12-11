@@ -97,38 +97,6 @@ const Header = memo(({ title, notificationCount, setNotificationCount, router, u
       <Text style={styles.title}>{title}</Text>
       
       <View style={styles.headerActions}>
-        <Pressable 
-          disabled={isNavigating}
-          onPress={() => {
-            if (!isNavigating) {
-              setIsNavigating(true);
-              router.push('/messenger');
-            }
-          }}
-          style={styles.iconContainer}
-        >
-          <Icon name="notsqr" size={hp(3.3)} color='white' />
-          {requestCount > 0 && (
-            <View style={styles.badgeContainer}>
-              <Text style={styles.badgeText}>
-                {requestCount > 99 ? '99+' : requestCount}
-              </Text>
-            </View>
-          )}
-        </Pressable>
-        
-        <Pressable 
-          disabled={isNavigating}
-          onPress={() => {
-            if (!isNavigating) {
-              setIsNavigating(true);
-              router.push('library');
-            }
-          }}
-        >
-          <Icon name="library" size={hp(3.2)} color='white' />
-        </Pressable>
-        
         <TouchableOpacity onPress={onFilterIconPress}>
           <Icon name="filter" size={hp(3.3)} color='white' />
         </TouchableOpacity>
@@ -652,7 +620,7 @@ useEffect(() => {
     // Memoized Header component with unwatched count
     const memoizedHeader = useMemo(() => (
       <Header
-        title="PlotTwist"
+        title="Spotlight"
         notificationCount={notificationCount}
         setNotificationCount={setNotificationCount}
         router={router}

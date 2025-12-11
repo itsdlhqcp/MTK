@@ -290,18 +290,14 @@ const InstagramProfile = React.memo(({ user, router, handleLogout, theme, postCo
       </View>
 
       {/* Contact Info */}
-      <View style={styles.contactInfo}>
-        <View style={styles.contactItem}>
-          <Icon name="mail" color={theme.colors.textLight} />
-          <Text style={[styles.contactText, { color: theme.colors.textLight }]}>{user?.email}</Text>
-        </View>
-        {user?.phoneNumber && (
+      {user?.phoneNumber && (
+        <View style={styles.contactInfo}>
           <View style={styles.contactItem}>
             <Icon name="call" color={theme.colors.textLight} />
             <Text style={[styles.contactText, { color: theme.colors.textLight }]}>{user.phoneNumber}</Text>
           </View>
-        )}
-      </View>
+        </View>
+      )}
 
       {/* Edit Profile Button */}
       <TouchableOpacity 

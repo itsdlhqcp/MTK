@@ -128,7 +128,7 @@ const TagInput = ({ tags = [], setTags }) => {
             value={inputValue}
             onChangeText={handleInputChange}
             style={styles.tagInput}
-            placeholder={tags.length >= MAX_TAGS ? "" : "Add a tag"}
+            placeholder={tags.length >= MAX_TAGS ? "" : "Add a tag (Optional)"}
             placeholderTextColor="#888"
             returnKeyType="done"
             onSubmitEditing={handleAddTag}
@@ -155,7 +155,7 @@ const TagInput = ({ tags = [], setTags }) => {
         )}
         
         {/* Predefined Tags Section */}
-        <View style={styles.predefinedTagsContainer}>
+        {/* <View style={styles.predefinedTagsContainer}>
           <Text style={styles.predefinedTagsTitle}>Suggested Tags:</Text>
           <ScrollView 
             horizontal 
@@ -183,7 +183,7 @@ const TagInput = ({ tags = [], setTags }) => {
               </TouchableOpacity>
             ))}
           </ScrollView>
-        </View>
+        </View> */}
       </View> 
     );
 };
@@ -242,8 +242,39 @@ const EditProfile = () => {
     }, [currentUser]);
 
     const validateForm = () => {
-      // All validations removed - form can be submitted without any required fields
-      return true;
+      const newErrors = {
+        name: '',
+        address: '',
+        bio: '',
+        image: '',
+        tags: '',
+        orgname: '',
+      };
+
+      // Validate orgname (if provided)
+      if (user.orgname && user.orgname.length > 50) {
+        newErrors.orgname = 'Name must be less than 50 characters';
+      }
+
+      // Validate address (if provided)
+      if (user.address && user.address.length > 100) {
+        newErrors.address = 'Address must be less than 100 characters';
+      }
+
+      // Validate bio (if provided)
+      if (user.bio && user.bio.length > 500) {
+        newErrors.bio = 'Bio must be less than 500 characters';
+      }
+
+      // Validate tags
+      if (user.tags && user.tags.length > 2) {
+        newErrors.tags = 'Maximum 2 tags allowed';
+      }
+
+      setErrors(newErrors);
+      
+      // Return true if no errors
+      return !Object.values(newErrors).some(error => error !== '');
     };
 
     const onPickImage = async () => {
@@ -268,7 +299,11 @@ const EditProfile = () => {
     };
       
     const onSubmit = async () => {
-        // Validation removed - form can be submitted without required fields
+        // Validate form before submission
+        if (!validateForm()) {
+          showToast('error', 'Please fix the errors in the form');
+          return;
+        }
         
         try {
           setLoading(true);
@@ -340,54 +375,91 @@ const EditProfile = () => {
              showsVerticalScrollIndicator={false}
              >
             <View style={styles.form}>
-              <View style={styles.avatarContainer}>
-                <Image source={imageSource} style={styles.avatar} />
-                <Pressable style={styles.cameraIcon} onPress={onPickImage}>
-                  <Icon name="camera" strokeWidth={2.5} size={hp(2.5)} color={theme.colors.text} />
-                </Pressable>
+              <View>
+                <View style={styles.avatarContainer}>
+                  <Image source={imageSource} style={styles.avatar} />
+                  <Pressable style={styles.cameraIcon} onPress={onPickImage}>
+                    <Icon name="camera" strokeWidth={2.5} size={hp(2.5)} color={theme.colors.text} />
+                  </Pressable>
+                </View>
+                {errors.image ? (
+                  <Text style={styles.fieldErrorText}>{errors.image}</Text>
+                ) : null}
               </View>
               <Text style={styles.formHeading}>
                 Please fill your profile details
               </Text>
-              <Input
-                icon={<Icon name="user" color="#fff" />}
-                placeholder="Enter username"
-                value={user.name}
-                onChangeText={(value) => handleInputChange('name', value)}
-                editable={false}  // Disable editing for now
-              />
+              <View>
+                <Input
+                  icon={<Icon name="user" color="#fff" />}
+                  placeholder="Enter username"
+                  value={user.name}
+                  onChangeText={(value) => handleInputChange('name', value)}
+                  editable={false}  // Disable editing for now
+                  containerStyle={errors.name ? styles.inputError : null}
+                />
+                {errors.name ? (
+                  <Text style={styles.fieldErrorText}>{errors.name}</Text>
+                ) : null}
+              </View>
               
               {/* Added Organization Name Field */}
-              <Input
-                icon={<Icon name="name" color="#fff" />}
-                placeholder="Enter your name"
-                value={user.orgname}
-                onChangeText={(value) => handleInputChange('orgname', value)}
-              />
+              <View>
+                <Input
+                  icon={<Icon name="name" color="#fff" />}
+                  placeholder="Enter your name"
+                  value={user.orgname}
+                  onChangeText={(value) => handleInputChange('orgname', value)}
+                  containerStyle={errors.orgname ? styles.inputError : null}
+                />
+                {errors.orgname ? (
+                  <Text style={styles.fieldErrorText}>{errors.orgname}</Text>
+                ) : null}
+              </View>
               
               {/* <PhoneVerification /> */}
               
-              <Input
-                icon={<Icon name="location" color="#fff" />}
-                placeholder="Enter your Home Town"
-                value={user.address}
-                onChangeText={(value) => handleInputChange('address', value)}
-              />
+              <View>
+                <Input
+                  icon={<Icon name="location" color="#fff" />}
+                  placeholder="Enter your Home Town"
+                  value={user.address}
+                  onChangeText={(value) => handleInputChange('address', value)}
+                  containerStyle={errors.address ? styles.inputError : null}
+                />
+                {errors.address ? (
+                  <Text style={styles.fieldErrorText}>{errors.address}</Text>
+                ) : null}
+              </View>
               
-              <Input
-                placeholder="Write your bio ..... "
-                value={user.bio}
-                multiline={true}
-                containerStyle={styles.bio}
-                onChangeText={(value) => handleInputChange('bio', value)}
-              />
+              <View>
+                <Input
+                  placeholder="Write your bio ..... "
+                  value={user.bio}
+                  multiline={true}
+                  containerStyle={[styles.bio, errors.bio ? styles.inputError : null]}
+                  onChangeText={(value) => handleInputChange('bio', value)}
+                />
+                {errors.bio ? (
+                  <Text style={styles.fieldErrorText}>{errors.bio}</Text>
+                ) : null}
+              </View>
               
-              <TagInput 
-                tags={user.tags} 
-                setTags={(newTags) => {
-                  setUser({ ...user, tags: newTags });
-                }} 
-              />
+              <View>
+                <TagInput 
+                  tags={user.tags} 
+                  setTags={(newTags) => {
+                    setUser({ ...user, tags: newTags });
+                    // Clear tags error when tags are updated
+                    if (errors.tags) {
+                      setErrors({...errors, tags: ''});
+                    }
+                  }} 
+                />
+                {errors.tags ? (
+                  <Text style={styles.fieldErrorText}>{errors.tags}</Text>
+                ) : null}
+              </View>
               
               <Button 
                 title="Update" 
@@ -535,6 +607,13 @@ const styles = StyleSheet.create({
   inputError: {
     borderColor: '#ff6b6b', // Error border color
     borderWidth: 1,
+  },
+  fieldErrorText: {
+    color: '#ff6b6b',
+    fontSize: hp(1.4),
+    marginTop: hp(0.5),
+    marginLeft: wp(2),
+    marginBottom: hp(0.5),
   },
   updateButton: {
     backgroundColor: '#3498DB', // Blue button

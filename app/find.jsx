@@ -11,7 +11,8 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import ScreenWrapper from '../components/ScreenWrapper';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
-import { updateUser } from '../services/userServices'; 
+import { updateUser } from '../services/userServices';
+import SearchSkeleton from '../components/SearchSkeleton'; 
 
 const instaTheme = {
   ...theme,
@@ -335,10 +336,7 @@ const UserSearchTab = () => {
           </Text>
         </View>
       ) : loading ? (
-        <View style={styles.emptyContainer}>
-          {/* <ActivityIndicator size="large" color={instaTheme.colors.primary} /> */}
-          <Text style={styles.emptyText}>Searching user...</Text>
-        </View>
+        <SearchSkeleton count={5} />
       ) : (
         <FlatList
           data={searchResults}

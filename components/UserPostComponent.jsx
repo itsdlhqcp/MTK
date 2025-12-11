@@ -432,6 +432,7 @@ const UserPostsComponent = ({ navigation, userId }) => {
               refreshing={loading}
               onEndReached={handleLoadMore}
               onEndReachedThreshold={0.3}
+              nestedScrollEnabled={true}
             />
           ) : (
             // Grid View with month sections
@@ -448,6 +449,7 @@ const UserPostsComponent = ({ navigation, userId }) => {
               refreshing={loading}
               onEndReached={handleLoadMore}
               onEndReachedThreshold={0.3}
+              nestedScrollEnabled={true}
             />
           )}
           

@@ -10,11 +10,12 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { useFocusEffect } from 'expo-router'
 import Icon from '../assets/icons'
 import DatePicker from '../components/DatePicker'
-import { updateStreamEndDate } from '../services/ottService'
+import { updateStreamEndDate, deleteStream } from '../services/ottService'
 import { useToast } from '../contexts/ToastContext'
 import { adminIds } from '../constants/admin'
 import { useAuth } from '../contexts/AuthContext'
 import { fetchAverageRating, fetchAverageRatingDirect } from '../services/releaseService'
+import { deleteSeries } from '../services/seriesService'
 
 const OttCard = ({
     item,
@@ -22,7 +23,8 @@ const OttCard = ({
     hasShadow = true,
     showMoreIcon = true,
     onEdit = () => {},
-    onEndDateUpdated = () => {} // Add callback for when end date is updated
+    onEndDateUpdated = () => {}, // Add callback for when end date is updated
+    onDelete = () => {} // Add callback for when card is deleted
 }) => {
     const { user: currentUser } = useAuth();
     const [userRating, setUserRating] = useState(0);
@@ -40,6 +42,9 @@ const OttCard = ({
     const [selectedEndDate, setSelectedEndDate] = useState(
         item?.endDate ? new Date(item.endDate) : null
     );
+    // State for delete confirmation modal
+    const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+    const [deleting, setDeleting] = useState(false);
 
     // Fetch the average rating when component mounts
     useEffect(() => {
@@ -99,7 +104,13 @@ const OttCard = ({
         if (isNavigating || showDropdown) return; // Prevent navigation if dropdown is open
         if (!item?.id) return null;
         setIsNavigating(true);
-        router.push({ pathname: 'streamInfo', params: { streamId: item.id } });
+        
+        // Check if this is a series item
+        if (item.isSeries && item.originalId) {
+            router.push({ pathname: 'seriesDetails', params: { seriesId: item.originalId } });
+        } else {
+            router.push({ pathname: 'streamInfo', params: { streamId: item.id } });
+        }
     }
 
     // Handle more button press - toggle dropdown
@@ -118,7 +129,12 @@ const OttCard = ({
     // Handle edit press
     const handleEditPress = (e) => {
         e.stopPropagation(); // Prevent card press event
-        router.push({ pathname: 'editDigitals', params: { ...item } });
+        // For series items, navigate directly to edit page
+        if (item.isSeries && item.originalId) {
+            router.push({ pathname: 'createSeries', params: { id: item.originalId } });
+        } else {
+            router.push({ pathname: 'editDigitals', params: { ...item } });
+        }
         setShowDropdown(false);
     };
 
@@ -127,6 +143,42 @@ const OttCard = ({
         e.stopPropagation(); // Prevent card press event
         setDatePickerVisible(true);
         setShowDropdown(false);
+    };
+
+    // Handle delete press
+    const handleDeletePress = (e) => {
+        e.stopPropagation(); // Prevent card press event
+        setDeleteModalVisible(true);
+        setShowDropdown(false);
+    };
+
+    // Handle delete confirmation
+    const handleDeleteConfirm = async () => {
+        if (!item?.id) return;
+        
+        setDeleting(true);
+        try {
+            let result;
+            // Check if it's a series or a digital (stream)
+            if (item.isSeries && item.originalId) {
+                result = await deleteSeries(item.originalId);
+            } else {
+                result = await deleteStream(item.id);
+            }
+            
+            if (result.success) {
+                showToast('success', result.msg || 'Deleted successfully');
+                setDeleteModalVisible(false);
+                onDelete(item.id, item.isSeries ? item.originalId : null);
+            } else {
+                showToast('error', result.msg || 'Failed to delete');
+            }
+        } catch (error) {
+            console.error('Delete error:', error);
+            showToast('error', 'Failed to delete. Please try again.');
+        } finally {
+            setDeleting(false);
+        }
     };
 
     const onEditDigital = async (item) => {
@@ -320,15 +372,28 @@ const OttCard = ({
                             onPress={handleEditPress}
                         >
                             <Icon name="edit" size={hp(2)} color={theme.colors.light || '#E0E0E0'} />
-                            <Text style={styles.dropdownText}>Details</Text>
+                            <Text style={styles.dropdownText}>Edit</Text>
                         </TouchableOpacity>
+                        {/* Show End Date option only for non-series items */}
+                        {!item.isSeries && (
+                            <>
+                                <View style={styles.divider} />
+                                <TouchableOpacity 
+                                    style={styles.dropdownItem} 
+                                    onPress={handleEndDatePress}
+                                >
+                                    <Icon name="calender" size={hp(2)} color={theme.colors.light || '#E0E0E0'} />
+                                    <Text style={styles.dropdownText}>End Date</Text>
+                                </TouchableOpacity>
+                            </>
+                        )}
                         <View style={styles.divider} />
                         <TouchableOpacity 
                             style={styles.dropdownItem} 
-                            onPress={handleEndDatePress}
+                            onPress={handleDeletePress}
                         >
-                            <Icon name="calender" size={hp(2)} color={theme.colors.light || '#E0E0E0'} />
-                            <Text style={styles.dropdownText}>End Date</Text>
+                            <Icon name="delete" size={hp(2)} color="#FF3B30" />
+                            <Text style={[styles.dropdownText, { color: '#FF3B30' }]}>Delete</Text>
                         </TouchableOpacity>
                     </View>
                 )}
@@ -396,6 +461,45 @@ const OttCard = ({
                             </View>
                         </View>
                     </TouchableOpacity>
+                </Modal>
+                
+                {/* Delete Confirmation Modal */}
+                <Modal
+                    visible={deleteModalVisible}
+                    transparent={true}
+                    animationType="fade"
+                    onRequestClose={() => !deleting && setDeleteModalVisible(false)}
+                >
+                    <View style={styles.deleteModalOverlay}>
+                        <View style={styles.deleteModalContent}>
+                            <Text style={styles.deleteModalTitle}>Confirm Delete</Text>
+                            <Text style={styles.deleteModalMessage}>
+                                Are you sure you want to delete this {item.isSeries ? 'series' : 'digital'}? This action cannot be undone.
+                            </Text>
+                            <View style={styles.deleteModalButtons}>
+                                <TouchableOpacity
+                                    style={[styles.deleteModalButton, styles.deleteModalCancelButton]}
+                                    onPress={() => setDeleteModalVisible(false)}
+                                    disabled={deleting}
+                                >
+                                    <Text style={styles.deleteModalCancelText}>Cancel</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[
+                                        styles.deleteModalButton, 
+                                        styles.deleteModalConfirmButton,
+                                        deleting && styles.disabledButton
+                                    ]}
+                                    onPress={handleDeleteConfirm}
+                                    disabled={deleting}
+                                >
+                                    <Text style={styles.deleteModalConfirmText}>
+                                        {deleting ? 'Deleting...' : 'Delete'}
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
                 </Modal>
             </View>
         </TouchableOpacity>
@@ -590,7 +694,60 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         fontSize: hp(1.8),
         color: 'white',
-    }
+    },
+    // Delete modal styles
+    deleteModalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    deleteModalContent: {
+        backgroundColor: '#1E1E1E',
+        borderRadius: 12,
+        padding: wp(6),
+        width: wp(80),
+        alignItems: 'center',
+    },
+    deleteModalTitle: {
+        color: '#FFFFFF',
+        fontSize: hp(2.2),
+        fontWeight: 'bold',
+        marginBottom: hp(1),
+    },
+    deleteModalMessage: {
+        color: '#E0E0E0',
+        fontSize: hp(1.8),
+        textAlign: 'center',
+        marginBottom: hp(3),
+    },
+    deleteModalButtons: {
+        flexDirection: 'row',
+        gap: wp(3),
+        width: '100%',
+    },
+    deleteModalButton: {
+        flex: 1,
+        paddingVertical: hp(1.5),
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    deleteModalCancelButton: {
+        backgroundColor: '#2D2D2D',
+    },
+    deleteModalConfirmButton: {
+        backgroundColor: '#FF3B30',
+    },
+    deleteModalCancelText: {
+        color: '#FFFFFF',
+        fontSize: hp(1.8),
+        fontWeight: '600',
+    },
+    deleteModalConfirmText: {
+        color: '#FFFFFF',
+        fontSize: hp(1.8),
+        fontWeight: '600',
+    },
 })
 
 // import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'

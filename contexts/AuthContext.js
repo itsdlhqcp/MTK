@@ -34,9 +34,9 @@ export const AuthProvider = ({ children }) => {
                     const isNew = await checkUserStatus(session.user.id);
                     await updatedUserData(session.user, session.user.email);
                     setIsNewUser(isNew);
-                    // Only redirect to feeds if user is not already set (to avoid overriding login navigation)
+                    // Only redirect to home if user is not already set (to avoid overriding login navigation)
                     if (!user) {
-                        router.replace('/feeds');
+                        router.replace('/home');
                     }
                 } else if (!storedUser && !user) {
                     // Only redirect to onboarding if no user is set

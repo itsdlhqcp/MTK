@@ -66,6 +66,18 @@ const AdminPanel = () => {
           </Pressable>
         </View>
         
+        <View style={styles.adminControls}>
+          <Pressable 
+            style={styles.controlButton} 
+            onPress={() => router.push('createSeries')}
+          >
+            <View style={[styles.iconContainer, styles.blueIcon]}>
+              <Icon name="plus" size={hp(3.2)} color="#fff" />
+            </View>
+            <Text style={styles.buttonText}>Add Series</Text>
+          </Pressable>
+        </View>
+        
         <View style={styles.statsContainer}>
           <View style={styles.statCard}>
             <Text style={styles.statNumber}>24</Text>
@@ -168,6 +180,9 @@ const styles = StyleSheet.create({
       },
       redIcon: {
         backgroundColor: '#5E1E1E', 
+      },
+      blueIcon: {
+        backgroundColor: '#1E3A5E', 
       },
       buttonText: {
         color: '#D0D0D0', 

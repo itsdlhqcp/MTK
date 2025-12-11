@@ -105,7 +105,7 @@ const ReleaseGridCard = ({ item, router }) => {
   );
 };
 
-const ReleaseList = ({ releases, currentUser, router, loading, hasMore, onLoadMore }) => {
+const ReleaseList = ({ releases, currentUser, router, loading, hasMore, onLoadMore, onDelete }) => {
   // Add view mode state
   const [viewMode, setViewMode] = useState('grid'); 
   // Map to store average ratings for each release
@@ -165,14 +165,32 @@ const ReleaseList = ({ releases, currentUser, router, loading, hasMore, onLoadMo
       return 'NOW SHOWING';
     }
     
+    // Calculate week boundaries (Monday to Sunday)
+    // Get current week's Monday (start of ISO week)
+    const currentWeekMonday = moment().startOf('isoWeek'); // Monday of current week
+    const currentWeekSunday = moment().endOf('isoWeek'); // Sunday of current week
+    
+    // Get next week's Monday (day after next Sunday)
+    const nextWeekMonday = currentWeekSunday.clone().add(1, 'day'); // Monday of next week
+    const nextWeekSunday = nextWeekMonday.clone().endOf('isoWeek'); // Sunday of next week
+    
     // Future dates
     if (diffDays === 1) return 'TOMORROW';
-    if (diffDays > 2 && diffDays <= 7) return 'THIS WEEK';
-    if (diffDays > 7 && diffDays <= 14) return 'NEXT WEEK';
+    
+    // Check if date is in current week (Monday to Sunday)
+    if (releaseDate.isSameOrAfter(currentWeekMonday, 'day') && releaseDate.isSameOrBefore(currentWeekSunday, 'day')) {
+      return 'THIS WEEK';
+    }
+    
+    // Check if date is in next week (Monday to Sunday after current week)
+    if (releaseDate.isSameOrAfter(nextWeekMonday, 'day') && releaseDate.isSameOrBefore(nextWeekSunday, 'day')) {
+      return 'NEXT WEEK';
+    }
+    
     if (diffDays > 14) return 'LATER';
     
     // Past dates
-    if (diffDays >= -7) return releaseDate.format('dddd').toUpperCase();
+    if (diffDays >= -7) return 'COMING STREAMS';
     if (diffDays < -7) return 'COMING STREAMS';
     return releaseDate.format('MMMM YYYY').toUpperCase();
   };
@@ -292,6 +310,12 @@ const ReleaseList = ({ releases, currentUser, router, loading, hasMore, onLoadMo
         item={item}
         currentUser={currentUser}
         router={router}
+        onDelete={(releaseId) => {
+          // Remove the deleted release from the list
+          if (onDelete && typeof onDelete === 'function') {
+            onDelete(releaseId);
+          }
+        }}
         // avgRating={avgRating}
         // isRatingLoading={isRatingLoading}
       />

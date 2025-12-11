@@ -118,7 +118,7 @@ const Login = () => {
           router.push('/auth/newuserscreens/userpreferences');
       } else {
            router.dismissAll();
-           router.push('/feeds');
+           router.push('/home');
       }
     } catch (error) {
         showToast('error', error.message);

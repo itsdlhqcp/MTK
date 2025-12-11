@@ -138,7 +138,7 @@ const AnimeFanPage = () => {
         throw new Error(response.msg);
       }
       router.dismissAll();
-      router.replace('/feeds');
+      router.replace('/home');
     } catch (error) {
       Alert.alert('Error', error.message);
     } finally {

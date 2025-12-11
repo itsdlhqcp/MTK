@@ -12,3 +12,13 @@
 -keep class com.facebook.react.turbomodule.** { *; }
 
 # Add any project specific keep options here:
+
+# Google Mobile Ads ProGuard rules
+-keep class com.google.android.gms.ads.** { *; }
+-keep class com.google.ads.** { *; }
+-dontwarn com.google.android.gms.ads.**
+
+# Keep native methods for Google Mobile Ads
+-keepclasseswithmembernames class * {
+    native <methods>;
+}

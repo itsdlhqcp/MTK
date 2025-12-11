@@ -469,16 +469,7 @@ const Profile = () => {
     );
   }
 
-  // Show skeleton loader while profile is loading
-  if (profileLoading && !profileData) {
-    return (
-      <ScreenWrapper bg={activeTheme.colors.background}>
-        <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-          <ProfileSkeleton />
-        </ScrollView>
-      </ScreenWrapper>
-    );
-  }
+  // Removed separate skeleton check - now showing skeleton inline within the main render
 
   return (
     <ScreenWrapper bg={activeTheme.colors.background}>
@@ -506,18 +497,22 @@ const Profile = () => {
         }
       >
         {/* Profile Info Section */}
-        <InstagramProfile 
-          user={currentUser}
-          router={router} 
-          handleLogout={onSettings} 
-          theme={activeTheme}
-          postCount={profileStats.postCount}
-          friendsCount={profileStats.friendsCount}
-          reviewCount={profileStats.reviewCount}
-          isLoading={profileLoading}
-          lastUpdated={profileDataTimestamp ? new Date(profileDataTimestamp).toLocaleTimeString() : null}
-          offlineMode={offlineMode}
-        />
+        {profileLoading && !profileData ? (
+          <ProfileSkeleton />
+        ) : (
+          <InstagramProfile 
+            user={currentUser}
+            router={router} 
+            handleLogout={onSettings} 
+            theme={activeTheme}
+            postCount={profileStats.postCount}
+            friendsCount={profileStats.friendsCount}
+            reviewCount={profileStats.reviewCount}
+            isLoading={profileLoading}
+            lastUpdated={profileDataTimestamp ? new Date(profileDataTimestamp).toLocaleTimeString() : null}
+            offlineMode={offlineMode}
+          />
+        )}
         
         {/* Tab Navigator - Now passes hasPostsAvailable prop */}
         <View style={styles.tabSection}>
@@ -626,19 +621,6 @@ const InstagramProfile = ({ user, router, handleLogout, theme, postCount, friend
           </>
         )} */}
         <View style={styles.toppanel}>
-
-        <TouchableOpacity 
-          style={[styles.logoutButton]} 
-          disabled={isNavigating}
-          onPress={() => {
-            if (!isNavigating) {
-              setIsNavigating(true);
-              router.push('find');
-            }
-          }}
-        >
-          <Icon name="addfriend" color={theme.colors.textDark} />
-        </TouchableOpacity>
           {/* admin icon menu */}
 
           {isadmin && (
@@ -727,12 +709,11 @@ const InstagramProfile = ({ user, router, handleLogout, theme, postCount, friend
         <Text style={[styles.bioName, { color: theme.colors.textDark }]}>{user?.orgname || user?.name || 'User'}</Text>
         {user?.bio && <Text style={[styles.bio, { color: theme.colors.text }]}>{user.bio}</Text>}
         <Text style={[styles.joinedDate, { color: theme.colors.textLight }]}>Joined {formattedDate}</Text>
-        {user?.email && <Text style={[styles.joinedDate, { color: theme.colors.textLight }]}>{user.email}</Text>}
         {user?.address && <Text style={[styles.joinedDate, { color: theme.colors.textLight }]}>{user.address}</Text>}
       </View>
 
       {/* Tags */}
-      {Array.isArray(parsedTags) && parsedTags.length > 0 && (
+      {/* {Array.isArray(parsedTags) && parsedTags.length > 0 && (
         <View style={styles.tagsContainer}>
           {parsedTags.map((tag, index) => (
             <View 
@@ -749,7 +730,7 @@ const InstagramProfile = ({ user, router, handleLogout, theme, postCount, friend
             </View>
           ))}
         </View>
-      )}
+      )} */}
 
       {/* Edit Profile Button - hide in offline mode */}
       {/* {!user?.verified && !offlineMode && (

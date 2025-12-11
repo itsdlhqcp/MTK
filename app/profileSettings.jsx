@@ -115,9 +115,9 @@ const ProfileSettings = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [logoutAlertVisible, setLogoutAlertVisible] = useState(false);
 
-  // WhatsApp group links
-  const COMMUNITY_WHATSAPP_LINK = "https://chat.whatsapp.com/FBWhvCMDwMDBp2EV7ZKfHQ";
-  const HELP_WHATSAPP_LINK = "https://chat.whatsapp.com/KlRsYEmS6qyIRGQ46pHQZA";
+  // Community and help links
+  const COMMUNITY_TELEGRAM_LINK = "https://t.me/PlotTwistCommunity";
+  const HELP_EMAIL = "mailto:plotwistapk@gmail.com";
 
   // Function to handle pull-to-refresh
   const onRefresh = useCallback(async () => {
@@ -148,8 +148,8 @@ const ProfileSettings = () => {
     }
   }, []);
 
-  // Function to open WhatsApp links
-  const openWhatsAppLink = async (url) => {
+  // Function to open external links (Telegram, email, etc.)
+  const openExternalLink = async (url) => {
     try {
       const supported = await Linking.canOpenURL(url);
       
@@ -158,15 +158,15 @@ const ProfileSettings = () => {
       } else {
         Alert.alert(
           "Error",
-          "WhatsApp is not installed on your device or the link is invalid.",
+          "Could not open the link. Please make sure the required app is installed.",
           [{ text: "OK" }]
         );
       }
     } catch (error) {
-      console.error("Error opening WhatsApp link:", error);
+      console.error("Error opening link:", error);
       Alert.alert(
         "Error",
-        "Could not open WhatsApp. Please try again later.",
+        "Could not open the link. Please try again later.",
         [{ text: "OK" }]
       );
     }
@@ -245,7 +245,7 @@ const ProfileSettings = () => {
         <SettingItem
           icon="community"
           title="Join the community"
-          onPress={() => openWhatsAppLink(COMMUNITY_WHATSAPP_LINK)}
+          onPress={() => openExternalLink(COMMUNITY_TELEGRAM_LINK)}
         />
 
         {/* More Info Section */}
@@ -264,7 +264,7 @@ const ProfileSettings = () => {
           <SettingItem
             icon="help"
             title="Help"
-            onPress={() => openWhatsAppLink(HELP_WHATSAPP_LINK)}
+            onPress={() => openExternalLink(HELP_EMAIL)}
           />
           {/* <SettingItem
             icon="policy"

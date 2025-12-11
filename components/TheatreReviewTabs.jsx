@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import theme from '../constants/theme';
 import { hp } from '../helpers/common';
-import TabContentSkeleton from './TabContentSkeleton';
+import DigitalTabSkeleton from './DigitalTabSkeleton';
+import TheatreTabSkeleton from './TheatreTabSkeleton';
 
 const TheatreReviewTabs = ({ children, loading = false }) => {
   const [activeTab, setActiveTab] = useState(0);
@@ -35,7 +36,11 @@ const TheatreReviewTabs = ({ children, loading = false }) => {
       </View>
       <View style={styles.tabContent}>
         {loading ? (
-          <TabContentSkeleton count={3} />
+          activeTab === 0 ? (
+            <TheatreTabSkeleton count={3} />
+          ) : (
+            <DigitalTabSkeleton count={3} />
+          )
         ) : (
           children[activeTab]
         )}

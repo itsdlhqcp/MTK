@@ -228,7 +228,7 @@ export const fetchReviewReplies = async (reviewId) => {
 
 // below are the set of services for the peoples reviews 
 
-export const fetchPeoplesReleaseDetails = async (postId) => {
+export const fetchPeoplesReleaseDetails = async (postId, userId = null) => {
   try {
     const { data, error } = await supabase
       .from('streams')
@@ -245,6 +245,14 @@ export const fetchPeoplesReleaseDetails = async (postId) => {
       console.log('Fetch peoples stream details error: ', error);
       return { success: false, msg: 'Could not people fetch streams' };
     }
+    
+    // Add hasUserReviewed flag if userId is provided
+    if (userId && data?.dpeopreviews) {
+      data.hasUserReviewed = data.dpeopreviews.some(review => review.userId === userId);
+    } else {
+      data.hasUserReviewed = false;
+    }
+    
     return { success: true, data };
   } catch (error) {
     return { success: false, msg: 'Could not fetch the peoples streams releases'};
@@ -596,7 +604,7 @@ export const createPeopleReviewUpvote = async (upvote) => {
             }
           };
 
-          export const fetchPeoplesStreamDetailsx = async (postId) => {
+          export const fetchPeoplesStreamDetailsx = async (postId, userId = null) => {
             try {
               const { data, error } = await supabase
                 .from('streams')
@@ -613,6 +621,14 @@ export const createPeopleReviewUpvote = async (upvote) => {
                 console.log('Fetch peoples stream details error: ', error);
                 return { success: false, msg: 'Could not people fetch streams' };
               }
+              
+              // Add hasUserReviewed flag if userId is provided
+              if (userId && data?.dpeopreviews) {
+                data.hasUserReviewed = data.dpeopreviews.some(review => review.userId === userId);
+              } else {
+                data.hasUserReviewed = false;
+              }
+              
               return { success: true, data };
             } catch (error) {
               return { success: false, msg: 'Could not fetch the peoples streams releases'};
@@ -781,6 +797,34 @@ export const fetchDigitals = async (limit = 20) => {
   } catch (error) {
     console.error("Error in fetchDigitals:", error);
     return { success: false, msg: "Could not fetch digital items", error: error.message };
+  }
+};
+
+/**
+ * Delete a digital item (stream) by ID
+ * @param {string|number} streamId - The ID of the stream to delete
+ * @returns {Promise<Object>} - Object containing success status and data/error message
+ */
+export const deleteStream = async (streamId) => {
+  try {
+    if (!streamId) {
+      return { success: false, msg: "Stream ID is required" };
+    }
+
+    const { error } = await supabase
+      .from('streams')
+      .delete()
+      .eq('id', streamId);
+
+    if (error) {
+      console.error("Error in deleteStream:", error);
+      return { success: false, msg: "Could not delete stream", error: error.message };
+    }
+
+    return { success: true, msg: "Stream deleted successfully" };
+  } catch (error) {
+    console.error("Error in deleteStream:", error);
+    return { success: false, msg: "Could not delete stream", error: error.message };
   }
 };
 

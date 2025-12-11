@@ -223,6 +223,13 @@ const icons = {
 
 const Icon = ({name, ...props}) => {
     const IconComponent = icons[name];
+    
+    // Safety check: if icon doesn't exist, return null or a placeholder
+    if (!IconComponent) {
+        console.warn(`Icon "${name}" not found in icons mapping`);
+        return null;
+    }
+    
   return (
     <IconComponent
         height={props.size || 24}

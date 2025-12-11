@@ -8,10 +8,32 @@ import { PostProvider } from '../contexts/PostContext';
 import { ReviewProvider } from '../contexts/ReviewContext';
 import { UserStorageService } from '../Storage/UserStorageService';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+// import mobileAds from 'react-native-google-mobile-ads';
 
 import { ToastProvider } from '../contexts/ToastContext';
 
  LogBox.ignoreAllLogs(true);
+ 
+ // Suppress VirtualizedList nested ScrollView warning (horizontal ScrollView in vertical FlatList is valid)
+ LogBox.ignoreLogs([
+   'VirtualizedLists should never be nested',
+   'VirtualizedLists should never be nested inside plain ScrollViews',
+   /VirtualizedLists should never be nested/,
+ ]);
+ 
+ // Additional suppression for console warnings
+ if (__DEV__) {
+   const originalWarn = console.warn;
+   console.warn = (...args) => {
+     const message = typeof args[0] === 'string' ? args[0] : JSON.stringify(args[0] || '');
+     if (message.includes('VirtualizedLists should never be nested') || 
+         message.includes('VirtualizedList') && message.includes('nested') ||
+         message.includes('ScrollView') && message.includes('VirtualizedList')) {
+       return;
+     }
+     originalWarn(...args);
+   };
+ }
 
 const _layout = () => {
   return (
@@ -32,6 +54,34 @@ const _layout = () => {
 const MainLayout = () => {
   const { setAuth, setUserData, parseDeepLink, initialized, logout } = useAuth();
   const router = useRouter();
+
+  // Initialize Google Mobile Ads SDK
+  // useEffect(() => {
+  //   const initializeAds = async () => {
+  //     try {
+  //       // Check if we're in production (not development)
+  //       const isProduction = !__DEV__;
+  //       
+  //       // Configure request configuration
+  //       // In production, use empty testDeviceIds array to disable test mode
+  //       const requestConfiguration = {
+  //         // Disable test mode in production - empty array means no test devices
+  //         testDeviceIds: isProduction ? [] : [], 
+  //       };
+  //       
+  //       await mobileAds().setRequestConfiguration(requestConfiguration);
+  //       
+  //       // Initialize the SDK
+  //       await mobileAds().initialize();
+  //       
+  //       console.log('Google Mobile Ads SDK initialized', { isProduction });
+  //     } catch (error) {
+  //       console.error('Error initializing Google Mobile Ads:', error);
+  //     }
+  //   };
+
+  //   initializeAds();
+  // }, []);
 
   // Handle deep linking
   const handleDeepLink = async ({ url }) => {
@@ -58,7 +108,7 @@ const MainLayout = () => {
         router.push('/releaseDetails');
       }
       else if (url.includes('home')) {
-        router.replace('/feeds');
+        router.replace('/home');
       }
     } catch (error) {
       console.error('Deep link handling error:', error);

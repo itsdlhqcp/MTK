@@ -197,6 +197,123 @@ export const fetchAllUserReviews = async (userId, page = 1, pageSize = 10) => {
   }
 };
 
+// Fetch "now showing" theatre releases and "now streaming" digital releases that user hasn't reviewed
+export const fetchRateNowSuggestions = async (userId) => {
+  try {
+    if (!userId) {
+      return { success: false, msg: 'User ID is required' };
+    }
+
+    const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+
+    // Fetch "now showing" theatre releases (releases where rDate <= today and (endDate is null or endDate >= today))
+    // We fetch more than needed and filter client-side for endDate logic
+    const { data: theatreReleasesRaw, error: theatreError } = await supabase
+      .from('releases')
+      .select(`
+        id,
+        body,
+        rDate,
+        endDate,
+        file,
+        filel,
+        sconnectedId
+      `)
+      .lte('rDate', today)
+      .order('rDate', { ascending: false })
+      .limit(20);
+    
+    // Filter client-side: keep only releases where endDate is null or endDate >= today
+    const todayDate = new Date(today);
+    const theatreReleases = (theatreReleasesRaw || []).filter(release => {
+      if (!release.endDate) return true;
+      const endDate = new Date(release.endDate);
+      return endDate >= todayDate;
+    });
+
+    if (theatreError) {
+      console.error('Error fetching theatre releases:', theatreError);
+    }
+
+    // Fetch "now streaming" digital releases (streams where rDate <= today and (endDate is null or endDate >= today))
+    // We fetch more than needed and filter client-side for endDate logic
+    const { data: digitalReleasesRaw, error: digitalError } = await supabase
+      .from('streams')
+      .select(`
+        id,
+        body,
+        rDate,
+        endDate,
+        file,
+        filel
+      `)
+      .lte('rDate', today)
+      .order('rDate', { ascending: false })
+      .limit(20);
+    
+    // Filter client-side: keep only releases where endDate is null or endDate >= today
+    const todayDateForDigital = new Date(today);
+    const digitalReleases = (digitalReleasesRaw || []).filter(release => {
+      if (!release.endDate) return true;
+      const endDate = new Date(release.endDate);
+      return endDate >= todayDateForDigital;
+    });
+
+    if (digitalError) {
+      console.error('Error fetching digital releases:', digitalError);
+    }
+
+    // Get user's reviewed release/stream IDs
+    const [theatreReviews, digitalReviews] = await Promise.all([
+      supabase
+        .from('peoplesReview')
+        .select('releaseId')
+        .eq('userId', userId),
+      supabase
+        .from('dpeopreviews')
+        .select('releaseId')
+        .eq('userId', userId)
+    ]);
+
+    const reviewedTheatreIds = new Set(
+      (theatreReviews.data || []).map(r => r.releaseId)
+    );
+    const reviewedDigitalIds = new Set(
+      (digitalReviews.data || []).map(r => r.releaseId)
+    );
+
+    // Filter out releases user has already reviewed
+    const availableTheatre = (theatreReleases || [])
+      .filter(release => !reviewedTheatreIds.has(release.id))
+      .slice(0, 1)
+      .map(release => ({
+        ...release,
+        type: 'theatre',
+        releaseId: release.id
+      }));
+
+    const availableDigital = (digitalReleases || [])
+      .filter(release => !reviewedDigitalIds.has(release.id))
+      .slice(0, 1)
+      .map(release => ({
+        ...release,
+        type: 'digital',
+        releaseId: release.id
+      }));
+
+    // Combine and return up to 2 suggestions
+    const suggestions = [...availableTheatre, ...availableDigital].slice(0, 2);
+
+    return {
+      success: true,
+      data: suggestions
+    };
+  } catch (error) {
+    console.error('Error fetching rate now suggestions:', error);
+    return { success: false, msg: 'Could not fetch suggestions', error: error.message };
+  }
+};
+
 // Keep the single review fetch functions unchanged
 export const fetchUserReviewForRelease = async (userId, releaseId) => {
   try {

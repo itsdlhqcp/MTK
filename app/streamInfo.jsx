@@ -7,6 +7,8 @@ import { fetchAverageRating, fetchPeoplesReleaseDetails } from "../services/ottS
 import StreamCardInfo from "../components/streamCardInfo";
 import { useToast } from "../contexts/ToastContext";
 import CustomDotIndicator from "../components/CutomDotIndicator";
+// import { BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
+// import { getBannerAdUnitId } from '../constants/ads';
 
 const ReleaseInfo = () => {
     const { streamId } = useLocalSearchParams();
@@ -98,6 +100,16 @@ const ReleaseInfo = () => {
                     handleReadReviews={handleReadReviews}
                     peoplesReviewCount={peoplesReviewCount}
                 />
+                {/* Banner Ad */}
+                {/* <View style={styles.adContainer}>
+                    <BannerAd
+                        unitId={getBannerAdUnitId()}
+                        size={BannerAdSize.FULL_BANNER}
+                        requestOptions={{
+                            requestNonPersonalizedAdsOnly: true,
+                        }}
+                    />
+                </View> */}
             </View>
         </View>
     );
@@ -126,5 +138,10 @@ const styles = StyleSheet.create({
         fontWeight: theme.fonts.medium,
         textAlign: 'center',
         marginHorizontal: wp(2), // Responsive margin
+    },
+    adContainer: {
+        alignItems: 'center',
+        marginVertical: hp(2),
+        width: '100%',
     }
 });

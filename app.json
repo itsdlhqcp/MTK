@@ -45,19 +45,27 @@
   },
   "plugins": [
     "expo-router",
+    // [
+    //   "react-native-google-mobile-ads",
+    //   {
+    //     "androidAppId": "ca-app-pub-7806969239829181~9318981034",
+    //     "iosAppId": "ca-app-pub-7806969239829181~9318981034"
+    //   }
+    // ],
+    "expo-font",
     [
-      "react-native-google-mobile-ads",
+      "expo-build-properties",
       {
-        "androidAppId": "ca-app-pub-7806969239829181~9318981034",
-        "iosAppId": "ca-app-pub-7806969239829181~9318981034"
+        "android": {
+          "useLegacyPackaging": false
+        }
       }
-    ],
-    "expo-font"
+    ]
   ],
-  "react-native-google-mobile-ads": {
-    "android_app_id": "ca-app-pub-7806969239829181~9318981034",
-    "ios_app_id": "ca-app-pub-7806969239829181~9318981034"
-  },
+  // "react-native-google-mobile-ads": {
+  //   "android_app_id": "ca-app-pub-7806969239829181~9318981034",
+  //   "ios_app_id": "ca-app-pub-7806969239829181~9318981034"
+  // },
   "experiments": {
     "typedRoutes": true
   },
