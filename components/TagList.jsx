@@ -34,54 +34,80 @@ const TagsList = ({ tags }) => {
         }
     }
 
-    if (!tags) return null;
+    if (!parsedTags || (Array.isArray(parsedTags) && parsedTags.length === 0)) return null;
+
+    // Hide the generic "series" tag from UI while keeping other tags
+    // Also filter out non-string tags and ensure all tags are valid strings
+    if (Array.isArray(parsedTags)) {
+        parsedTags = parsedTags
+            .filter((tag) => {
+                // Only keep string tags, skip arrays, objects, null, undefined
+                if (typeof tag !== 'string') return false;
+                // Skip empty strings and the "series" tag
+                return tag.trim() !== '' && tag.toLowerCase() !== 'series';
+            })
+            .map((tag) => {
+                // Ensure tag is a clean string (trim whitespace)
+                return typeof tag === 'string' ? tag.trim() : String(tag).trim();
+            });
+    }
+
+    if (!parsedTags || (Array.isArray(parsedTags) && parsedTags.length === 0)) return null;
 
     return (
         <View style={styles.tagsContainer}>
-            {Array.isArray(parsedTags) && parsedTags.map((tag, index) => (
+            {Array.isArray(parsedTags) && parsedTags.map((tag, index) => {
+                // Double-check that tag is a string before rendering
+                if (typeof tag !== 'string' || !tag.trim()) {
+                    return null;
+                }
+                
+                const tagLower = tag.toLowerCase().trim();
+                
+                return (
                 <View key={index} style={styles.tagWrapper}>
-                    {tag.toLowerCase() === "netflix" ? (
+                    {tagLower === "netflix" ? (
                         <Icon name="netflix" size={hp(7)}  color={theme.colors.primaryDark} />
-                    ) : tag.toLowerCase() === "prime" ? (
+                    ) : tagLower === "prime" ? (
                         <Icon name="prime" size={hp(6)} color={theme.colors.primaryDark} />
-                    ) : tag.toLowerCase() === "disney" ? (
+                    ) : tagLower === "disney" ? (
                         <Icon name="disney" size={hp(7)} color={theme.colors.primaryDark} />
-                    ): tag.toLowerCase() === "hbo" ? (
+                    ): tagLower === "hbo" ? (
                         <Icon name="hbo" size={hp(7)} color={theme.colors.primaryDark} />
-                    ): tag.toLowerCase() === "hulu" ? (
+                    ): tagLower === "hulu" ? (
                         <Icon name="hulu" size={hp(7)} color={theme.colors.primaryDark} />
-                    ): tag.toLowerCase() === "amc" ? (
+                    ): tagLower === "amc" ? (
                         <Icon name="amc" size={hp(7.2)} color={theme.colors.primaryDark} />
-                    ): tag.toLowerCase() === "zee5" ? (
+                    ): tagLower === "zee5" ? (
                         <Icon name="zee5" size={hp(6.4)} color={theme.colors.primaryDark} />
-                    ): tag.toLowerCase() === "sonyliv" ? (
+                    ): tagLower === "sonyliv" ? (
                         <Icon name="sonyliv" size={hp(6)} color={theme.colors.primaryDark} />
-                    ): tag.toLowerCase() === "paramountplus" ? (
+                    ): tagLower === "paramountplus" ? (
                         <Icon name="paramountplus" size={hp(7)} color={theme.colors.primaryDark} />
-                    ): tag.toLowerCase() === "appletvplus" ? (
+                    ): tagLower === "appletvplus" ? (
                         <Icon name="appletvplus" size={hp(7)} color={theme.colors.primaryDark} />
-                    ): tag.toLowerCase() === "hotstar" ? (
+                    ): tagLower === "hotstar" ? (
                         <Icon name="hotstar" size={hp(6)} style={{marginVertical: hp(0.5)}} color={theme.colors.primaryDark} />
-                    ): tag.toLowerCase() === "voot" ? (
+                    ): tagLower === "voot" ? (
                         <Icon name="voot" size={hp(5.8)} style={{marginVertical: hp(0.5)}} color={theme.colors.primaryDark} />
-                    ): tag.toLowerCase() === "aha" ? (
+                    ): tagLower === "aha" ? (
                         <Icon name="aha" size={hp(6)} style={{marginVertical: hp(0.5)}} color={theme.colors.primaryDark} />
-                    ): tag.toLowerCase() === "sunnxt" ? (
+                    ): tagLower === "sunnxt" ? (
                         <Icon name="sunnxt" size={hp(6)} style={{marginVertical: hp(0.5)}} color={theme.colors.primaryDark} />
-                    ) : tag.toLowerCase() === "appletv" ? (
+                    ) : tagLower === "appletv" ? (
                         <Image 
                         source={{ uri: 'https://img.icons8.com/3d-fluency/94/apple-tv.png' }}
                         style={styles.appleTvImage}
                         resizeMode="contain"
                     />
-                    ): tag.toLowerCase() === "paramountx" ? (
+                    ): tagLower === "paramountx" ? (
                         <Image 
                        // source={{ uri: 'https://img.icons8.com/clouds/100/paramount-plus.png' }}
                         source={{ uri: 'https://img.icons8.com/doodle/48/paramount-plus.png' }}
                         style={styles.paraImage}
                         resizeMode="contain"
                     />
-                    ): tag.toLowerCase() === "peacocktv" ? (
+                    ): tagLower === "peacocktv" ? (
                         <Image 
                         source={{ uri: 'https://img.icons8.com/doodle/48/peacock-tv.png' }}
                        // source={{ uri: 'https://img.icons8.com/doodle/48/paramount-plus.png' }}
@@ -101,7 +127,8 @@ const TagsList = ({ tags }) => {
                         </LinearGradient>
                     )}
                 </View>
-            ))}
+                );
+            })}
         </View>
     );
 };

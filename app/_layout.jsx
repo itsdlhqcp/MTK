@@ -9,6 +9,7 @@ import { ReviewProvider } from '../contexts/ReviewContext';
 import { UserStorageService } from '../Storage/UserStorageService';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 // import mobileAds from 'react-native-google-mobile-ads';
+import { useNotifications } from '../hooks/useNotifications';
 
 import { ToastProvider } from '../contexts/ToastContext';
 
@@ -54,6 +55,9 @@ const _layout = () => {
 const MainLayout = () => {
   const { setAuth, setUserData, parseDeepLink, initialized, logout } = useAuth();
   const router = useRouter();
+  
+  // Initialize push notifications
+  useNotifications();
 
   // Initialize Google Mobile Ads SDK
   // useEffect(() => {
@@ -108,7 +112,7 @@ const MainLayout = () => {
         router.push('/releaseDetails');
       }
       else if (url.includes('home')) {
-        router.replace('/home');
+        router.replace('/feeds');
       }
     } catch (error) {
       console.error('Deep link handling error:', error);

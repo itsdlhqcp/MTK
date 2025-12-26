@@ -16,7 +16,7 @@ import Header from '../components/Header';
 import { useAuth } from '../contexts/AuthContext';
 import { getUserData } from '../services/userServices';
 import theme from '../constants/theme';
-import { hp, wp } from '../helpers/common';
+import { hp, wp, truncateEmail, truncateUsername } from '../helpers/common';
 import Icon from '@/assets/icons';
 import moment from 'moment';
 
@@ -262,14 +262,14 @@ const Information = () => {
           <InfoItem
             icon="user"
             title="Username"
-            value={user?.name}
+            value={user?.name ? truncateUsername(user.name) : undefined}
             loading={loading}
           />
           
           <InfoItem
             icon="mail"
             title="Email"
-            value={user?.email}
+            value={user?.email ? truncateEmail(user.email) : undefined}
             loading={loading}
           />
           
@@ -305,7 +305,7 @@ const Information = () => {
           <InfoItem
             icon="user"
             title="Display Name"
-            value={userData?.orgname}
+            value={userData?.orgname ? truncateUsername(userData.orgname) : undefined}
             loading={loading}
           />
           

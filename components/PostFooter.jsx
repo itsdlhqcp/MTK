@@ -26,7 +26,8 @@ const PostFooter = ({
         <LikeButton 
           item={item} 
           currentUser={currentUser} 
-          updatePost={updatePost} 
+          updatePost={updatePost}
+          iconType="popcorn"
         />
       </View>
       <View style={[styles.footerButton, { width: 60 }]}>

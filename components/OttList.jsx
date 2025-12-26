@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity,Image } from 'react-native';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Animated } from 'react-native';
 import moment from 'moment';
 import OttCard from '../components/OttCard';
 import FeedLoader from './FeedLoader';
@@ -9,6 +9,15 @@ import { getSupabaseFileUrl } from '../services/imageService';
 import PratingStars from './pRatingStars';
 import { fetchAverageRating, fetchAverageRatingDirect } from '../services/releaseService';
 import CustomDotIndicator from './CutomDotIndicator';
+import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
+import {
+  subscribeToReleaseNotifications,
+  unsubscribeFromReleaseNotifications,
+  checkSubscriptionStatus
+} from '../services/releaseNotificationSubscriptionService.js';
+import { playBellActivateSound, playBellDeactivateSound } from '../services/bellSoundService.js';
+import theme from '../constants/theme';
 
 // Modified header with toggle button that only shows for the first header
 const ReleaseDateHeader = ({ date, viewMode, onToggleView, isFirstHeader, onFilterPress, filterLabel }) => (
@@ -49,9 +58,15 @@ const ReleaseDateHeader = ({ date, viewMode, onToggleView, isFirstHeader, onFilt
 );
 
 // Grid version of OttCard
-const OttGridCard = ({ item, router }) => {
+const OttGridCard = ({ item, router, currentUser }) => {
    const [avgRating, setAvgRating] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
+    const [isSubscribed, setIsSubscribed] = useState(false);
+    const [subscriptionLoading, setSubscriptionLoading] = useState(false);
+    const { showToast } = useToast();
+    // Animation values for bell icon
+    const bellScale = useRef(new Animated.Value(1)).current;
+    const bellRotation = useRef(new Animated.Value(0)).current;
   
     useEffect(() => {
       if (!item?.directRelease && item?.connectedId) {
@@ -60,6 +75,112 @@ const OttGridCard = ({ item, router }) => {
         getAverageRatingOfDirect();
       }
     }, [item?.id]);
+
+    // Check subscription status on mount
+    useEffect(() => {
+      const checkSubscription = async () => {
+        if (!currentUser?.id || !item?.id) return;
+        try {
+          const result = await checkSubscriptionStatus(currentUser.id, item.id, 'digital');
+          if (result.success) {
+            setIsSubscribed(result.isSubscribed);
+          }
+        } catch (error) {
+          console.error("Error checking subscription:", error);
+        }
+      };
+      checkSubscription();
+    }, [currentUser?.id, item?.id]);
+
+    // Animation function for bell toggle
+    const animateBell = () => {
+      // Scale down then up with rotation
+      Animated.sequence([
+        Animated.parallel([
+          Animated.spring(bellScale, {
+            toValue: 0.8,
+            useNativeDriver: true,
+            tension: 300,
+            friction: 7,
+          }),
+          Animated.timing(bellRotation, {
+            toValue: 1,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.parallel([
+          Animated.spring(bellScale, {
+            toValue: 1.2,
+            useNativeDriver: true,
+            tension: 300,
+            friction: 7,
+          }),
+          Animated.timing(bellRotation, {
+            toValue: 0,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.spring(bellScale, {
+          toValue: 1,
+          useNativeDriver: true,
+          tension: 300,
+          friction: 7,
+        }),
+      ]).start();
+    };
+
+    // Handle notification bell toggle
+    const handleNotificationToggle = async (e) => {
+      e.stopPropagation(); // Prevent card press event
+      if (!currentUser?.id || !item?.id || subscriptionLoading) return;
+
+      // Start animation
+      animateBell();
+
+      setSubscriptionLoading(true);
+      try {
+        if (isSubscribed) {
+          // Play deactivation sound
+          playBellDeactivateSound();
+          
+          // Unsubscribe
+          const result = await unsubscribeFromReleaseNotifications(
+            currentUser.id,
+            item.id,
+            'digital'
+          );
+          if (result.success) {
+            setIsSubscribed(false);
+            showToast('success', 'Notifications disabled for this release');
+          } else {
+            showToast('error', result.msg || 'Failed to unsubscribe');
+          }
+        } else {
+          // Play activation sound
+          playBellActivateSound();
+          
+          // Subscribe
+          const result = await subscribeToReleaseNotifications(
+            currentUser.id,
+            item.id,
+            'digital'
+          );
+          if (result.success) {
+            setIsSubscribed(true);
+            showToast('success', 'You will be notified when this release is available');
+          } else {
+            showToast('error', result.msg || 'Failed to subscribe');
+          }
+        }
+      } catch (error) {
+        console.error('Error toggling notification:', error);
+        showToast('error', 'Something went wrong');
+      } finally {
+        setSubscriptionLoading(false);
+      }
+    };
 
        // Fetch the average rating when component mounts
        const getAverageRating = async () => {
@@ -90,12 +211,35 @@ const OttGridCard = ({ item, router }) => {
       };
 
 
+  // Helper to check if item is a series
+  const isSeriesItem = (item) => {
+    // Check for old series format (from separate series table)
+    if (item.isSeries && item.originalId) {
+      return true;
+    }
+    // Check for new series format (from streams table with episodes)
+    if (item.episodes && Array.isArray(item.episodes) && item.episodes.length > 0) {
+      return true;
+    }
+    // Check seriesType
+    if (item.seriesType === 'series') {
+      return true;
+    }
+    return false;
+  };
+
   const handleCardPress = () => {
     if (!item?.id) return null;
     
     // Check if this is a series item
-    if (item.isSeries && item.originalId) {
-      router.push({ pathname: 'seriesDetails', params: { seriesId: item.originalId } });
+    if (isSeriesItem(item)) {
+      // For old series table format
+      if (item.isSeries && item.originalId) {
+        router.push({ pathname: 'seriesDetails', params: { seriesId: item.originalId } });
+      } else {
+        // For new series format from streams table, navigate to stream details
+        router.push({ pathname: 'streamInfo', params: { streamId: item.id } });
+      }
     } else {
       router.push({ pathname: 'streamInfo', params: { streamId: item.id } });
     }
@@ -112,23 +256,64 @@ const OttGridCard = ({ item, router }) => {
       onPress={handleCardPress}
       activeOpacity={0.9}
     >
-      {item?.file?.includes('postImage') && (
+      {(item?.file || item?.filel) && (
         <View style={styles.gridImageContainer}>
           <Image
-            source={getSupabaseFileUrl(item.filel)}
+            source={getSupabaseFileUrl(item.filel || item.file)}
             style={styles.gridItemImage}
             resizeMode="cover"
           />
+          
+          {/* Notification bell button - Top right */}
+          {currentUser?.id && (
+            <TouchableOpacity 
+              style={[
+                styles.gridNotificationButton,
+                isSubscribed && styles.gridNotificationButtonActive
+              ]} 
+              onPress={handleNotificationToggle}
+              activeOpacity={0.7}
+              disabled={subscriptionLoading}
+            >
+              <Animated.View
+                style={{
+                  transform: [
+                    { scale: bellScale },
+                    {
+                      rotate: bellRotation.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: ['0deg', '15deg'],
+                      }),
+                    },
+                  ],
+                }}
+              >
+                <Text style={[
+                  styles.gridNotificationIcon,
+                  isSubscribed && styles.gridNotificationIconActive
+                ]}>
+                  {isSubscribed ? '🔔' : '🔕'}
+                </Text>
+              </Animated.View>
+            </TouchableOpacity>
+          )}
+
               <View style={styles.gridRatingContainer}>
                     {show ? ( 
                                       <> <PratingStars 
-                                              rating={avgRating?.average} 
+                                              rating={avgRating?.average || 0} 
                                               showRatingText={false} 
                                               starSize={hp(1.6)}
+                                              isLoading={isLoading || avgRating?.average === undefined || avgRating?.average === null}
                                             />
-                                            <Text style={styles.gridRatingText}>
-                                              {isLoading ? '...' : `${avgRating?.average}/5`}
-                                            </Text></>
+                                            {isLoading || avgRating?.average === undefined || avgRating?.average === null ? (
+                                              <View style={styles.skeletonRatingText} />
+                                            ) : (
+                                              <Text style={styles.gridRatingText}>
+                                                {avgRating?.average}/5
+                                              </Text>
+                                            )}
+                                          </>
                                              
                                           ) : (
                                             <Text style={styles.gridRatingText}>
@@ -142,9 +327,24 @@ const OttGridCard = ({ item, router }) => {
   );
 };
 
-const OttList = ({ streams, currentUser, router, loading, hasMore, onLoadMore, onFilterPress, filterLabel, onDelete }) => {
-  // Add view mode state
-  const [viewMode, setViewMode] = useState('grid'); 
+const OttList = ({ streams, currentUser, router, loading, hasMore, onLoadMore, onFilterPress, filterLabel, onDelete, viewMode = 'grid', onToggleViewMode }) => { 
+  
+  // Helper to check if item is a series - defined at OttList level so it can be used in renderListItem
+  const isSeriesItem = (item) => {
+    // Check for old series format (from separate series table)
+    if (item?.isSeries && item?.originalId) {
+      return true;
+    }
+    // Check for new series format (from streams table with episodes)
+    if (item?.episodes && Array.isArray(item.episodes) && item.episodes.length > 0) {
+      return true;
+    }
+    // Check seriesType
+    if (item?.seriesType === 'series') {
+      return true;
+    }
+    return false;
+  };
   
   const getHeaderText = (date, endDate) => {
     // If date is null, return "COMING SOON"
@@ -154,7 +354,14 @@ const OttList = ({ streams, currentUser, router, loading, hasMore, onLoadMore, o
     const releaseDate = moment(date).startOf('day');
     const diffDays = releaseDate.diff(today, 'days');
 
+    // Check if currently streaming
+    // Case 1: Has endDate and current date is between rDate and endDate
     if (endDate && moment().isBetween(releaseDate, moment(endDate), null, '[]')) {
+      return 'NOW STREAMING';
+    }
+    
+    // Case 2: No endDate but release date has passed (streaming indefinitely)
+    if (!endDate && diffDays <= 0) {
       return 'NOW STREAMING';
     }
     
@@ -185,8 +392,6 @@ const OttList = ({ streams, currentUser, router, loading, hasMore, onLoadMore, o
     // Past dates
     // if (diffDays === 0) return 'TODAY';
     // if (diffDays === -1) return 'YESTERDAY';
-    if (diffDays >= -7) return 'COMING STREAMS';
-    if (diffDays < -7) return 'COMING STREAMS';
     return releaseDate.format('MMMM YYYY').toUpperCase();
   };
 
@@ -210,18 +415,9 @@ const OttList = ({ streams, currentUser, router, loading, hasMore, onLoadMore, o
 
   const groupedReleases = useMemo(() => {
     const grouped = {};
-    const today = moment().startOf('day');
     
-    // Filter streams where the current date is not after endDate
-    const filteredStreams = streams.filter(stream => {
-      // If there's no endDate, always show the stream
-      if (!stream.endDate) return true;
-      
-      // Don't display if current date is after endDate
-      return !today.isAfter(moment(stream.endDate));
-    });
-    
-    filteredStreams.forEach(release => {
+    // Show all streams without date-based filtering
+    streams.forEach(release => {
       const headerText = getHeaderText(release.rDate, release.endDate);
       if (!grouped[headerText]) {
         grouped[headerText] = [];
@@ -265,10 +461,11 @@ const OttList = ({ streams, currentUser, router, loading, hasMore, onLoadMore, o
       });
   }, [streams]);
 
-  // Toggle view mode between list and grid
-  const toggleViewMode = () => {
-    setViewMode(prevMode => prevMode === 'list' ? 'grid' : 'list');
-  };
+  // Toggle view mode between list and grid (use prop if provided, otherwise use local handler)
+  const toggleViewMode = onToggleViewMode || (() => {
+    // Fallback if no handler provided (shouldn't happen, but for safety)
+    console.warn('onToggleViewMode not provided to OttList');
+  });
 
   // Helper function to chunk array into groups of specified size (for grid view)
   function chunk(array, size) {
@@ -288,7 +485,7 @@ const OttList = ({ streams, currentUser, router, loading, hasMore, onLoadMore, o
       return (
         <ReleaseDateHeader 
           date={item.header} 
-          viewMode={viewMode} 
+          viewMode={viewMode || 'grid'} 
           onToggleView={toggleViewMode}
           isFirstHeader={isFirstHeader}
           onFilterPress={onFilterPress}
@@ -308,6 +505,7 @@ const OttList = ({ streams, currentUser, router, loading, hasMore, onLoadMore, o
             onDelete(itemId, seriesId);
           }
         }}
+        isSeries={isSeriesItem(item)}
       />
     );
   };
@@ -321,6 +519,7 @@ const OttList = ({ streams, currentUser, router, loading, hasMore, onLoadMore, o
             key={`grid-item-${stream.id || index}`}
             item={stream}
             router={router}
+            currentUser={currentUser}
           />
         ))}
         {/* Add placeholder items to fill the row if needed */}
@@ -346,7 +545,7 @@ const OttList = ({ streams, currentUser, router, loading, hasMore, onLoadMore, o
       <View style={styles.gridSection}>
         <ReleaseDateHeader 
           date={item.header} 
-          viewMode={viewMode} 
+          viewMode={viewMode || 'grid'} 
           onToggleView={toggleViewMode}
           isFirstHeader={isFirstHeader}
           onFilterPress={onFilterPress}
@@ -397,7 +596,7 @@ const OttList = ({ streams, currentUser, router, loading, hasMore, onLoadMore, o
 
   return (
     <>
-      {viewMode === 'list' ? (
+      {(viewMode || 'grid') === 'list' ? (
         // List View
         <FlatList
           key="list"
@@ -453,12 +652,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     position: 'relative',
     width: '100%',
+    paddingHorizontal: wp(20), // Add padding to ensure space for buttons
   },
   headerPill: {
     backgroundColor: '#424242',
     paddingHorizontal: 16,
     paddingVertical: 2,
     borderRadius: 20,
+    maxWidth: '60%', // Limit pill width to prevent touching buttons
   },
   headerText: {
     fontSize: 11,
@@ -552,5 +753,35 @@ const styles = StyleSheet.create({
     fontSize: hp(1.4),
     fontWeight: '500',
     color: '#00ac62',
+  },
+  skeletonRatingText: {
+    width: wp(8),
+    height: hp(1.4),
+    backgroundColor: 'rgba(0, 172, 98, 0.2)',
+    borderRadius: 4,
+    marginLeft: wp(1),
+  },
+  gridNotificationButton: {
+    position: 'absolute',
+    top: hp(0.5),
+    right: wp(2),
+    padding: hp(0.6),
+    borderRadius: hp(1.5),
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: hp(3),
+    minHeight: hp(3),
+    zIndex: 10,
+  },
+  gridNotificationButtonActive: {
+    backgroundColor: 'rgba(229, 9, 20, 0.6)',
+  },
+  gridNotificationIcon: {
+    fontSize: hp(1.8),
+    color: theme.colors.light || '#E0E0E0',
+  },
+  gridNotificationIconActive: {
+    color: theme.colors.primary || '#E50914',
   },
 });

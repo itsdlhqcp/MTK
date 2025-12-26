@@ -254,7 +254,7 @@ const ChatScreen = () => {
               size={hp(4)}
               rounded={theme.radius.xl}
             />
-            <Text style={styles.chatHeaderTitle}>{otherUser?.name}</Text>
+            <Text style={styles.chatHeaderTitle}>{truncateUsername(otherUser?.name || '')}</Text>
           </View>
         ),
       });

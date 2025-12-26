@@ -39,7 +39,6 @@ const EpisodeDetails = () => {
   const [episode, setEpisode] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('Section');
   const [allEpisodes, setAllEpisodes] = useState([]);
   const [loadingEpisodes, setLoadingEpisodes] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
@@ -193,53 +192,58 @@ const EpisodeDetails = () => {
     const pdfFile = section?.pdf_file;
 
     const textStyle = {
-      color: '#CCCCCC',
-      fontSize: hp(1.7)
+      color: '#E0E0E0',
+      fontSize: hp(2),
+      lineHeight: hp(3)
     };
 
     const tagsStyles = {
       div: textStyle,
-      p: textStyle,
+      p: { ...textStyle, marginBottom: hp(1.5) },
       ol: textStyle,
-      h1: { color: '#FFFFFF' },
-      h4: { color: '#FFFFFF' }
+      h1: { color: '#FFFFFF', fontSize: hp(2.8), fontWeight: 'bold', marginBottom: hp(1) },
+      h2: { color: '#FFFFFF', fontSize: hp(2.5), fontWeight: 'bold', marginBottom: hp(0.8) },
+      h3: { color: '#FFFFFF', fontSize: hp(2.2), fontWeight: '600', marginBottom: hp(0.8) },
+      h4: { color: '#FFFFFF', fontSize: hp(2), fontWeight: '600', marginBottom: hp(0.8) }
     };
 
     return (
       <View key={section?.id || index} style={styles.sectionItem}>
-        {/* Section Order Badge */}
-        <View style={styles.sectionOrderBadge}>
-          <Text style={styles.sectionOrderText}>{section?.section_order || index + 1} Section</Text>
+        {/* Chapter Header */}
+        <View style={styles.chapterHeader}>
+          <View style={styles.chapterNumberBadge}>
+            <Text style={styles.chapterNumberText}>Chapter {section?.section_order || index + 1}</Text>
+          </View>
         </View>
 
-        {/* Text Content */}
+        {/* Image File - Full Width (Storybook Style) */}
+        {imageFile && (
+          <View style={styles.fullWidthImageContainer}>
+            <Image
+              source={{ uri: getSectionFileUrl(imageFile) }}
+              style={styles.fullWidthImage}
+              resizeMode="cover"
+            />
+          </View>
+        )}
+
+        {/* Text Content - Storybook Style */}
         {textContent && (
-          <View style={styles.sectionTextContainer}>
+          <View style={styles.storyTextContainer}>
             <RenderHtml
-              contentWidth={SCREEN_WIDTH - wp(8)}
+              contentWidth={SCREEN_WIDTH - wp(10)}
               source={{ html: textContent }}
               tagsStyles={tagsStyles}
             />
           </View>
         )}
 
-        {/* Image File */}
-        {imageFile && (
-          <View style={styles.sectionMediaContainer}>
-            <Image
-              source={{ uri: getSectionFileUrl(imageFile) }}
-              style={styles.sectionImage}
-              resizeMode="contain"
-            />
-          </View>
-        )}
-
-        {/* Video File */}
+        {/* Video File - Full Width */}
         {videoFile && (
-          <View style={styles.sectionMediaContainer}>
+          <View style={styles.fullWidthVideoContainer}>
             <Video
               source={{ uri: getSectionFileUrl(videoFile) }}
-              style={styles.sectionVideo}
+              style={styles.fullWidthVideo}
               useNativeControls
               resizeMode="contain"
             />
@@ -248,16 +252,18 @@ const EpisodeDetails = () => {
 
         {/* PDF File */}
         {pdfFile && (
-          <TouchableOpacity
-            style={styles.pdfContainer}
-            onPress={() => handleOpenPDF(pdfFile)}
-            activeOpacity={0.8}
-          >
-            <View style={styles.pdfButton}>
-              <Icon name="paperclip" size={hp(3)} color={theme.colors.primary} />
-              <Text style={styles.pdfButtonText}>View PDF</Text>
-            </View>
-          </TouchableOpacity>
+          <View style={styles.pdfContainerWrapper}>
+            <TouchableOpacity
+              style={styles.pdfContainer}
+              onPress={() => handleOpenPDF(pdfFile)}
+              activeOpacity={0.8}
+            >
+              <View style={styles.pdfButton}>
+                <Icon name="paperclip" size={hp(3)} color={theme.colors.primary} />
+                <Text style={styles.pdfButtonText}>View PDF</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
         )}
       </View>
     );
@@ -440,70 +446,19 @@ const EpisodeDetails = () => {
           )}
         </View>
 
-        {/* Navigation Tabs */}
-        <View style={styles.tabsContainer}>
-          <TouchableOpacity
-            style={[styles.tab, activeTab === 'Preview' && styles.activeTab]}
-            onPress={() => setActiveTab('Preview')}
-          >
-            <Text style={[styles.tabText, activeTab === 'Preview' && styles.activeTabText]}>
-              Preview
-            </Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={[styles.tab, activeTab === 'Section' && styles.activeTab]}
-            onPress={() => setActiveTab('Section')}
-          >
-            <Text style={[styles.tabText, activeTab === 'Section' && styles.activeTabText]}>
-              Section
-            </Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={[styles.tab, activeTab === 'Readers Also Like' && styles.activeTab]}
-            onPress={() => setActiveTab('Readers Also Like')}
-          >
-            <Text style={[styles.tabText, activeTab === 'Readers Also Like' && styles.activeTabText]}>
-              Readers Also Like
-            </Text>
-          </TouchableOpacity>
+        {/* Sections Content - Storybook Style */}
+        <View style={styles.storybookContainer}>
+          {episode?.sections && episode.sections.length > 0 ? (
+            <>
+              {episode.sections.map((section, index) => renderSection(section, index))}
+            </>
+          ) : (
+            <View style={styles.emptySectionsContainer}>
+              <Text style={styles.emptySectionsText}>No chapters available for this episode.</Text>
+            </View>
+          )}
         </View>
 
-        {/* Tab Content */}
-        {activeTab === 'Section' && (
-          <View style={styles.sectionsContainer}>
-            {episode?.sections && episode.sections.length > 0 ? (
-              <>
-                <Text style={styles.sectionsTitle}>
-                  {episode.sections.length} {episode.sections.length === 1 ? 'Section' : 'Sections'}
-                </Text>
-                {episode.sections.map((section, index) => renderSection(section, index))}
-              </>
-            ) : (
-              <View style={styles.emptySectionsContainer}>
-                <Text style={styles.emptySectionsText}>No sections available for this episode.</Text>
-              </View>
-            )}
-          </View>
-        )}
-
-        {activeTab === 'Preview' && (
-          <View style={styles.previewSection}>
-            <Text style={styles.sectionTitle}>Preview</Text>
-            {episode.description && (
-              <Text style={styles.previewText}>{episode.description}</Text>
-            )}
-            {/* Add preview content here */}
-          </View>
-        )}
-
-        {activeTab === 'Readers Also Like' && (
-          <View style={styles.readersAlsoLikeSection}>
-            <Text style={styles.sectionTitle}>Readers Also Like</Text>
-            {/* Add recommendations here */}
-          </View>
-        )}
       </ScrollView>
     </ScreenWrapper>
   );
@@ -843,6 +798,9 @@ const styles = StyleSheet.create({
     fontSize: hp(1.7),
     lineHeight: hp(2.5),
   },
+  storybookContainer: {
+    backgroundColor: '#121212',
+  },
   sectionsContainer: {
     padding: wp(4),
   },
@@ -853,26 +811,48 @@ const styles = StyleSheet.create({
     marginBottom: hp(2),
   },
   sectionItem: {
-    marginBottom: hp(3),
+    marginBottom: hp(4),
+    backgroundColor: '#1A1A1A',
+    paddingBottom: hp(3),
+  },
+  chapterHeader: {
+    paddingHorizontal: wp(5),
+    paddingTop: hp(3),
     paddingBottom: hp(2),
-    borderBottomWidth: 1,
-    borderBottomColor: '#2D2D2D',
+    backgroundColor: '#121212',
   },
-  sectionOrderBadge: {
+  chapterNumberBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.radius.sm,
-    paddingHorizontal: wp(3),
-    paddingVertical: hp(0.5),
-    marginBottom: hp(1.5),
+    backgroundColor: 'rgba(0, 149, 246, 0.2)',
+    borderWidth: 1,
+    borderColor: theme.colors.primary,
+    borderRadius: theme.radius.lg,
+    paddingHorizontal: wp(4),
+    paddingVertical: hp(0.8),
   },
-  sectionOrderText: {
-    color: '#FFFFFF',
-    fontSize: hp(1.4),
-    fontWeight: '600',
+  chapterNumberText: {
+    color: theme.colors.primary,
+    fontSize: hp(1.6),
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  storyTextContainer: {
+    paddingHorizontal: wp(5),
+    paddingVertical: hp(2),
+    backgroundColor: '#1A1A1A',
   },
   sectionTextContainer: {
     marginBottom: hp(1.5),
+  },
+  fullWidthImageContainer: {
+    width: '100%',
+    marginVertical: hp(2),
+    backgroundColor: '#000000',
+  },
+  fullWidthImage: {
+    width: '100%',
+    height: SCREEN_HEIGHT * 0.5,
+    backgroundColor: '#000000',
   },
   sectionMediaContainer: {
     marginVertical: hp(1.5),
@@ -885,9 +865,23 @@ const styles = StyleSheet.create({
     minHeight: hp(20),
     maxHeight: hp(40),
   },
+  fullWidthVideoContainer: {
+    width: '100%',
+    marginVertical: hp(2),
+    backgroundColor: '#000000',
+  },
+  fullWidthVideo: {
+    width: '100%',
+    height: SCREEN_HEIGHT * 0.4,
+  },
   sectionVideo: {
     width: '100%',
     height: hp(25),
+  },
+  pdfContainerWrapper: {
+    paddingHorizontal: wp(5),
+    paddingVertical: hp(2),
+    backgroundColor: '#1A1A1A',
   },
   pdfContainer: {
     marginVertical: hp(1.5),

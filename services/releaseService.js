@@ -101,6 +101,125 @@ export const deleteRelease = async (releaseId) => {
       return { success: false, msg: "Release ID is required" };
     }
 
+    // 1) Cleanup critic reviews and their replies for this release
+    try {
+      const { data: criticReviews, error: criticError } = await supabase
+        .from('reviews')
+        .select('id')
+        .eq('releaseId', releaseId);
+
+      if (criticError) {
+        console.error("Error fetching critic reviews for deleteRelease:", criticError);
+      } else if (criticReviews && criticReviews.length > 0) {
+        const reviewIds = criticReviews.map(r => r.id);
+
+        // Delete replies to those reviews
+        if (reviewIds.length > 0) {
+          const { error: replyError } = await supabase
+            .from('replyReviews')
+            .delete()
+            .in('reviewId', reviewIds);
+
+          if (replyError) {
+            console.error("Error deleting review replies in deleteRelease:", replyError);
+          }
+
+          // Delete the reviews themselves
+          const { error: deleteCriticError } = await supabase
+            .from('reviews')
+            .delete()
+            .in('id', reviewIds);
+
+          if (deleteCriticError) {
+            console.error("Error deleting critic reviews in deleteRelease:", deleteCriticError);
+          }
+        }
+      }
+    } catch (cleanupError) {
+      console.error("Unexpected error cleaning up critic reviews in deleteRelease:", cleanupError);
+    }
+
+    // 2) Cleanup people reviews (peoplesReview) and all their related data
+    try {
+      const { data: peopleReviews, error: peopleError } = await supabase
+        .from('peoplesReview')
+        .select('id')
+        .eq('releaseId', releaseId);
+
+      if (peopleError) {
+        console.error("Error fetching peoplesReview for deleteRelease:", peopleError);
+      } else if (peopleReviews && peopleReviews.length > 0) {
+        const peopleReviewIds = peopleReviews.map(r => r.id);
+
+        // Delete upvotes / downvotes linked to these people reviews
+        if (peopleReviewIds.length > 0) {
+          const { error: upvoteError } = await supabase
+            .from('threviewupvote')
+            .delete()
+            .in('peoplesReviewId', peopleReviewIds);
+
+          if (upvoteError) {
+            console.error("Error deleting people review upvotes in deleteRelease:", upvoteError);
+          }
+
+          const { error: downvoteError } = await supabase
+            .from('threviewdownvote')
+            .delete()
+            .in('peoplesReviewId', peopleReviewIds);
+
+          if (downvoteError) {
+            console.error("Error deleting people review downvotes in deleteRelease:", downvoteError);
+          }
+
+          // Find replies for these people reviews
+          const { data: peopleReplies, error: repliesError } = await supabase
+            .from('replyPeopleReviews')
+            .select('id')
+            .in('peoplesReviewId', peopleReviewIds);
+
+          if (repliesError) {
+            console.error("Error fetching replyPeopleReviews in deleteRelease:", repliesError);
+          } else if (peopleReplies && peopleReplies.length > 0) {
+            const replyIds = peopleReplies.map(r => r.id);
+
+            // Delete likes on those replies
+            if (replyIds.length > 0) {
+              const { error: replyLikesError } = await supabase
+                .from('pepreplylikes')
+                .delete()
+                .in('peoplesReviewReplyId', replyIds);
+
+              if (replyLikesError) {
+                console.error("Error deleting pepreplylikes in deleteRelease:", replyLikesError);
+              }
+            }
+
+            // Delete the reply records themselves
+            const { error: deleteRepliesError } = await supabase
+              .from('replyPeopleReviews')
+              .delete()
+              .in('id', replyIds);
+
+            if (deleteRepliesError) {
+              console.error("Error deleting replyPeopleReviews in deleteRelease:", deleteRepliesError);
+            }
+          }
+
+          // Finally delete the peoplesReview rows
+          const { error: deletePeopleError } = await supabase
+            .from('peoplesReview')
+            .delete()
+            .in('id', peopleReviewIds);
+
+          if (deletePeopleError) {
+            console.error("Error deleting peoplesReview in deleteRelease:", deletePeopleError);
+          }
+        }
+      }
+    } catch (cleanupError) {
+      console.error("Unexpected error cleaning up peoplesReview in deleteRelease:", cleanupError);
+    }
+
     const { error } = await supabase
       .from('releases')
       .delete()
@@ -611,6 +730,36 @@ const { data, error } = await supabase
       console.log('people review upvote error: ', error);
         return {success: false, msg: error?.message};
     }
+    
+    // Send notification to review author if voter is not the author
+    if (upvote.userId && upvote.peoplesReviewId) {
+      try {
+        // Fetch review to get author's userId
+        const { data: reviewData } = await supabase
+          .from('peoplesReview')
+          .select('userId, releaseId')
+          .eq('id', upvote.peoplesReviewId)
+          .single();
+        
+        if (reviewData && reviewData.userId !== upvote.userId) {
+          // Dynamic import to avoid circular dependency
+          const notificationModule = await import('./notificationService');
+          await notificationModule.createNotifications({
+            senderId: upvote.userId,
+            receiverId: reviewData.userId,
+            title: 'upvoted your review',
+            data: JSON.stringify({ 
+              reviewId: upvote.peoplesReviewId,
+              releaseId: reviewData.releaseId 
+            })
+          });
+        }
+      } catch (notifError) {
+        console.error('Error sending upvote notification:', notifError);
+        // Don't fail the upvote if notification fails
+      }
+    }
+    
      return {success: true, data}; 
   }catch(error){
     console.log('got upvote create error', error);
@@ -655,6 +804,36 @@ export const removePeopleReviewUpvote = async (peoplesReviewId, userId) => {
           console.log('people review downvote error: ', error);
             return {success: false, msg: error?.message};
         }
+        
+        // Send notification to review author if voter is not the author
+        if (downupvote.userId && downupvote.peoplesReviewId) {
+          try {
+            // Fetch review to get author's userId
+            const { data: reviewData } = await supabase
+              .from('peoplesReview')
+              .select('userId, releaseId')
+              .eq('id', downupvote.peoplesReviewId)
+              .single();
+            
+            if (reviewData && reviewData.userId !== downupvote.userId) {
+              // Dynamic import to avoid circular dependency
+              const notificationModule = await import('./notificationService');
+              await notificationModule.createNotifications({
+                senderId: downupvote.userId,
+                receiverId: reviewData.userId,
+                title: 'downvoted your review',
+                data: JSON.stringify({ 
+                  reviewId: downupvote.peoplesReviewId,
+                  releaseId: reviewData.releaseId 
+                })
+              });
+            }
+          } catch (notifError) {
+            console.error('Error sending downvote notification:', notifError);
+            // Don't fail the downvote if notification fails
+          }
+        }
+        
          return {success: true, data}; 
       }catch(error){
         console.log('got downvote create error', error);

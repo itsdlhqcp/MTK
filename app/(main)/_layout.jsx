@@ -25,15 +25,24 @@ export default function TabLayout() {
   // Cache timeout in milliseconds
   const AVATAR_CACHE_TIMEOUT = 30 * 60 * 1000; // 30 minutes
   
-  // Tab routes in order (including home tab)
-  const tabRoutes = ['home', 'feeds', 'upcoming', 'profile'];
+  // Tab routes in order (home is hidden but still accessible for redirects)
+  const tabRoutes = ['feeds', 'upcoming', 'profile'];
   const allTabRoutes = ['home', 'feeds', 'upcoming', 'profile'];
   
   // Get current tab index
   const getCurrentTabIndex = () => {
-    const currentRoute = pathname.split('/')[1] || 'home';
-    return tabRoutes.indexOf(currentRoute);
+    const currentRoute = pathname.split('/')[1] || 'feeds';
+    // Map 'home' to 'feeds' for tab index calculation
+    const routeForIndex = currentRoute === 'home' ? 'feeds' : currentRoute;
+    return tabRoutes.indexOf(routeForIndex);
   };
+  
+  // Redirect home to feeds
+  useEffect(() => {
+    if (pathname === '/home' || pathname === '/(main)/home') {
+      router.replace('/feeds');
+    }
+  }, [pathname, router]);
 
   // Load and cache avatar image
   useEffect(() => {
@@ -195,13 +204,20 @@ export default function TabLayout() {
                     color={focused ? 'white' : '#959695'} 
                   />
                 ),
+                href: null, // Hide from tab bar
               }}
             />
             <Tabs.Screen
               name="feeds"
               options={{
-                title: 'Spotlight',
-                tabBarIcon: ({ color }) => <Icon name="spotlight" size={27} color={'#959695'} />,
+                title: 'Home',
+                tabBarIcon: ({ color, focused }) => (
+                  <IconSymbol 
+                    name="house.fill" 
+                    size={22} 
+                    color={focused ? 'white' : '#959695'} 
+                  />
+                ),
               }}
             />
             <Tabs.Screen

@@ -7,7 +7,7 @@ import ScreenWrapper from '../components/ScreenWrapper';
 import Avatar from '../components/Avatar';
 import Icon from '@/assets/icons';
 import theme from '../constants/theme';
-import { hp, wp } from '../helpers/common';
+import { hp, wp, truncateUsername } from '../helpers/common';
 import MLoading from '../components/MaterialLoader';
 import { friendRequestService } from '../services/requestService';
 import { profileService } from '../services/profileService';
@@ -358,7 +358,7 @@ const FriendProfileHeader = ({
     <View style={[styles.profileContainer, { backgroundColor: theme.colors.background }]}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={[styles.username, { color: theme.colors.textDark }]}>{profileUser?.name}</Text>
+        <Text style={[styles.username, { color: theme.colors.textDark }]}>{truncateUsername(profileUser?.name || '')}</Text>
         <View style={styles.toppanel}>
           <TouchableOpacity 
             style={styles.backButton} 
@@ -410,8 +410,16 @@ const FriendProfileHeader = ({
 
       {/* Bio Section */}
       <View style={styles.bioSection}>
-        <Text style={[styles.bioName, { color: theme.colors.textDark }]}>{profileUser?.name}</Text>
-        {profileUser?.bio && <Text style={[styles.bio, { color: theme.colors.text }]}>{profileUser.bio}</Text>}
+        <Text style={[styles.bioName, { color: theme.colors.textDark }]}>{truncateUsername(profileUser?.name || '')}</Text>
+        {profileUser?.bio && (
+          <Text 
+            style={[styles.bio, { color: theme.colors.text }]} 
+            numberOfLines={2}
+            ellipsizeMode="tail"
+          >
+            {profileUser.bio}
+          </Text>
+        )}
         <Text style={[styles.joinedDate, { color: theme.colors.textLight }]}>Joined {formattedDate}</Text>
         {profileUser?.address && <Text style={[styles.joinedDate, { color: theme.colors.textLight }]}>{profileUser.address}</Text>}
       </View>
@@ -521,6 +529,7 @@ const styles = StyleSheet.create({
   bio: {
     fontSize: hp(1.8),
     marginBottom: hp(1),
+    maxWidth: wp(90), // Limit width to ensure 26 chars per line
   },
   joinedDate: {
     fontSize: hp(1.6),
@@ -649,7 +658,7 @@ const styles = StyleSheet.create({
 // import Avatar from '../components/Avatar';
 // import Icon from '@/assets/icons';
 // import theme from '../constants/theme';
-// import { hp, wp } from '../helpers/common';
+// import { hp, wp, truncateUsername } from '../helpers/common';
 // import MLoading from '../components/MaterialLoader';
 // import { friendRequestService } from '../services/requestService';
 // import { profileService } from '../services/profileService';
@@ -1378,7 +1387,7 @@ const styles = StyleSheet.create({
 // import Avatar from '../components/Avatar';
 // import Icon from '@/assets/icons';
 // import theme from '../constants/theme';
-// import { hp, wp } from '../helpers/common';
+// import { hp, wp, truncateUsername } from '../helpers/common';
 // import MLoading from '../components/MaterialLoader';
 // import { friendRequestService } from '../services/requestService';
 // import { profileService } from '../services/profileService';

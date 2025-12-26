@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import React, { useState, useCallback } from 'react';
-import { hp, wp } from '@/helpers/common';
+import { hp, wp, truncateUsername } from '@/helpers/common';
 import theme from '../../../constants/theme';
 import Icon from '@/assets/icons';
 import Avatar from '../../../components/Avatar';
@@ -80,7 +80,7 @@ const MessageTab = () => {
       />
       <View style={styles.conversationContent}>
         <View style={styles.conversationHeader}>
-          <Text style={styles.username}>{item.user?.name}</Text>
+          <Text style={styles.username}>{truncateUsername(item.user?.name || '')}</Text>
           <Text style={styles.timestamp}>{formatTimestamp(item.lastMessage && item.lastMessage.lastMessageTime)}</Text>
         </View>
         <Text 

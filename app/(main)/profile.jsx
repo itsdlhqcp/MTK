@@ -5,7 +5,7 @@ import { UserStorageService } from '../../Storage/UserStorageService';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import theme from '../../constants/theme';
 import ScreenWrapper from '../../components/ScreenWrapper';
-import { wp, hp } from '../../helpers/common';
+import { wp, hp, truncateUsername } from '../../helpers/common';
 import Icon from '@/assets/icons';
 import { supabase } from '../../lib/supabase';
 import Avatar from '../../components/Avatar';
@@ -50,7 +50,9 @@ const Profile = () => {
   const [profileStats, setProfileStats] = useState({
     postCount: 0,
     friendsCount: 0,
-    reviewCount: 0
+    reviewCount: 0,
+    followersCount: 0,
+    followingCount: 0
   });
   const activeTheme = colorScheme === 'dark' ? darkTheme : darkTheme;
   const params = useLocalSearchParams();
@@ -252,6 +254,10 @@ const Profile = () => {
       // Fetch friends count
       const friendsCountResult = await friendRequestService.getFriendsCount();
       
+      // Fetch followers and following counts
+      const followersCountResult = await friendRequestService.getFollowersCount();
+      const followingCountResult = await friendRequestService.getFollowingCount();
+      
       // Fetch reviews count from dpeopreviews table
       const { count: dpeopreviewsCount, error: dpeopreviewsError } = await supabase
         .from('dpeopreviews')
@@ -271,7 +277,9 @@ const Profile = () => {
         const newStats = {
           postCount: count || 0,
           friendsCount: friendsCountResult.success ? friendsCountResult.count : 0,
-          reviewCount: totalReviewsCount
+          reviewCount: totalReviewsCount,
+          followersCount: followersCountResult.success ? followersCountResult.count : 0,
+          followingCount: followingCountResult.success ? followingCountResult.count : 0
         };
         
         // 1. Update local state
@@ -508,9 +516,12 @@ const Profile = () => {
             postCount={profileStats.postCount}
             friendsCount={profileStats.friendsCount}
             reviewCount={profileStats.reviewCount}
+            followersCount={profileStats.followersCount}
+            followingCount={profileStats.followingCount}
             isLoading={profileLoading}
             lastUpdated={profileDataTimestamp ? new Date(profileDataTimestamp).toLocaleTimeString() : null}
             offlineMode={offlineMode}
+            showToast={showToast}
           />
         )}
         
@@ -527,6 +538,7 @@ const Profile = () => {
             navigation={router}
             offlineMode={offlineMode}
             hasPostsAvailable={hasPostsAvailable} // Pass the posts availability flag
+            userId={currentUser?.id} // Pass userId to prevent double loading
           />
         </View>
       </ScrollView>
@@ -543,7 +555,7 @@ const StatsItem = ({ label, value, theme, isLoading }) => (
   </View>
 );
 
-const InstagramProfile = ({ user, router, handleLogout, theme, postCount, friendsCount, reviewCount, isLoading, offlineMode }) => {
+const InstagramProfile = ({ user, router, handleLogout, theme, postCount, friendsCount, reviewCount, followersCount, followingCount, isLoading, offlineMode, showToast }) => {
   // Safety check: Don't render if user is not available
   if (!user) {
     return (
@@ -605,7 +617,7 @@ const InstagramProfile = ({ user, router, handleLogout, theme, postCount, friend
     <View style={[styles.profileContainer, { backgroundColor: theme.colors.background }]}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={[styles.username, { color: theme.colors.textDark }]}>{user?.name || user?.orgname || 'User'}</Text>
+        <Text style={[styles.username, { color: theme.colors.textDark }]}>{truncateUsername(user?.name || user?.orgname || 'User')}</Text>
 
         {/* {!offlineMode && (
           <>
@@ -695,19 +707,61 @@ const InstagramProfile = ({ user, router, handleLogout, theme, postCount, friend
               isLoading={isLoading}
             />
           )}
-          <StatsItem 
-            value={friendsCount?.toString() || "0"} 
-            label="Friends" 
-            theme={theme} 
-            isLoading={isLoading}
-          />
+          <TouchableOpacity 
+            onPress={() => {
+              const count = followersCount || 0;
+              if (count === 0) {
+                showToast('info', 'You have no followers');
+              } else {
+                router.push({
+                  pathname: '/messenger',
+                  params: { tab: 'requests', subTab: 'followers' }
+                });
+              }
+            }}
+          >
+            <StatsItem 
+              value={followersCount?.toString() || "0"} 
+              label="Followers" 
+              theme={theme} 
+              isLoading={isLoading}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            onPress={() => {
+              const count = followingCount || 0;
+              if (count === 0) {
+                showToast('info', 'You have no followings');
+              } else {
+                router.push({
+                  pathname: '/messenger',
+                  params: { tab: 'requests', subTab: 'following' }
+                });
+              }
+            }}
+          >
+            <StatsItem 
+              value={followingCount?.toString() || "0"} 
+              label="Following" 
+              theme={theme} 
+              isLoading={isLoading}
+            />
+          </TouchableOpacity>
         </View>
       </View>
 
       {/* Bio Section */}
       <View style={styles.bioSection}>
-        <Text style={[styles.bioName, { color: theme.colors.textDark }]}>{user?.orgname || user?.name || 'User'}</Text>
-        {user?.bio && <Text style={[styles.bio, { color: theme.colors.text }]}>{user.bio}</Text>}
+        <Text style={[styles.bioName, { color: theme.colors.textDark }]}>{truncateUsername(user?.orgname || user?.name || 'User')}</Text>
+        {user?.bio && (
+          <Text 
+            style={[styles.bio, { color: theme.colors.text }]} 
+            numberOfLines={2}
+            ellipsizeMode="tail"
+          >
+            {user.bio}
+          </Text>
+        )}
         <Text style={[styles.joinedDate, { color: theme.colors.textLight }]}>Joined {formattedDate}</Text>
         {user?.address && <Text style={[styles.joinedDate, { color: theme.colors.textLight }]}>{user.address}</Text>}
       </View>
@@ -815,6 +869,7 @@ const styles = StyleSheet.create({
   bio: {
     fontSize: hp(1.6),
     marginBottom: hp(0.5),
+    maxWidth: wp(90), // Limit width to ensure 26 chars per line
   },
   joinedDate: {
     fontSize: hp(1.4),

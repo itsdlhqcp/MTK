@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { createNotifications } from './notificationService';
 
 export const friendRequestService = {
   // Send a friend request to another user
@@ -33,6 +34,20 @@ export const friendRequestService = {
       if (error) {
         console.error('Error sending friend request:', error);
         return { success: false, message: error.message };
+      }
+
+      // Create notification for friend request
+      try {
+        const notify = {
+          senderId: senderId,
+          receiverId: receiverId,
+          title: 'sent you a friend request',
+          data: JSON.stringify({ requestId: data[0]?.id })
+        };
+        await createNotifications(notify);
+      } catch (notifyError) {
+        console.error('Error creating friend request notification:', notifyError);
+        // Don't fail the friend request if notification fails
       }
       
       return { success: true, data };
@@ -280,6 +295,112 @@ export const friendRequestService = {
     } catch (error) {
       console.error('Error in getFriendsCount:', error);
       return { success: false, message: 'Failed to count friends' };
+    }
+  },
+
+  // Get followers (people who sent you friend requests that you accepted)
+  getFollowers: async () => {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user.id;
+      
+      // Get friends where user was the receiver (they sent you a request)
+      const { data: followers, error } = await supabase
+        .from('friend_requests')
+        .select(`
+          sender:sender_id(id, name, image, bio)
+        `)
+        .eq('receiver_id', userId)
+        .eq('status', 'accepted');
+        
+      if (error) {
+        console.error('Error fetching followers:', error);
+        return { success: false, message: error.message };
+      }
+      
+      const followersList = followers?.map(req => req.sender) || [];
+      
+      return { success: true, data: followersList };
+    } catch (error) {
+      console.error('Error in getFollowers:', error);
+      return { success: false, message: 'Failed to fetch followers' };
+    }
+  },
+
+  // Get following (people you sent friend requests to that were accepted)
+  getFollowing: async () => {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user.id;
+      
+      // Get friends where user was the sender (you sent them a request)
+      const { data: following, error } = await supabase
+        .from('friend_requests')
+        .select(`
+          receiver:receiver_id(id, name, image, bio)
+        `)
+        .eq('sender_id', userId)
+        .eq('status', 'accepted');
+        
+      if (error) {
+        console.error('Error fetching following:', error);
+        return { success: false, message: error.message };
+      }
+      
+      const followingList = following?.map(req => req.receiver) || [];
+      
+      return { success: true, data: followingList };
+    } catch (error) {
+      console.error('Error in getFollowing:', error);
+      return { success: false, message: 'Failed to fetch following' };
+    }
+  },
+
+  // Get followers count
+  getFollowersCount: async () => {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user.id;
+      
+      const { count, error } = await supabase
+        .from('friend_requests')
+        .select('*', { count: 'exact' })
+        .eq('receiver_id', userId)
+        .eq('status', 'accepted');
+        
+      if (error) {
+        console.error('Error counting followers:', error);
+        return { success: false, message: 'Failed to count followers' };
+      }
+      
+      return { success: true, count: count || 0 };
+    } catch (error) {
+      console.error('Error in getFollowersCount:', error);
+      return { success: false, message: 'Failed to count followers' };
+    }
+  },
+
+  // Get following count
+  getFollowingCount: async () => {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user.id;
+      
+      const { count, error } = await supabase
+        .from('friend_requests')
+        .select('*', { count: 'exact' })
+        .eq('sender_id', userId)
+        .eq('status', 'accepted');
+        
+      if (error) {
+        console.error('Error counting following:', error);
+        return { success: false, message: 'Failed to count following' };
+      }
+      
+      return { success: true, count: count || 0 };
+    } catch (error) {
+      console.error('Error in getFollowingCount:', error);
+      return { success: false, message: 'Failed to count following' };
     }
   }
 

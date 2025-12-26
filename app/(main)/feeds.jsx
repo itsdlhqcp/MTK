@@ -1,4 +1,4 @@
-import { Text, Alert, View, StyleSheet, FlatList, RefreshControl, TouchableOpacity, Pressable} from 'react-native'
+import { Text, Alert, View, StyleSheet, FlatList, RefreshControl, TouchableOpacity, Pressable, Modal, Animated, Dimensions, PanResponder, ScrollView } from 'react-native'
 import React, { useEffect, useRef, useState, memo, useCallback, useMemo } from 'react'
 import { useRouter } from 'expo-router'
 import theme from '../../constants/theme'
@@ -6,8 +6,9 @@ import { useAuth } from '../../contexts/AuthContext'
 import ScreenWrapper from '@/components/ScreenWrapper'
 import { supabase } from '../../lib/supabase'
 import { wp, hp } from '@/helpers/common'
-import { fetchPosts, markPostAsViewed, getUnwatchedPostsCount, syncPendingViews } from '../../services/postService'
+import { fetchPosts, fetchNewPostsSince, markPostAsViewed, getUnwatchedPostsCount, syncPendingViews } from '../../services/postService'
 import { getUserData } from '../../services/userServices'
+import { getLastSeenPostTimestamp, updateLastSeenPostTimestamp, storeLastSeenPostTimestamp } from '../../services/timestampService'
 import FeedLoader from '../../components/FeedLoader'
 import { ScrollView as GestureScrollView } from 'react-native-gesture-handler';
 import { useFocusEffect } from '@react-navigation/native';
@@ -17,6 +18,12 @@ import { useToast } from '../../contexts/ToastContext'
 import CustomDotIndicator from '../../components/CutomDotIndicator';
 import Icon from '../../assets/icons'
 import { friendRequestService } from '../../services/requestService'
+import { adminIds } from '../../constants/admin'
+import UserSuggestion from '../../components/UserSuggestion'
+import Reviews from '../../components/Reviews'
+import WatchNow from '../../components/WatchNow'
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const MemoizedPostCard = memo(({ item, currentUser, router, isVisible, onPostViewed }) => {
   const hasBeenViewed = useRef(false);
@@ -90,16 +97,195 @@ const EmptyListComponent = memo(({ loading }) => {
   );
 });
 
+// Side Navbar Component
+const SideNavbar = memo(({ visible, onClose, router, setIsNavigating, isNavigating, isadmin, slideAnim, panResponder, onLogoutPress }) => {
+  const handleNavItemPress = (path) => {
+    if (!isNavigating) {
+      setIsNavigating(true);
+      router.push(path);
+      onClose();
+    }
+  };
+
+  return (
+    <Modal
+      visible={visible}
+      transparent={true}
+      animationType="none"
+      onRequestClose={onClose}
+    >
+      <View style={styles.sideNavOverlay} pointerEvents="box-none">
+        <TouchableOpacity 
+          style={styles.sideNavBackdrop}
+          activeOpacity={1}
+          onPress={onClose}
+        />
+        <Animated.View 
+          style={[
+            styles.sideNavContainer,
+            {
+              transform: [{ translateX: slideAnim }]
+            }
+          ]}
+          {...panResponder.panHandlers}
+        >
+          <View style={styles.sideNavHeader}>
+            <Text style={styles.sideNavTitle}>Menu</Text>
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+              <Icon name="close" size={hp(2.5)} color='white' />
+            </TouchableOpacity>
+          </View>
+          
+          <ScrollView style={styles.sideNavContent} showsVerticalScrollIndicator={false}>
+            {/* Community Tab */}
+            <TouchableOpacity 
+              style={styles.sideNavItem}
+              onPress={() => handleNavItemPress('community')}
+              disabled={true}
+            >
+              <View style={styles.sideNavItemContent}>
+                <Icon name="community" size={hp(2.8)} color='white' />
+                <Text style={styles.sideNavItemText}>Community</Text>
+                <Text style={styles.comingSoonBadge}>Coming Soon</Text>
+              </View>
+            </TouchableOpacity>
+            
+            {/* Library Tab */}
+            <TouchableOpacity 
+              style={styles.sideNavItem}
+              onPress={() => handleNavItemPress('library')}
+              disabled={isNavigating}
+            >
+              <View style={styles.sideNavItemContent}>
+                <Icon name="library" size={hp(2.8)} color='white' />
+                <Text style={styles.sideNavItemText}>Library</Text>
+              </View>
+            </TouchableOpacity>
+            
+            {/* Admin Only Tabs */}
+            {isadmin && (
+              <>
+                {/* Add Twist Tab */}
+                <TouchableOpacity 
+                  style={styles.sideNavItem}
+                  onPress={() => handleNavItemPress('addTwist')}
+                  disabled={isNavigating}
+                >
+                  <View style={styles.sideNavItemContent}>
+                    <Icon name="plus" size={hp(2.8)} color='white' />
+                    <Text style={styles.sideNavItemText}>Create Post</Text>
+                  </View>
+                </TouchableOpacity>
+                
+                {/* Poll Screen Tab */}
+                <TouchableOpacity 
+                  style={styles.sideNavItem}
+                  onPress={() => handleNavItemPress('pollScreen')}
+                  disabled={isNavigating}
+                >
+                  <View style={styles.sideNavItemContent}>
+                    <Icon name="rocket" size={hp(2.8)} color={theme.colors.blue} />
+                    <Text style={styles.sideNavItemText}>Create Poll</Text>
+                  </View>
+                </TouchableOpacity>
+              </>
+            )}
+          </ScrollView>
+          
+          {/* Settings and Logout Buttons at Bottom */}
+          <View style={styles.sideNavFooter}>
+            {/* Settings Tab */}
+            <TouchableOpacity 
+              style={styles.sideNavItem}
+              onPress={() => handleNavItemPress('/profileSettings')}
+              disabled={isNavigating}
+            >
+              <View style={styles.sideNavItemContent}>
+                <Icon name="preferances" size={hp(2.8)} color='white' />
+                <Text style={styles.sideNavItemText}>Settings</Text>
+              </View>
+            </TouchableOpacity>
+            
+            {/* Logout Button */}
+            <TouchableOpacity 
+              style={styles.sideNavLogoutItem}
+              onPress={onLogoutPress}
+              disabled={isNavigating}
+            >
+              <View style={styles.sideNavItemContent}>
+                <Icon name="lgout" size={hp(2.8)} color='#FF3B30' />
+                <Text style={[styles.sideNavItemText, styles.sideNavLogoutText]}>Logout</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+      </View>
+    </Modal>
+  );
+});
+
 // Memoized Header component
-const Header = memo(({ title, notificationCount, setNotificationCount, router, unwatchedCount, showOnlyUnwatched, handleToggleFilter, onFilterIconPress, requestCount, setIsNavigating, isNavigating }) => {
+const Header = memo(({ title, notificationCount, setNotificationCount, router, unwatchedCount, showOnlyUnwatched, handleToggleFilter, onFilterIconPress, requestCount, setIsNavigating, isNavigating, onMenuPress }) => {
   return (
     <View style={styles.header}>
-      <Text style={styles.title}>{title}</Text>
+      <Pressable 
+        style={styles.titleContainer}
+        onPress={onMenuPress}
+      >
+        <Text style={styles.title}>{title}</Text>
+      </Pressable>
       
       <View style={styles.headerActions}>
+        {/* Search User Button */}
+        <Pressable 
+          disabled={isNavigating}
+          onPress={() => {
+            if (!isNavigating) {
+              setIsNavigating(true);
+              router.push('find');
+            }
+          }}
+          style={styles.iconContainer}
+        >
+          <Icon name="addfriend" size={hp(3.3)} color='white' />
+        </Pressable>
+        {/* Notification Button */}
+        <Pressable 
+          disabled={isNavigating}
+          onPress={() => {
+            if (!isNavigating) {
+              setIsNavigating(true);
+              router.push('/messenger');
+            }
+          }}
+          style={styles.iconContainer}
+        >
+          <Icon name="notsqr" size={hp(3.3)} color='white' />
+          {requestCount > 0 && (
+            <View style={styles.badgeContainer}>
+              <Text style={styles.badgeText}>
+                {requestCount > 99 ? '99+' : requestCount}
+              </Text>
+            </View>
+          )}
+        </Pressable>
         <TouchableOpacity onPress={onFilterIconPress}>
           <Icon name="filter" size={hp(3.3)} color='white' />
         </TouchableOpacity>
+      </View>
+    </View>
+  );
+});
+
+// Component to show "You have covered all feeds" tag
+const AllFeedsCoveredTag = memo(() => {
+  return (
+    <View style={styles.allFeedsCoveredContainer}>
+      <View style={styles.allFeedsCoveredTag}>
+        <View style={styles.allFeedsCoveredIconContainer}>
+          <Text style={styles.allFeedsCoveredIcon}>✓</Text>
+        </View>
+        <Text style={styles.allFeedsCoveredText}>You have covered all feeds</Text>
       </View>
     </View>
   );
@@ -141,7 +327,7 @@ const Header = memo(({ title, notificationCount, setNotificationCount, router, u
  
 
 const Home = () => {
-    const {user, setAuth, navigationGuard} = useAuth();
+    const {user, setAuth, navigationGuard, logout} = useAuth();
     const router = useRouter();
     
     // Memoize configuration objects to prevent unnecessary recreations
@@ -154,10 +340,157 @@ const Home = () => {
     }, []);
     
     const [visibleItems, setVisibleItems] = useState([]);
+    const [sideNavVisible, setSideNavVisible] = useState(false);
+    const [logoutAlertVisible, setLogoutAlertVisible] = useState(false);
+    const slideAnim = useRef(new Animated.Value(-SCREEN_WIDTH * 0.8)).current;
+    const dragX = useRef(0);
+    const isDragging = useRef(false);
+    const NAVBAR_WIDTH = SCREEN_WIDTH * 0.8;
   
     const onViewableItemsChanged = useRef(({ viewableItems }) => {
       setVisibleItems(viewableItems.map(item => item.item?.id));
     }).current;
+
+    useFocusEffect(
+      React.useCallback(() => {
+        setIsNavigating(false);
+        // Close side navbar when page loses focus
+        setSideNavVisible(false);
+      }, [])
+    );
+
+    // PanResponder for dragging the navbar
+    const panResponder = useMemo(() => PanResponder.create({
+      onStartShouldSetPanResponder: (evt, gestureState) => {
+        // Don't respond to taps when navbar is open - only to drag gestures
+        if (sideNavVisible) {
+          return false;
+        }
+        
+        // Don't capture if this is likely a button tap - check if there are interactive elements
+        // We'll let onMoveShouldSetPanResponder handle the actual gesture detection
+        return false;
+      },
+      onStartShouldSetPanResponderCapture: (evt, gestureState) => {
+        // Don't aggressively capture - let buttons handle their own touches first
+        return false;
+      },
+      onMoveShouldSetPanResponder: (evt, gestureState) => {
+        // More lenient detection for horizontal swipes
+        const startX = evt.nativeEvent.pageX;
+        const isFromLeftEdge = startX < 40;
+        const isHorizontalSwipe = Math.abs(gestureState.dx) > Math.abs(gestureState.dy) * 1.5; // More strict horizontal requirement
+        const hasMinimumMovement = Math.abs(gestureState.dx) > 20; // Increased threshold to avoid capturing button taps
+        
+        // If navbar is open, only respond to significant drag gestures (not taps)
+        // Require more movement to distinguish drags from taps
+        if (sideNavVisible) {
+          const significantMovement = Math.abs(gestureState.dx) > 15; // Higher threshold for drags
+          return isHorizontalSwipe && significantMovement;
+        }
+        
+        // Only respond to clear swipe gestures from left edge (not taps)
+        // Require significant horizontal movement to distinguish from button taps
+        if (isFromLeftEdge && gestureState.dx > 0 && hasMinimumMovement && isHorizontalSwipe) {
+          return true;
+        }
+        
+        return false;
+      },
+      onMoveShouldSetPanResponderCapture: (evt, gestureState) => {
+        // Only capture clear swipe gestures, not taps
+        const startX = evt.nativeEvent.pageX;
+        const isFromLeftEdge = startX < 40;
+        const isHorizontalSwipe = Math.abs(gestureState.dx) > Math.abs(gestureState.dy) * 1.5; // More strict
+        const isRightwardSwipe = gestureState.dx > 20; // Require significant movement
+        
+        return isFromLeftEdge && isHorizontalSwipe && isRightwardSwipe && !sideNavVisible;
+      },
+      onPanResponderGrant: (evt, gestureState) => {
+        // Only process if this is a drag gesture, not a tap
+        // If navbar is open and movement is minimal, don't start dragging
+        if (sideNavVisible && Math.abs(gestureState.dx) < 15) {
+          return;
+        }
+        
+        isDragging.current = true;
+        const startX = evt.nativeEvent.pageX;
+        
+        // Open navbar if starting from left edge (only when closed)
+        if (!sideNavVisible && startX < 40) {
+          setSideNavVisible(true);
+          slideAnim.setValue(-NAVBAR_WIDTH);
+        }
+        
+        dragX.current = 0;
+        const currentValue = slideAnim._value || -NAVBAR_WIDTH;
+        slideAnim.setOffset(currentValue);
+        slideAnim.setValue(0);
+      },
+      onPanResponderMove: (evt, gestureState) => {
+        if (isDragging.current) {
+          dragX.current = gestureState.dx;
+          let newValue = gestureState.dx;
+          
+          // Clamp the value between -NAVBAR_WIDTH and 0
+          if (newValue < -NAVBAR_WIDTH) newValue = -NAVBAR_WIDTH;
+          if (newValue > 0) newValue = 0;
+          
+          slideAnim.setValue(newValue);
+        }
+      },
+      onPanResponderRelease: (evt, gestureState) => {
+        isDragging.current = false;
+        slideAnim.flattenOffset();
+        
+        const threshold = NAVBAR_WIDTH * 0.3; // Close if dragged more than 30% of width
+        
+        if (dragX.current < -threshold) {
+          // Close navbar
+          setSideNavVisible(false);
+          Animated.timing(slideAnim, {
+            toValue: -NAVBAR_WIDTH,
+            duration: 200,
+            useNativeDriver: true,
+          }).start();
+        } else {
+          // Snap back open
+          Animated.timing(slideAnim, {
+            toValue: 0,
+            duration: 200,
+            useNativeDriver: true,
+          }).start();
+        }
+      },
+      onPanResponderTerminate: () => {
+        isDragging.current = false;
+        slideAnim.flattenOffset();
+        if (sideNavVisible) {
+          Animated.timing(slideAnim, {
+            toValue: 0,
+            duration: 200,
+            useNativeDriver: true,
+          }).start();
+        }
+      },
+    }), [sideNavVisible, NAVBAR_WIDTH]);
+
+    // Handle side navbar open/close with animation
+    useEffect(() => {
+      if (sideNavVisible && !isDragging.current) {
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }).start();
+      } else if (!sideNavVisible && !isDragging.current) {
+        Animated.timing(slideAnim, {
+          toValue: -NAVBAR_WIDTH,
+          duration: 300,
+          useNativeDriver: true,
+        }).start();
+      }
+    }, [sideNavVisible, NAVBAR_WIDTH]);
 
     // State management
     const [posts, setPosts] = useState([]);
@@ -175,6 +508,9 @@ const Home = () => {
     const [showFilters, setShowFilters] = useState(false);
     const [incomingRequestCount, setIncomingRequestCount] = useState(0);
     const [isNavigating, setIsNavigating] = useState(false);
+    const [allPostsSeen, setAllPostsSeen] = useState(false); // Track if all posts are seen
+    const [allPosts, setAllPosts] = useState([]); // Store all posts when all are seen
+    const suggestionsLoadTriggerRef = useRef(false); // Ref to trigger suggestions loading
     
     // UPDATED: Filter options with label/value structure
     const filterOptions = useMemo(() => [
@@ -386,14 +722,19 @@ const Home = () => {
 useEffect(() => {
   if (!user?.id || !isConnected) return;
   
-  const postChannel = supabase
-      .channel(`posts-${user?.id}`) // Make channel name unique
-      .on('postgres_changes', 
-          { event: '*', schema: 'public', table: 'posts' }, 
-          handlePostEvent
-      )
-      .subscribe();
+  // DISABLED: Real-time post subscription - now using timestamp-based polling instead
+  // This reduces server load and scales better for large user bases
+  // Posts are fetched on refresh using cursor-based pagination with timestamps
+  // 
+  // const postChannel = supabase
+  //     .channel(`posts-${user?.id}`)
+  //     .on('postgres_changes', 
+  //         { event: '*', schema: 'public', table: 'posts' }, 
+  //         handlePostEvent
+  //     )
+  //     .subscribe();
 
+  // Keep notification channel for real-time notifications
   const notificationChannel = supabase
       .channel(`notifications-${user?.id}`) // Make channel name unique
       .on('postgres_changes', 
@@ -402,7 +743,7 @@ useEffect(() => {
       )
       .subscribe();
       
-  // New subscription for post_views to update UI in real-time
+  // Keep post_views subscription to update UI in real-time when user views posts
   const viewsChannel = supabase
       .channel(`post_views-${user?.id}`) // Make channel name unique
       .on('postgres_changes',
@@ -411,7 +752,7 @@ useEffect(() => {
       )
       .subscribe();
 
-  // Friend request channel
+  // Keep friend request channel for real-time friend request updates
   const requestChannel = supabase
       .channel(`friend-requests-${user?.id}`)
       .on('postgres_changes',
@@ -422,6 +763,10 @@ useEffect(() => {
       )
       .subscribe();
 
+  // Reset allPostsSeen on mount
+  setAllPostsSeen(false);
+  setAllPosts([]);
+  
   // Initial posts fetch
   getPosts();
   
@@ -433,19 +778,25 @@ useEffect(() => {
 
   return () => {
       // Clean up subscriptions properly
-      supabase.removeChannel(postChannel);
+      // supabase.removeChannel(postChannel); // Disabled
       supabase.removeChannel(notificationChannel);
       supabase.removeChannel(viewsChannel);
       if (requestChannel) supabase.removeChannel(requestChannel);
   };
-}, [user?.id, handlePostEvent, handleNewNotification, handlePostViewEvent, isConnected, fetchIncomingRequestCount]);
+}, [user?.id, handleNewNotification, handlePostViewEvent, isConnected, fetchIncomingRequestCount]);
 
     const isLoadingMore = useRef(false);
 
-    // Modified onRefresh with filter support
+    // Modified onRefresh: On refresh, only fetch posts user hasn't viewed yet
+    // Viewed posts are excluded from the request - only unseen posts appear at top
     const onRefresh = useCallback(async () => {
       if (!isConnected) {
         showToast('error', 'No network connection');
+        return;
+      }
+      
+      if (!user?.id) {
+        showToast('error', 'User not found');
         return;
       }
       
@@ -454,13 +805,43 @@ useEffect(() => {
         setPage(1);
         setHasMore(true);
         
-        const res = await fetchPosts(ITEMS_PER_PAGE, null, showOnlyUnwatched, activeFilter);
+        // Fetch only UNSEEN posts (posts user hasn't viewed yet)
+        // This excludes viewed posts from the request - they won't appear in the feed
+        // Pass null for userId (to get all posts), user.id as viewerUserId (to filter by viewer)
+        const res = await fetchPosts(ITEMS_PER_PAGE, null, true, activeFilter, null, user.id);
         
         if (res.success) {
-          setPosts(res.data);
-          if (res.data.length < ITEMS_PER_PAGE) {
-            setHasMore(false);
+          if (res.data.length === 0) {
+            // All posts are seen - show "You have covered all feeds" tag
+            // and fetch all posts (including seen ones) to display below
+            setAllPostsSeen(true);
+            
+            // Fetch all posts (including seen ones) to display below the tag
+            const allPostsRes = await fetchPosts(ITEMS_PER_PAGE, null, false, activeFilter, null, null);
+            
+            if (allPostsRes.success) {
+              setAllPosts(allPostsRes.data);
+              setPosts([]); // Clear unseen posts since there are none
+              setHasMore(allPostsRes.data.length === ITEMS_PER_PAGE);
+            } else {
+              setAllPosts([]);
+            }
+            
+            showToast('success', 'You have covered all feeds!');
+          } else {
+            // There are unseen posts - show only unseen posts
+            setAllPostsSeen(false);
+            setAllPosts([]);
+            setPosts(res.data);
+            setHasMore(res.data.length === ITEMS_PER_PAGE);
+            
+            // Update timestamp to the newest unseen post
+            const newestPost = res.data[0]; // Already sorted by created_at desc
+            await updateLastSeenPostTimestamp(newestPost.created_at);
+            
+            showToast('success', `Showing ${res.data.length} unseen post${res.data.length > 1 ? 's' : ''}`);
           }
+          
           // Reload unwatched count after refresh
           await loadUnwatchedCount();
         } else {
@@ -472,11 +853,13 @@ useEffect(() => {
       } finally {
         setRefreshing(false);
       }
-    }, [isConnected, ITEMS_PER_PAGE, showOnlyUnwatched, activeFilter, loadUnwatchedCount, showToast]);
+    }, [isConnected, ITEMS_PER_PAGE, activeFilter, loadUnwatchedCount, showToast, user?.id]);
     
     // Effect to reload posts when filter changes
     useEffect(() => {
       if (user?.id && isConnected && initialCheckDone) {
+        setAllPostsSeen(false); // Reset allPostsSeen when filter changes
+        setAllPosts([]);
         getPosts(true); // Reset posts when filter changes
       }
     }, [showOnlyUnwatched, activeFilter, user?.id, isConnected, initialCheckDone]);
@@ -497,31 +880,57 @@ useEffect(() => {
         setLoading(true);
         
         const currentPage = reset ? 1 : page;
+        
+        // If all posts are seen, fetch all posts (including seen ones) for pagination
+        const fetchUnwatchedOnly = !allPostsSeen && showOnlyUnwatched;
+        const viewerId = fetchUnwatchedOnly ? user?.id : null;
+        
         const res = await fetchPosts(
           currentPage * ITEMS_PER_PAGE, 
           null, // userId - null for all posts
-          showOnlyUnwatched,
-          activeFilter // Pass the filter code (ml, am, kd, etc.)
+          fetchUnwatchedOnly,
+          activeFilter, // Pass the filter code (ml, am, kd, etc.)
+          null, // sinceTimestamp
+          viewerId
         );
         
         if (res.success) {
           if (reset) {
-            setPosts(res.data);
+            if (allPostsSeen) {
+              setAllPosts(res.data);
+            } else {
+              setPosts(res.data);
+            }
             setPage(2);
             setHasMore(res.data.length === ITEMS_PER_PAGE);
+            
+            // Store timestamp of the newest post after initial load
+            if (res.data.length > 0 && !allPostsSeen) {
+              await storeLastSeenPostTimestamp(res.data[0].created_at);
+            }
           } else {
             // Check if we've reached the end
-            if (res.data.length === posts.length) {
+            const currentPosts = allPostsSeen ? allPosts : posts;
+            if (res.data.length === currentPosts.length) {
               setHasMore(false);
             }
             
             // Append new posts, avoiding duplicates
-            setPosts(prevPosts => {
-              const newPosts = res.data.filter(
-                newPost => !prevPosts.some(existingPost => existingPost?.id === newPost?.id)
-              );
-              return [...prevPosts, ...newPosts];
-            });
+            if (allPostsSeen) {
+              setAllPosts(prevPosts => {
+                const newPosts = res.data.filter(
+                  newPost => !prevPosts.some(existingPost => existingPost?.id === newPost?.id)
+                );
+                return [...prevPosts, ...newPosts];
+              });
+            } else {
+              setPosts(prevPosts => {
+                const newPosts = res.data.filter(
+                  newPost => !prevPosts.some(existingPost => existingPost?.id === newPost?.id)
+                );
+                return [...prevPosts, ...newPosts];
+              });
+            }
             
             setPage(prev => prev + 1);
           }
@@ -537,7 +946,7 @@ useEffect(() => {
           isLoadingMore.current = false;
         }, 300);
       }
-    }, [hasMore, page, posts.length, isConnected, showOnlyUnwatched, activeFilter, showToast, ITEMS_PER_PAGE]);
+    }, [hasMore, page, posts.length, allPosts.length, allPostsSeen, isConnected, showOnlyUnwatched, activeFilter, showToast, ITEMS_PER_PAGE, user?.id]);
 
     // Toggle filter function
     const handleToggleFilter = useCallback(() => {
@@ -552,15 +961,59 @@ useEffect(() => {
     }, []);
 
      // Enhanced render item with view tracking
-     const renderItem = useCallback(({ item }) => (
-      <MemoizedPostCard
-        item={item}
-        currentUser={user}
-        router={router}
-        isVisible={visibleItems.includes(item?.id)}
-        onPostViewed={handlePostViewed}
-      />
-    ), [user, router, visibleItems, handlePostViewed]);
+     const renderItem = useCallback(({ item, index }) => {
+      const postCard = (
+        <MemoizedPostCard
+          item={item}
+          currentUser={user}
+          router={router}
+          isVisible={visibleItems.includes(item?.id)}
+          onPostViewed={handlePostViewed}
+        />
+      );
+
+      // Show suggestion component after the second post (index 1)
+      if (index === 1) {
+        return (
+          <View>
+            {postCard}
+            <UserSuggestion currentUserId={user?.id} />
+          </View>
+        );
+      }
+
+      // Show reviews component after the 4th post (index 3)
+      if (index === 3) {
+        return (
+          <View>
+            {postCard}
+            <Reviews />
+          </View>
+        );
+      }
+
+      // Show Watch Now component after the 6th post (index 5)
+      if (index === 5) {
+        return (
+          <View>
+            {postCard}
+            <WatchNow />
+          </View>
+        );
+      }
+
+      // Show suggestion component after the 14th post (index 13)
+      if (index === 13) {
+        return (
+          <View>
+            {postCard}
+            <UserSuggestion currentUserId={user?.id} />
+          </View>
+        );
+      }
+
+      return postCard;
+    }, [user, router, visibleItems, handlePostViewed]);
 
     const keyExtractor = useCallback((item) => item?.id.toString(), []);
     
@@ -617,10 +1070,12 @@ useEffect(() => {
       },
     }), []);
 
+    const isadmin = adminIds.includes(user?.id) || user?.role === 'sadmin';
+
     // Memoized Header component with unwatched count
     const memoizedHeader = useMemo(() => (
       <Header
-        title="Spotlight"
+        title="PlotTwist"
         notificationCount={notificationCount}
         setNotificationCount={setNotificationCount}
         router={router}
@@ -631,6 +1086,7 @@ useEffect(() => {
         requestCount={incomingRequestCount}
         setIsNavigating={setIsNavigating}
         isNavigating={isNavigating}
+        onMenuPress={() => setSideNavVisible(true)}
       />
     ), [notificationCount, router, unwatchedCount, showOnlyUnwatched, handleToggleFilter, handleFilterIconPress, incomingRequestCount, isNavigating]);
 
@@ -642,9 +1098,61 @@ useEffect(() => {
                 <Text style={styles.offlineText}>Offline Mode - Network Unavailable</Text>
               </View>
             )}
-        <View style={styles.container}>
+        <View style={styles.container} {...panResponder.panHandlers}>
           {/* Memoized Header */}
           {memoizedHeader}
+
+          {/* Side Navbar */}
+          <SideNavbar
+            visible={sideNavVisible}
+            onClose={() => setSideNavVisible(false)}
+            router={router}
+            setIsNavigating={setIsNavigating}
+            isNavigating={isNavigating}
+            isadmin={isadmin}
+            slideAnim={slideAnim}
+            panResponder={panResponder}
+            onLogoutPress={() => setLogoutAlertVisible(true)}
+          />
+          
+          {/* Logout Confirmation Modal */}
+          <Modal
+            transparent={true}
+            visible={logoutAlertVisible}
+            animationType="fade"
+            onRequestClose={() => setLogoutAlertVisible(false)}
+          >
+            <View style={styles.logoutModalOverlay}>
+              <View style={styles.logoutModalContent}>
+                <Text style={styles.logoutModalTitle}>Confirm</Text>
+                <Text style={styles.logoutModalMessage}>Are you sure you want to logout?</Text>
+                <View style={styles.logoutModalButtons}>
+                  <TouchableOpacity
+                    style={[styles.logoutModalButton, styles.logoutModalCancelButton]}
+                    onPress={() => setLogoutAlertVisible(false)}
+                  >
+                    <Text style={styles.logoutModalCancelText}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.logoutModalButton, styles.logoutModalConfirmButton]}
+                    onPress={async () => {
+                      setLogoutAlertVisible(false);
+                      try {
+                        const { error } = await logout();
+                        if (error) {
+                          Alert.alert('Error', 'Failed to logout. Please try again.');
+                        }
+                      } catch (error) {
+                        Alert.alert('Error', 'Failed to logout. Please try again.');
+                      }
+                    }}
+                  >
+                    <Text style={styles.logoutModalConfirmText}>Logout</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </Modal>
 
           {/* UPDATED: Filter Bubbles with new structure */}
           {showFilters && (
@@ -657,7 +1165,7 @@ useEffect(() => {
 
           {/* Highly optimized FlatList with RefreshControl */}
           <FlatList
-            data={posts}
+            data={allPostsSeen ? allPosts : posts}
             extraData={visibleItems} // Only re-render when visible items change
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.listStyle}
@@ -667,6 +1175,7 @@ useEffect(() => {
             viewabilityConfig={viewabilityConfig}
             onEndReached={handleEndReached}
             onEndReachedThreshold={1}
+            ListHeaderComponent={allPostsSeen ? <AllFeedsCoveredTag /> : null}
             ListFooterComponent={memoizedFooter}
             ListEmptyComponent={memoizedEmptyComponent}
             refreshControl={refreshControl} // Add RefreshControl component
@@ -693,6 +1202,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgb(19, 21, 22)',
     padding: wp(2.4),
   }, 
+  titleContainer: {
+    flex: 1,
+  },
   title:{
     color: 'white',
     fontSize: hp(3.2),
@@ -853,5 +1365,190 @@ const styles = StyleSheet.create({
   filterBubbleTextActive: {
     color: 'white',
     fontWeight: '700'
+  },
+  allFeedsCoveredContainer: {
+    width: '100%',
+    paddingVertical: hp(0.5),
+    paddingHorizontal: 0,
+    backgroundColor: 'transparent'
+  },
+  allFeedsCoveredTag: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(76, 175, 80, 0.12)',
+    paddingVertical: hp(0.8),
+    paddingHorizontal: wp(3),
+    borderRadius: 0,
+    borderWidth: 0,
+    borderBottomWidth: 1.5,
+    borderTopWidth: 1.5,
+    borderColor: 'rgba(76, 175, 80, 0.4)',
+    gap: wp(2),
+    shadowColor: 'rgba(76, 175, 80, 0.1)',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1
+  },
+  allFeedsCoveredIconContainer: {
+    width: hp(2.2),
+    height: hp(2.2),
+    borderRadius: hp(1.1),
+    backgroundColor: 'rgba(76, 175, 80, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 0.8,
+    borderColor: 'rgba(76, 175, 80, 0.5)'
+  },
+  allFeedsCoveredIcon: {
+    fontSize: hp(1.4),
+    color: '#4CAF50',
+    fontWeight: 'bold',
+    lineHeight: hp(1.6)
+  },
+  allFeedsCoveredText: {
+    color: '#4CAF50',
+    fontSize: hp(1.5),
+    fontWeight: theme.fonts.bold,
+    textAlign: 'center',
+    letterSpacing: 0.2
+  },
+  sideNavOverlay: {
+    flex: 1,
+    flexDirection: 'row',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  sideNavBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  sideNavContainer: {
+    width: SCREEN_WIDTH * 0.8,
+    backgroundColor: '#1E1E1E',
+    height: '100%',
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    shadowColor: '#000',
+    shadowOffset: { width: 2, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  sideNavHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: wp(5),
+    paddingVertical: hp(2),
+    borderBottomWidth: 1,
+    borderBottomColor: '#333333',
+    paddingTop: hp(4),
+  },
+  sideNavTitle: {
+    color: '#FFFFFF',
+    fontSize: hp(2.5),
+    fontWeight: 'bold',
+  },
+  closeButton: {
+    padding: wp(2),
+  },
+  sideNavContent: {
+    flex: 1,
+    paddingTop: hp(2),
+  },
+  sideNavItem: {
+    paddingHorizontal: wp(5),
+    paddingVertical: hp(2),
+    borderBottomWidth: 1,
+    borderBottomColor: '#2D2D2D',
+  },
+  sideNavItemContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: wp(4),
+  },
+  sideNavItemText: {
+    color: '#FFFFFF',
+    fontSize: hp(2),
+    fontWeight: '500',
+    flex: 1,
+  },
+  comingSoonBadge: {
+    color: '#888888',
+    fontSize: hp(1.3),
+    fontStyle: 'italic',
+  },
+  sideNavFooter: {
+    borderTopWidth: 1,
+    borderTopColor: '#2D2D2D',
+    paddingTop: hp(1),
+    paddingBottom: hp(2),
+  },
+  sideNavLogoutItem: {
+    paddingHorizontal: wp(5),
+    paddingVertical: hp(2),
+  },
+  sideNavLogoutText: {
+    color: '#FF3B30',
+  },
+  logoutModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  logoutModalContent: {
+    backgroundColor: '#1E1E1E',
+    borderRadius: 12,
+    padding: wp(6),
+    width: wp(80),
+    alignItems: 'center',
+  },
+  logoutModalTitle: {
+    color: '#FFFFFF',
+    fontSize: hp(2.2),
+    fontWeight: 'bold',
+    marginBottom: hp(1),
+  },
+  logoutModalMessage: {
+    color: '#E0E0E0',
+    fontSize: hp(1.8),
+    textAlign: 'center',
+    marginBottom: hp(3),
+  },
+  logoutModalButtons: {
+    flexDirection: 'row',
+    gap: wp(3),
+    width: '100%',
+  },
+  logoutModalButton: {
+    flex: 1,
+    paddingVertical: hp(1.5),
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  logoutModalCancelButton: {
+    backgroundColor: '#2D2D2D',
+  },
+  logoutModalConfirmButton: {
+    backgroundColor: '#FF3B30',
+  },
+  logoutModalCancelText: {
+    color: '#FFFFFF',
+    fontSize: hp(1.8),
+    fontWeight: '600',
+  },
+  logoutModalConfirmText: {
+    color: '#FFFFFF',
+    fontSize: hp(1.8),
+    fontWeight: '600',
   }
 });

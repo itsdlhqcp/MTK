@@ -1,12 +1,28 @@
 import { uploadProfileImage } from "./imageService";
 import { supabase } from "../lib/supabase";
 
-export const createOrUpdatePost = async (post) => {
+export const createOrUpdatePost = async (post, onProgress) => {
   try {
     console.log("Starting createOrUpdatePost with data:", post);
     
+    // Calculate total steps based on what needs to be done
+    const needsFileUpload = post.file && typeof post.file === "object";
+    let totalSteps = 1; // database save is always 1 step
+    if (needsFileUpload) totalSteps++;
+    
+    let currentStep = 0;
+
+    const updateProgress = (step, message) => {
+      currentStep = step;
+      const percentage = (step / totalSteps) * 100;
+      if (onProgress) {
+        onProgress({ percentage, step, message, totalSteps });
+      }
+    };
+    
     // Handle file upload for image or video if present
-    if (post.file && typeof post.file === "object") {
+    if (needsFileUpload) {
+      updateProgress(1, "Uploading media...");
       let isImage = post.file.type === "image";
       let folderName = isImage ? "postImage" : "postVideo";
       console.log(`Uploading ${isImage ? 'image' : 'video'} to ${folderName}`);
@@ -36,6 +52,9 @@ export const createOrUpdatePost = async (post) => {
 
     console.log("Sending data to Supabase:", postData);
 
+    // Save to database
+    const dbStep = needsFileUpload ? 2 : 1;
+    updateProgress(dbStep, "Saving post...");
     // Insert or update the post in the database
     const { data, error } = await supabase.from('twists').upsert(postData).select().single();
 
@@ -44,6 +63,7 @@ export const createOrUpdatePost = async (post) => {
       return { success: false, msg: "Could not create or update your twist", error: error.message };
     }
     
+    updateProgress(totalSteps, "Complete!");
     console.log("Post created/updated successfully:", data);
     return { success: true, data };
   } catch (error) {

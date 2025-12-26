@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { 
   View, 
   Text, 
@@ -26,7 +26,7 @@ import CustomDotIndicator from './CutomDotIndicator';
 import WatchListSkeleton from './WatchListSkeleton';
 
 // Modified Month Header component with toggle button
-const MonthHeader = ({ month, viewMode, onToggleView, isFirstHeader }) => (
+const MonthHeader = ({ month, viewMode, onToggleView, isFirstHeader, onCameraPress }) => (
   <View style={styles.headerContainer}>
     <View style={styles.headerPillContainer}>
       <View style={styles.headerPill}>
@@ -34,16 +34,28 @@ const MonthHeader = ({ month, viewMode, onToggleView, isFirstHeader }) => (
       </View>
 
       {isFirstHeader && (
-        <TouchableOpacity 
-          style={styles.toggleButton} 
-          onPress={onToggleView}
-        >
-          <Icon 
-            name={viewMode === 'grid' ? 'list' : 'grid'} 
-            size={hp(2.6)} 
-            color="#FFFFFF" 
-          />
-        </TouchableOpacity>
+        <View style={styles.headerButtonsContainer}>
+          <TouchableOpacity 
+            style={styles.cameraButton} 
+            onPress={onCameraPress}
+          >
+            <Icon 
+              name="share" 
+              size={hp(2.6)} 
+              color="#FFFFFF" 
+            />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.toggleButton} 
+            onPress={onToggleView}
+          >
+            <Icon 
+              name={viewMode === 'grid' ? 'list' : 'grid'} 
+              size={hp(2.6)} 
+              color="#FFFFFF" 
+            />
+          </TouchableOpacity>
+        </View>
       )}
     </View>
   </View>
@@ -59,6 +71,7 @@ const UserReviewsComponent = ({ navigation, userId }) => {
   const [initialCheckDone, setInitialCheckDone] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const hasLoadedRef = useRef(false); // Add ref to prevent double loading
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -86,7 +99,8 @@ const UserReviewsComponent = ({ navigation, userId }) => {
   }, []);
 
   useEffect(() => {
-    if (initialCheckDone) {
+    if (initialCheckDone && !hasLoadedRef.current) {
+      hasLoadedRef.current = true; // Mark as loaded
       loadReviews(1, true); // Load first page on initial load
       // Load suggestions only for authenticated user viewing their own profile
       if (user?.id && (!userId || userId === user.id)) {
@@ -245,6 +259,11 @@ const UserReviewsComponent = ({ navigation, userId }) => {
     setViewMode(prevMode => prevMode === 'list' ? 'grid' : 'list');
   };
   
+  // Handle camera icon press - navigate to shot page
+  const handleCameraPress = () => {
+    router.push('shot');
+  };
+  
   // Extract day of month from date
   const extractDay = (dateString) => {
     return moment(dateString).format('D');
@@ -261,7 +280,7 @@ const UserReviewsComponent = ({ navigation, userId }) => {
     
     // Render header if isHeader is true
     if (item.isHeader) {
-      return <MonthHeader month={item.month} viewMode={viewMode} onToggleView={toggleViewMode} isFirstHeader={isFirstHeader} />;
+      return <MonthHeader month={item.month} viewMode={viewMode} onToggleView={toggleViewMode} isFirstHeader={isFirstHeader} onCameraPress={handleCameraPress} />;
     }
 
     const monName = moment(item.created_at).format('MMM');
@@ -440,7 +459,7 @@ const UserReviewsComponent = ({ navigation, userId }) => {
     const isFirstHeader = index === 0;
     return (
       <View style={styles.gridSection}>
-        <MonthHeader month={item.month} viewMode={viewMode} onToggleView={toggleViewMode} isFirstHeader={isFirstHeader} />
+        <MonthHeader month={item.month} viewMode={viewMode} onToggleView={toggleViewMode} isFirstHeader={isFirstHeader} onCameraPress={handleCameraPress} />
         <FlatList
           data={chunk(item.data, 3)}
           renderItem={renderGridRow}
@@ -519,7 +538,6 @@ const UserReviewsComponent = ({ navigation, userId }) => {
                 // Only show suggestions for authenticated user viewing their own profile
                 user?.id && (!userId || userId === user.id) && suggestions.length > 0 ? (
                   <View style={styles.suggestionsContainer}>
-                    <Text style={styles.suggestionsTitle}>Rate Now</Text>
                     <FlatList
                       horizontal
                       data={suggestions}
@@ -555,7 +573,6 @@ const UserReviewsComponent = ({ navigation, userId }) => {
                 // Only show suggestions for authenticated user viewing their own profile
                 user?.id && (!userId || userId === user.id) && suggestions.length > 0 ? (
                   <View style={styles.suggestionsContainer}>
-                    <Text style={styles.suggestionsTitle}>Rate Now</Text>
                     <FlatList
                       horizontal
                       data={suggestions}
@@ -689,10 +706,18 @@ const styles = StyleSheet.create({
     color: '#fff',
     textAlign: 'center',
   },
-  toggleButton: {
-    padding: hp(0.5),
+  headerButtonsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     position: 'absolute',
     right: wp(4),
+    gap: wp(3),
+  },
+  cameraButton: {
+    padding: hp(0.5),
+  },
+  toggleButton: {
+    padding: hp(0.5),
   },
   movieInfoContainer: {
     flexDirection: 'row',

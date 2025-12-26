@@ -1,4 +1,10 @@
+to run the APP
+
+npx expo start
+
 # Welcome to your Expo app 👋
+https://chatgpt.com/share/693dc009-cf70-8009-bf6e-da6c4839d4e5
+(here is the push notification change needed to be pushed)
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
@@ -9,23 +15,7 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    ```bash
    npm install
    ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
+esh project
 
 When you're ready, run:
 
@@ -48,3 +38,18 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+
+
+Solution
+To build your app in the cloud:
+npx eas-cli build --platform android 
+
+production
+To build AND automatically submit:
+npx eas-cli build --platform android --profile production --auto-submit
+To submit an already-built app:
+npx eas-cli submit --platform android --profile production --latest
+The --latest flag submits your most recent build.
+Note: Your eas.json is configured correctly. The issue is that eas submit by itself doesn't build; it only submits existing builds.
+Should I run the build command for you, or do you want to submit an existing build?

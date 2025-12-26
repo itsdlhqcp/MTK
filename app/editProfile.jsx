@@ -251,6 +251,11 @@ const EditProfile = () => {
         orgname: '',
       };
 
+      // Validate username (name field) - should not exceed 8 characters
+      if (user.name && user.name.length > 8) {
+        newErrors.name = 'Username must not exceed 8 characters';
+      }
+
       // Validate orgname (if provided)
       if (user.orgname && user.orgname.length > 50) {
         newErrors.orgname = 'Name must be less than 50 characters';
@@ -358,6 +363,12 @@ const EditProfile = () => {
 
     // Input change handler with validation
     const handleInputChange = (field, value) => {
+      // Validate username length before setting
+      if (field === 'name' && value.length > 8) {
+        setErrors({...errors, name: 'Username must not exceed 8 characters'});
+        return;
+      }
+      
       setUser({...user, [field]: value});
       
       // Clear error when typing
@@ -394,7 +405,13 @@ const EditProfile = () => {
                   icon={<Icon name="user" color="#fff" />}
                   placeholder="Enter username"
                   value={user.name}
-                  onChangeText={(value) => handleInputChange('name', value)}
+                  onChangeText={(value) => {
+                    // Limit to 8 characters while typing
+                    if (value.length <= 8) {
+                      handleInputChange('name', value);
+                    }
+                  }}
+                  maxLength={8}
                   editable={false}  // Disable editing for now
                   containerStyle={errors.name ? styles.inputError : null}
                 />
@@ -445,7 +462,7 @@ const EditProfile = () => {
                 ) : null}
               </View>
               
-              <View>
+              {/* <View>
                 <TagInput 
                   tags={user.tags} 
                   setTags={(newTags) => {
@@ -459,7 +476,7 @@ const EditProfile = () => {
                 {errors.tags ? (
                   <Text style={styles.fieldErrorText}>{errors.tags}</Text>
                 ) : null}
-              </View>
+              </View> */}
               
               <Button 
                 title="Update" 

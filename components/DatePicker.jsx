@@ -58,7 +58,7 @@ const DatePicker = ({ onDateSelect, initialDate, label = "Select Release Date" }
           style={styles.dateInput}
           placeholder="Select Release Date (YYYY-MM-DD)"
           value={displayDate}
-          placeholderTextColor="#666"
+          placeholderTextColor="#9E9E9E"
           editable={false}
         />
       </Pressable>
@@ -71,18 +71,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     paddingStart: 10,
-    color: '#000',
+    color: '#E0E0E0',
     paddingBottom: 5
   },
   dateInput: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
+    color: '#FFFFFF',
     padding: 14,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#333333',
     borderRadius: 8,
     marginTop: 10,
+    backgroundColor: '#181818',
   }
 });
 

@@ -1,13 +1,13 @@
-import { View, StyleSheet, TouchableOpacity, Text, Animated, Alert, Share } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Text, Animated, Alert, Share, Modal } from 'react-native';
 import React, { useState, useRef } from 'react';
 import * as Sharing from 'expo-sharing';
 import { captureRef } from 'react-native-view-shot';
 import Icon from '../assets/icons';
 import theme from '../constants/theme';
-import { hp, wp, stripHtmlTags } from '../helpers/common';
+import { hp, wp, stripHtmlTags, truncateUsername } from '../helpers/common';
 import LikeButton from './AnimatedHeartButton';
 import { usePost } from '../contexts/PostContext';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, usePathname } from 'expo-router';
 import { Image } from 'react-native';
 import { getSupabaseFileUrl } from '../services/imageService';
 import { adminIds } from '../constants/admin';
@@ -30,7 +30,7 @@ const PosterView = React.forwardRef(({ item }, ref) => {
       {/* Header with app branding */}
       <View style={posterStyles.header}>
         <Text style={posterStyles.appName}>PlotTwist</Text>
-        <Text style={posterStyles.username}>@{item?.name || 'user'}</Text>
+        <Text style={posterStyles.username}>@{truncateUsername(item?.name || 'user')}</Text>
       </View>
 
       {/* Content area */}
@@ -190,6 +190,9 @@ const SpotlightFooter = ({
   const posterRef = useRef(null);
   const [isSharing, setIsSharing] = useState(false);
   const [showPosterView, setShowPosterView] = useState(false);
+  // For delete confirmation modal
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // which reset on coming the page 
   useFocusEffect(
@@ -220,31 +223,41 @@ const SpotlightFooter = ({
   };
 
 
-  const onDeletePost = async (item) => {
+  const pathname = usePathname();
+  
+  const onDeletePost = (item) => {
+    // Show the custom delete modal instead of Alert.alert
+    setDeleteModalVisible(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!item?.id) return;
+    
+    setDeleting(true);
     try {
-        Alert.alert('Confirm', 'Are you sure you want to delete this Post?', [
-            {
-                text: 'Cancel',
-                style: 'cancel'
-            },
-            {
-                text: 'Delete',
-                style: 'destructive',
-                onPress: async () => {
-                    let res = await removePost(item?.id);
-                    if (res.success) {
-                        router.back();
-                    } else {
-                        Alert.alert('Error', res.msg || 'Something went wrong while deleting the post');
-                    }
-                }
-            }
-        ]);
+      let res = await removePost(item?.id);
+      if (res.success) {
+        setDeleteModalVisible(false);
+        // Only navigate back if we're on a detail screen (postDetails, feedDetails, etc.)
+        // If we're on the feeds screen itself, don't navigate - the real-time subscription will handle removing the post
+        const isDetailScreen = pathname?.includes('postDetails') || 
+                             pathname?.includes('feedDetails') || 
+                             pathname?.includes('twistDetails');
+        
+        if (isDetailScreen) {
+          router.back();
+        }
+        // If on feeds screen, the post will be removed automatically by the real-time subscription
+      } else {
+        Alert.alert('Error', res.msg || 'Something went wrong while deleting the post');
+      }
     } catch (error) {
-        console.error('Delete post error:', error);
-        Alert.alert('Error', 'An unexpected error occurred while deleting the post.');
+      console.error('Delete post error:', error);
+      Alert.alert('Error', 'An unexpected error occurred while deleting the post.');
+    } finally {
+      setDeleting(false);
     }
-};
+  };
 
   // Share function that creates and shares an embedded poster
   // const onShare = async () => {
@@ -407,6 +420,45 @@ const SpotlightFooter = ({
           </Text>
         </View>
       </View>
+
+      {/* Delete Confirmation Modal - Dark UI */}
+      <Modal
+        visible={deleteModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => !deleting && setDeleteModalVisible(false)}
+      >
+        <View style={styles.deleteModalOverlay}>
+          <View style={styles.deleteModalContent}>
+            <Text style={styles.deleteModalTitle}>Confirm Delete</Text>
+            <Text style={styles.deleteModalMessage}>
+              Are you sure you want to delete this post? This action cannot be undone.
+            </Text>
+            <View style={styles.deleteModalButtons}>
+              <TouchableOpacity
+                style={[styles.deleteModalButton, styles.deleteModalCancelButton]}
+                onPress={() => setDeleteModalVisible(false)}
+                disabled={deleting}
+              >
+                <Text style={styles.deleteModalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.deleteModalButton, 
+                  styles.deleteModalConfirmButton,
+                  deleting && styles.disabledButton
+                ]}
+                onPress={handleDeleteConfirm}
+                disabled={deleting}
+              >
+                <Text style={styles.deleteModalConfirmText}>
+                  {deleting ? 'Deleting...' : 'Delete'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </>
   );
 };
@@ -450,7 +502,63 @@ const styles = StyleSheet.create({
   comments: {
     fontSize: hp(1.6),
     color: theme.colors.textLight,
-  }
+  },
+  // Delete modal styles - Dark UI
+  deleteModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deleteModalContent: {
+    backgroundColor: '#1E1E1E',
+    borderRadius: 12,
+    padding: wp(6),
+    width: wp(80),
+    alignItems: 'center',
+  },
+  deleteModalTitle: {
+    color: '#FFFFFF',
+    fontSize: hp(2.2),
+    fontWeight: 'bold',
+    marginBottom: hp(1),
+  },
+  deleteModalMessage: {
+    color: '#E0E0E0',
+    fontSize: hp(1.8),
+    textAlign: 'center',
+    marginBottom: hp(3),
+  },
+  deleteModalButtons: {
+    flexDirection: 'row',
+    gap: wp(3),
+    width: '100%',
+  },
+  deleteModalButton: {
+    flex: 1,
+    paddingVertical: hp(1.5),
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  deleteModalCancelButton: {
+    backgroundColor: '#2D2D2D',
+  },
+  deleteModalConfirmButton: {
+    backgroundColor: '#FF3B30',
+  },
+  deleteModalCancelText: {
+    color: '#FFFFFF',
+    fontSize: hp(1.8),
+    fontWeight: '600',
+  },
+  deleteModalConfirmText: {
+    color: '#FFFFFF',
+    fontSize: hp(1.8),
+    fontWeight: '600',
+  },
+  disabledButton: {
+    opacity: 0.6,
+  },
 });
 
 export default SpotlightFooter;

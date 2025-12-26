@@ -118,7 +118,7 @@ const Login = () => {
           router.push('/auth/newuserscreens/userpreferences');
       } else {
            router.dismissAll();
-           router.push('/home');
+           router.push('/feeds');
       }
     } catch (error) {
         showToast('error', error.message);
@@ -275,6 +275,7 @@ export default Login
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
+    backgroundColor: '#0A0A0A', // Dark fallback background
   },
   backgroundImage: {
     flex: 1,

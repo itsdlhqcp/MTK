@@ -17,7 +17,7 @@ const PostRoute = () => {
   const checkPostType = async () => {
     try {
       if (!id) {
-        router.replace('/home');
+        router.replace('/feeds');
         return;
       }
 

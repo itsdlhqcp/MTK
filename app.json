@@ -15,28 +15,38 @@
   },
   "ios": {
     "supportsTablet": true,
-    "bundleIdentifier": "com.mediatalk.plotwist"
+    "bundleIdentifier": "com.mediatalk.plotwist",
+    "infoPlist": {
+      "ITSAppUsesNonExemptEncryption": false
+    }
   },
   "android": {
-  "intentFilters": [
-    {
-      "action": "VIEW",
-      "autoVerify": true,
-      "data": [
-        {
-          "scheme": "https",
-          "host": "plotwist-site.vercel.app",
-          "pathPrefix": "/auth/onpasswordless" 
-        }
-      ],
-      "category": ["BROWSABLE", "DEFAULT"]
+    "intentFilters": [
+      {
+        "action": "VIEW",
+        "autoVerify": true,
+        "data": [
+          {
+            "scheme": "https",
+            "host": "plotwist-site.vercel.app",
+            "pathPrefix": "/auth/onpasswordless"
+          }
+        ],
+        "category": [
+          "BROWSABLE",
+          "DEFAULT"
+        ]
+      }
+    ],
+    "package": "com.mediatalk.plotwist",
+    "adaptiveIcon": {
+      "foregroundImage": "./assets/last-test.png",
+      "backgroundColor": "#000000"
+    },
+    "notification": {
+      "icon": "./assets/last-test.png",
+      "color": "#000000"
     }
-  ],
-  "package": "com.mediatalk.plotwist",
-  "adaptiveIcon": {
-    "foregroundImage": "./assets/last-test.png",
-    "backgroundColor": "#000000"
-   }
   },
   "web": {
     "bundler": "metro",
@@ -45,14 +55,25 @@
   },
   "plugins": [
     "expo-router",
-    // [
-    //   "react-native-google-mobile-ads",
-    //   {
-    //     "androidAppId": "ca-app-pub-7806969239829181~9318981034",
-    //     "iosAppId": "ca-app-pub-7806969239829181~9318981034"
-    //   }
-    // ],
+    [
+      "react-native-google-mobile-ads",
+      {
+        "androidAppId": "ca-app-pub-7806969239829181~9318981034",
+        "iosAppId": "ca-app-pub-7806969239829181~9318981034"
+      }
+    ],
     "expo-font",
+    [
+      "expo-notifications",
+      {
+        "icon": "./assets/last-test.png",
+        "color": "#000000",
+        "sounds": [
+          "./assets/sounds/notification.mp3"
+        ],
+        "mode": "production"
+      }
+    ],
     [
       "expo-build-properties",
       {
@@ -62,10 +83,10 @@
       }
     ]
   ],
-  // "react-native-google-mobile-ads": {
-  //   "android_app_id": "ca-app-pub-7806969239829181~9318981034",
-  //   "ios_app_id": "ca-app-pub-7806969239829181~9318981034"
-  // },
+  "react-native-google-mobile-ads": {
+    "android_app_id": "ca-app-pub-7806969239829181~9318981034",
+    "ios_app_id": "ca-app-pub-7806969239829181~9318981034"
+  },
   "experiments": {
     "typedRoutes": true
   },

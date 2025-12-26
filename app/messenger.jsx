@@ -1,13 +1,22 @@
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { hp, wp } from '@/helpers/common';
 import theme from '../constants/theme';
 import RequestTab from './chat/tabs/requestTab';
 import NotificationsTab from '../components/NotificationTab';
 import ScreenWrapper from '../components/ScreenWrapper';
+import { useLocalSearchParams } from 'expo-router';
 
 const MessengerScreen = () => {
-  const [activeTab, setActiveTab] = useState('notifications');
+  const params = useLocalSearchParams();
+  const [activeTab, setActiveTab] = useState(params?.tab || 'notifications');
+  
+  // Handle navigation params
+  useEffect(() => {
+    if (params?.tab) {
+      setActiveTab(params.tab);
+    }
+  }, [params?.tab]);
   
   const TabButton = ({ title, isActive, onPress, count }) => (
     <TouchableOpacity 
@@ -39,7 +48,7 @@ const MessengerScreen = () => {
       {activeTab === 'notifications' ? (
         <NotificationsTab />
       ) : (
-        <RequestTab />
+        <RequestTab initialTab={params?.subTab} />
       )}
     </View>
     </ScreenWrapper>

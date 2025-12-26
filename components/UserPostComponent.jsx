@@ -8,7 +8,7 @@ import MLoading from '../components/MaterialLoader';
 import FeedLoader from '../components/FeedLoader';
 import { getSupabaseFileUrl } from '../services/imageService';
 import { fetchTwists } from '../services/homeService';
-import { hp, wp } from '../helpers/common';
+import { hp, wp, truncateUsername } from '../helpers/common';
 import RenderHtml from 'react-native-render-html';
 import { router } from 'expo-router';
 
@@ -242,7 +242,7 @@ const UserPostsComponent = ({ navigation, userId }) => {
                   <View style={styles.both}>
                     {item.user?.name && (
                       <View style={styles.titleHtmlContainer}>
-                        <Text style={styles.userNameText}>{item.user.name}</Text>
+                        <Text style={styles.userNameText}>{truncateUsername(item.user.name)}</Text>
                       </View>
                     )}
 

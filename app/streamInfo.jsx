@@ -3,7 +3,7 @@ import { StyleSheet, View, Alert} from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { hp, wp } from '../helpers/common';
 import theme from '../constants/theme';
-import { fetchAverageRating, fetchPeoplesReleaseDetails } from "../services/ottService";
+import { fetchAverageRating, fetchPeoplesReleaseDetails, fetchDigitalById } from "../services/ottService";
 import StreamCardInfo from "../components/streamCardInfo";
 import { useToast } from "../contexts/ToastContext";
 import CustomDotIndicator from "../components/CutomDotIndicator";
@@ -28,13 +28,23 @@ const ReleaseInfo = () => {
                 // Fetch the average rating separately
                 const avgRes = await fetchAverageRating(streamId);
             
+                // Fetch episodes if it's a series
+                let episodesData = null;
+                if (res.success && res.data) {
+                    const digitalRes = await fetchDigitalById(streamId);
+                    if (digitalRes.success && digitalRes.data?.episodes) {
+                        episodesData = digitalRes.data.episodes;
+                    }
+                }
+            
                 if (res.success && isMounted) {
                     const releaseData = res.data;
             
-                    // Add the averageRating to the release object
+                    // Add the averageRating and episodes to the release object
                     const releaseWithRating = {
                         ...releaseData,
                         averageRating: avgRes.success ? avgRes.average : null,
+                        episodes: episodesData || releaseData.episodes || [],
                     };
             
                     setRelease(releaseWithRating);

@@ -1,10 +1,31 @@
 import { uploadProfileImage } from "./imageService";
 import { supabase } from "../lib/supabase";
 
-export const createOrUpdateOtt = async (post) => {
+export const createOrUpdateOtt = async (post, onProgress) => {
   try {
+    // Calculate total steps based on what needs to be done
+    const needsFileUpload = post.file && typeof post.file === "object";
+    const needsFilelUpload = post.filel && typeof post.filel === "object";
+    const isSeries = post.seriesType === 'series' && post.episodes && post.episodes.length > 0;
+    
+    let totalSteps = 1; // database save is always 1 step
+    if (needsFileUpload) totalSteps++;
+    if (needsFilelUpload) totalSteps++;
+    if (isSeries) totalSteps++;
+    
+    let currentStep = 0;
+
+    const updateProgress = (step, message) => {
+      currentStep = step;
+      const percentage = (step / totalSteps) * 100;
+      if (onProgress) {
+        onProgress({ percentage, step, message, totalSteps });
+      }
+    };
+
     // Handle first file upload (file)
-    if (post.file && typeof post.file === "object") {
+    if (needsFileUpload) {
+      updateProgress(1, "Uploading landscape poster...");
       let isImage = post.file.type === "image";
       let folderName = isImage ? "postImage" : "postVideo";
       let fileResult = await uploadProfileImage(folderName, post.file.uri, isImage);
@@ -16,7 +37,9 @@ export const createOrUpdateOtt = async (post) => {
     }
 
     // Handle second file upload (filel)
-    if (post.filel && typeof post.filel === "object") {
+    if (needsFilelUpload) {
+      const step = needsFileUpload ? 2 : 1;
+      updateProgress(step, "Uploading portrait poster...");
       let isImage = post.filel.type === "image";
       let folderName = isImage ? "postImage" : "postVideo";
       let fileResult = await uploadProfileImage(folderName, post.filel.uri, isImage);
@@ -27,7 +50,27 @@ export const createOrUpdateOtt = async (post) => {
       }
     }
 
-    const { data, error } = await supabase.from('streams').upsert(post).select().single();
+    // Extract episodes if it's a series
+    const episodes = post.episodes;
+    const seriesType = post.seriesType || 'normal';
+    // Remove episodes from post data before inserting into streams
+    const { episodes: _, ...streamData } = post;
+
+    // Add seriesType to streamData (column added via migration)
+    streamData.seriesType = seriesType;
+
+    // Add 'series' to tags if it's a series type
+    if (seriesType === 'series') {
+      const tags = Array.isArray(streamData.tags) ? streamData.tags : (streamData.tags ? JSON.parse(streamData.tags) : []);
+      if (!tags.includes('series')) {
+        tags.push('series');
+      }
+      streamData.tags = tags;
+    }
+
+    const dbStep = (needsFileUpload ? 1 : 0) + (needsFilelUpload ? 1 : 0) + 1;
+    updateProgress(dbStep, "Saving to database...");
+    const { data, error } = await supabase.from('streams').upsert(streamData).select().single();
 
     if (error) {
       console.error("Error in createOrUpdateOtt:", error);
@@ -40,6 +83,42 @@ export const createOrUpdateOtt = async (post) => {
       return { success: false, msg: "Could not create or update your Ott", error: error.message };
     }
 
+    // If it's a series and has episodes, create episodes
+    if (seriesType === 'series' && episodes && episodes.length > 0 && data && data.id) {
+      const episodesStep = dbStep + 1;
+      updateProgress(episodesStep, `Creating ${episodes.length} episode(s)...`);
+      // Create episodes in series_episodes table, using stream_id to link to streams table
+      // Make episode title, release date and duration optional.
+      // We still persist the episode row even if only the episode_number is present,
+      // so UI can at least show "Episode X".
+      const episodesToInsert = episodes
+        .filter(ep => ep.episode_number != null) // keep any episode with a number
+        .map(ep => ({
+          stream_id: data.id, // Link to streams table via stream_id
+          series_id: null, // Null for streams-based series
+          episode_number: ep.episode_number,
+          episode_title: ep.episode_title || null,
+          description: ep.description || null,
+          release_date: ep.release_date || null,
+          duration: ep.duration || null
+        }));
+
+      if (episodesToInsert.length > 0) {
+        const { error: episodesError } = await supabase
+          .from('series_episodes')
+          .insert(episodesToInsert);
+
+        if (episodesError) {
+          console.error("Error creating episodes:", episodesError);
+          // Don't fail the whole operation, just log the error
+          // The stream was created successfully
+        }
+      }
+      updateProgress(totalSteps, "Complete!");
+    } else {
+      updateProgress(totalSteps, "Complete!");
+    }
+
     return { success: true, data };
   } catch (error) {
     console.error("Error in createOrUpdateOtt:", error);
@@ -49,19 +128,62 @@ export const createOrUpdateOtt = async (post) => {
 
 
 // plese adjust the fetch releses based on rDate oder in ascending
-export const fetchOtt = async (limit2=10) => {
+export const fetchOtt = async (limit2=10, offset=0) => {
   try {
-    const {data, error} = await supabase
+    // First fetch streams with pagination
+    // Order by rDate (NULLS LAST) then by created_at for items without rDate
+    // Fetch ALL streams (both direct releases and connected releases)
+    const {data: streamsData, error} = await supabase
     .from('streams')
     .select('*')
-    .order('rDate', { ascending: false })  
-    .limit(limit2);
-    // can also order based on created date
+    .order('rDate', { ascending: false, nullsFirst: false })
+    .order('created_at', { ascending: false }) // Secondary sort for items without rDate
+    .range(offset, offset + limit2 - 1); // Use range for proper pagination
 
     if(error){
       console.log("Error in fetching ottss:", error);
       return { success: false, msg: "Could not fetch Otts", error: error.message };
     }
+
+    if (!streamsData || streamsData.length === 0) {
+      return {success: true, data: []};
+    }
+
+    // Get all stream IDs that might have episodes
+    const streamIds = streamsData.map(s => s.id);
+
+    // Fetch episodes for these streams
+    const {data: episodesData, error: episodesError} = await supabase
+      .from('series_episodes')
+      .select('*')
+      .in('stream_id', streamIds);
+
+    if (episodesError) {
+      console.log("Error fetching episodes:", episodesError);
+      // Continue without episodes rather than failing
+    }
+
+    // Group episodes by stream_id
+    const episodesByStreamId = {};
+    if (episodesData && Array.isArray(episodesData)) {
+      episodesData.forEach(episode => {
+        if (episode.stream_id) {
+          if (!episodesByStreamId[episode.stream_id]) {
+            episodesByStreamId[episode.stream_id] = [];
+          }
+          episodesByStreamId[episode.stream_id].push(episode);
+        }
+      });
+    }
+
+    // Attach episodes to their respective streams and sort
+    const data = streamsData.map(stream => {
+      const episodes = episodesByStreamId[stream.id] || [];
+      return {
+        ...stream,
+        episodes: episodes.sort((a, b) => a.episode_number - b.episode_number)
+      };
+    });
 
     return {success: true, data: data};
    
@@ -403,6 +525,36 @@ export const createPeopleReviewUpvote = async (upvote) => {
         console.log('people preview upvote error: ', error);
           return {success: false, msg: error?.message};
       }
+      
+      // Send notification to review author if voter is not the author
+      if (upvote.userId && upvote.dpeopleReviewId) {
+        try {
+          // Fetch review to get author's userId
+          const { data: reviewData } = await supabase
+            .from('dpeopreviews')
+            .select('userId, releaseId')
+            .eq('id', upvote.dpeopleReviewId)
+            .single();
+          
+          if (reviewData && reviewData.userId !== upvote.userId) {
+            // Dynamic import to avoid circular dependency
+            const notificationModule = await import('./notificationService');
+            await notificationModule.createNotifications({
+              senderId: upvote.userId,
+              receiverId: reviewData.userId,
+              title: 'upvoted your review',
+              data: JSON.stringify({ 
+                reviewId: upvote.dpeopleReviewId,
+                streamId: reviewData.releaseId 
+              })
+            });
+          }
+        } catch (notifError) {
+          console.error('Error sending upvote notification:', notifError);
+          // Don't fail the upvote if notification fails
+        }
+      }
+      
        return {success: true, data}; 
     }catch(error){
       console.log('got upvote create error', error);
@@ -446,6 +598,36 @@ export const createPeopleReviewUpvote = async (upvote) => {
             console.log('people preview downvote error: ', error);
               return {success: false, msg: error?.message};
           }
+          
+          // Send notification to review author if voter is not the author
+          if (downupvote.userId && downupvote.dpeopleReviewId) {
+            try {
+              // Fetch review to get author's userId
+              const { data: reviewData } = await supabase
+                .from('dpeopreviews')
+                .select('userId, releaseId')
+                .eq('id', downupvote.dpeopleReviewId)
+                .single();
+              
+              if (reviewData && reviewData.userId !== downupvote.userId) {
+                // Dynamic import to avoid circular dependency
+                const notificationModule = await import('./notificationService');
+                await notificationModule.createNotifications({
+                  senderId: downupvote.userId,
+                  receiverId: reviewData.userId,
+                  title: 'downvoted your review',
+                  data: JSON.stringify({ 
+                    reviewId: downupvote.dpeopleReviewId,
+                    streamId: reviewData.releaseId 
+                  })
+                });
+              }
+            } catch (notifError) {
+              console.error('Error sending downvote notification:', notifError);
+              // Don't fail the downvote if notification fails
+            }
+          }
+          
            return {success: true, data}; 
         }catch(error){
           console.log('got downvote create error', error);
@@ -708,13 +890,14 @@ export const createPeopleReviewUpvote = async (upvote) => {
 
 
 /**
- * Fetch a digital item by its ID
+ * Fetch a digital item by its ID with episodes
  * @param {string} id - The ID of the digital item to fetch
  * @returns {Promise<Object>} - Object containing success status and data/error message
  */
 export const fetchDigitalById = async (id) => {
   try {
-    const { data, error } = await supabase
+    // Fetch the stream
+    const { data: streamData, error } = await supabase
       .from('streams')
       .select('*')
       .eq('id', id)
@@ -724,6 +907,24 @@ export const fetchDigitalById = async (id) => {
       console.error("Error in fetchDigitalById:", error);
       return { success: false, msg: "Could not fetch digital item", error: error.message };
     }
+
+    // Fetch episodes for this stream
+    const { data: episodesData, error: episodesError } = await supabase
+      .from('series_episodes')
+      .select('*')
+      .eq('stream_id', id)
+      .order('episode_number', { ascending: true });
+
+    if (episodesError) {
+      console.error("Error fetching episodes:", episodesError);
+      // Continue without episodes rather than failing
+    }
+
+    // Attach episodes to stream
+    const data = {
+      ...streamData,
+      episodes: episodesData ? episodesData.sort((a, b) => a.episode_number - b.episode_number) : []
+    };
 
     return { success: true, data };
   } catch (error) {
@@ -809,6 +1010,125 @@ export const deleteStream = async (streamId) => {
   try {
     if (!streamId) {
       return { success: false, msg: "Stream ID is required" };
+    }
+
+    // 1) Cleanup critic reviews (preview) and their replies for this stream
+    try {
+      const { data: previews, error: previewError } = await supabase
+        .from('preview')
+        .select('id')
+        .eq('releaseId', streamId);
+
+      if (previewError) {
+        console.error("Error fetching preview rows for deleteStream:", previewError);
+      } else if (previews && previews.length > 0) {
+        const previewIds = previews.map(p => p.id);
+
+        // Delete replies for these previews
+        if (previewIds.length > 0) {
+          const { error: replyError } = await supabase
+            .from('previewsreply')
+            .delete()
+            .in('previewId', previewIds);
+
+          if (replyError) {
+            console.error("Error deleting previewsreply in deleteStream:", replyError);
+          }
+
+          // Delete the previews themselves
+          const { error: deletePreviewError } = await supabase
+            .from('preview')
+            .delete()
+            .in('id', previewIds);
+
+          if (deletePreviewError) {
+            console.error("Error deleting preview rows in deleteStream:", deletePreviewError);
+          }
+        }
+      }
+    } catch (cleanupError) {
+      console.error("Unexpected error cleaning up preview data in deleteStream:", cleanupError);
+    }
+
+    // 2) Cleanup people reviews (dpeopreviews) and all related data for this stream
+    try {
+      const { data: dPeopleReviews, error: dPeopleError } = await supabase
+        .from('dpeopreviews')
+        .select('id')
+        .eq('releaseId', streamId);
+
+      if (dPeopleError) {
+        console.error("Error fetching dpeopreviews for deleteStream:", dPeopleError);
+      } else if (dPeopleReviews && dPeopleReviews.length > 0) {
+        const dPeopleIds = dPeopleReviews.map(r => r.id);
+
+        // Delete upvotes / downvotes linked to these people reviews
+        if (dPeopleIds.length > 0) {
+          const { error: upvoteError } = await supabase
+            .from('dupvote')
+            .delete()
+            .in('dpeopleReviewId', dPeopleIds);
+
+          if (upvoteError) {
+            console.error("Error deleting dupvote rows in deleteStream:", upvoteError);
+          }
+
+          const { error: downvoteError } = await supabase
+            .from('ddownvotes')
+            .delete()
+            .in('dpeopleReviewId', dPeopleIds);
+
+          if (downvoteError) {
+            console.error("Error deleting ddownvotes rows in deleteStream:", downvoteError);
+          }
+
+          // Find replies for these people reviews
+          const { data: dReplies, error: dRepliesError } = await supabase
+            .from('replydpeopreviews')
+            .select('id')
+            .in('replypreviewId', dPeopleIds);
+
+          if (dRepliesError) {
+            console.error("Error fetching replydpeopreviews in deleteStream:", dRepliesError);
+          } else if (dReplies && dReplies.length > 0) {
+            const replyIds = dReplies.map(r => r.id);
+
+            // Delete likes on those replies
+            if (replyIds.length > 0) {
+              const { error: dLikesError } = await supabase
+                .from('dplikes')
+                .delete()
+                .in('replydpeoplereviewId', replyIds);
+
+              if (dLikesError) {
+                console.error("Error deleting dplikes in deleteStream:", dLikesError);
+              }
+            }
+
+            // Delete the reply records themselves
+            const { error: deleteDRepliesError } = await supabase
+              .from('replydpeopreviews')
+              .delete()
+              .in('id', replyIds);
+
+            if (deleteDRepliesError) {
+              console.error("Error deleting replydpeopreviews in deleteStream:", deleteDRepliesError);
+            }
+          }
+
+          // Finally delete the dpeopreviews rows
+          const { error: deleteDPeopleError } = await supabase
+            .from('dpeopreviews')
+            .delete()
+            .in('id', dPeopleIds);
+
+          if (deleteDPeopleError) {
+            console.error("Error deleting dpeopreviews in deleteStream:", deleteDPeopleError);
+          }
+        }
+      }
+    } catch (cleanupError) {
+      console.error("Unexpected error cleaning up dpeopreviews in deleteStream:", cleanupError);
     }
 
     const { error } = await supabase

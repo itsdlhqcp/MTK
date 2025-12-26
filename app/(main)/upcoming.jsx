@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import ScreenWrapper from '@/components/ScreenWrapper';
 import { Text, View, TouchableOpacity, StyleSheet, Alert, Vibration, Pressable, Modal } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchReleases } from '../../services/releaseService';
 import { wp, hp } from '@/helpers/common';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from 'expo-router';
-import { fetchOtt } from '../../services/ottService'; 
+import { fetchOtt, fetchDigitalById } from '../../services/ottService'; 
 import { fetchSeries } from '../../services/seriesService';
 import ReleaseList from '../../components/ReleaseList';
 import OttList from '../../components/OttList';
@@ -14,8 +15,13 @@ import { NetworkUtils } from '../../utils/network';
 import theme from '../../constants/theme';
 import Icon from '../../assets/icons';
 import { useToast } from '../../contexts/ToastContext';
+import moment from 'moment';
 
 const ITEMS_PER_PAGE = 30;
+
+// AsyncStorage keys for view preferences
+const THEATRE_VIEW_PREFERENCE_KEY = 'upcoming_theatre_view_preference';
+const DIGITAL_VIEW_PREFERENCE_KEY = 'upcoming_digital_view_preference';
 
 const upcoming = () => {
     const { user, setAuth } = useAuth();
@@ -23,6 +29,10 @@ const upcoming = () => {
     const [activeTab, setActiveTab] = useState('upcoming');
     const [digitalSubTab, setDigitalSubTab] = useState('ALL'); // New state for digital sub-tabs
     const [showFilterModal, setShowFilterModal] = useState(false);
+    
+    // View mode preferences for THEATRE and DIGITAL tabs
+    const [theatreViewMode, setTheatreViewMode] = useState('grid');
+    const [digitalViewMode, setDigitalViewMode] = useState('grid');
 
     const [releases, setReleases] = useState([]);
     const [releasesLoading, setReleasesLoading] = useState(false);
@@ -45,6 +55,29 @@ const upcoming = () => {
        const [initialCheckDone, setInitialCheckDone] = useState(false);
        const [offlineMode, setOfflineMode] = useState(false);
        const { showToast } = useToast();
+
+       // Load view preferences from AsyncStorage on mount
+       useEffect(() => {
+           const loadViewPreferences = async () => {
+               try {
+                   // Load THEATRE view preference
+                   const theatrePreference = await AsyncStorage.getItem(THEATRE_VIEW_PREFERENCE_KEY);
+                   if (theatrePreference) {
+                       setTheatreViewMode(theatrePreference);
+                   }
+                   
+                   // Load DIGITAL view preference
+                   const digitalPreference = await AsyncStorage.getItem(DIGITAL_VIEW_PREFERENCE_KEY);
+                   if (digitalPreference) {
+                       setDigitalViewMode(digitalPreference);
+                   }
+               } catch (error) {
+                   console.error('Error loading view preferences:', error);
+               }
+           };
+           
+           loadViewPreferences();
+       }, []);
 
        // Check network status on mount
         useEffect(() => {
@@ -92,10 +125,37 @@ const upcoming = () => {
     };
 
     // Handle real-time OTT updates
-    const handleOttEvent = (payload) => {
+    const handleOttEvent = async (payload) => {
         // Handle new OTT
         if (payload.eventType === 'INSERT' && payload?.new?.id) {
-            setOtts(prevOtts => [payload.new, ...prevOtts]);
+            // Fetch full data including episodes for the new stream
+            try {
+                const res = await fetchDigitalById(payload.new.id);
+                if (res.success && res.data) {
+                    setOtts(prevOtts => {
+                        // Check if already exists to avoid duplicates
+                        const exists = prevOtts.some(ott => ott.id === res.data.id);
+                        if (!exists) {
+                            return [res.data, ...prevOtts];
+                        }
+                        // Update if exists
+                        return prevOtts.map(ott => 
+                            ott.id === res.data.id ? res.data : ott
+                        );
+                    });
+                    return;
+                }
+            } catch (error) {
+                console.error('Error fetching new stream:', error);
+            }
+            // Fallback: add without episodes if fetch fails
+            setOtts(prevOtts => {
+                const exists = prevOtts.some(ott => ott.id === payload.new.id);
+                if (!exists) {
+                    return [payload.new, ...prevOtts];
+                }
+                return prevOtts;
+            });
         }
         
         // Handle OTT deletion
@@ -107,6 +167,21 @@ const upcoming = () => {
         
         // Handle OTT update
         if (payload.eventType === 'UPDATE' && payload.new.id) {
+            // Fetch full updated data including episodes
+            try {
+                const res = await fetchDigitalById(payload.new.id);
+                if (res.success && res.data) {
+                    setOtts(prevOtts => 
+                        prevOtts.map(ott => 
+                            ott.id === res.data.id ? res.data : ott
+                        )
+                    );
+                    return;
+                }
+            } catch (error) {
+                console.error('Error fetching updated stream:', error);
+            }
+            // Fallback: update without episodes
             setOtts(prevOtts => 
                 prevOtts.map(ott => 
                     ott.id === payload.new.id ? payload.new : ott
@@ -252,19 +327,23 @@ const getOtts = async () => {
     
     try {
         setOttsLoading(true);
-        const res = await fetchOtt(ottsPage * ITEMS_PER_PAGE);
+        const offset = (ottsPage - 1) * ITEMS_PER_PAGE;
+        const res = await fetchOtt(ITEMS_PER_PAGE, offset);
         
         if (res.success) {
-            if (res.data.length === otts.length) {
+            // Check if we got fewer items than requested, meaning no more to load
+            if (res.data.length < ITEMS_PER_PAGE) {
                 setHasMoreOtts(false);
             }
             
             setOtts(prevOtts => {
-                const newOtts = res.data.filter(
-                    newOtt => !prevOtts.some(
-                        existingOtt => existingOtt.id === newOtt.id
-                    )
-                );
+                // For first page, replace all items
+                if (ottsPage === 1) {
+                    return res.data;
+                }
+                // For subsequent pages, append new items avoiding duplicates
+                const existingIds = new Set(prevOtts.map(ott => ott.id));
+                const newOtts = res.data.filter(newOtt => !existingIds.has(newOtt.id));
                 return [...prevOtts, ...newOtts];
             });
             
@@ -337,6 +416,28 @@ const getSeries = async () => {
         }
     };
 
+    // Toggle view mode for THEATRE tab
+    const handleTheatreViewToggle = async () => {
+        const newMode = theatreViewMode === 'grid' ? 'list' : 'grid';
+        setTheatreViewMode(newMode);
+        try {
+            await AsyncStorage.setItem(THEATRE_VIEW_PREFERENCE_KEY, newMode);
+        } catch (error) {
+            console.error('Error saving theatre view preference:', error);
+        }
+    };
+
+    // Toggle view mode for DIGITAL tab
+    const handleDigitalViewToggle = async () => {
+        const newMode = digitalViewMode === 'grid' ? 'list' : 'grid';
+        setDigitalViewMode(newMode);
+        try {
+            await AsyncStorage.setItem(DIGITAL_VIEW_PREFERENCE_KEY, newMode);
+        } catch (error) {
+            console.error('Error saving digital view preference:', error);
+        }
+    };
+
     // Transform series data to match OTT format for display
     const transformSeriesToOttFormat = useMemo(() => {
         return series.map(ser => {
@@ -374,96 +475,74 @@ const getSeries = async () => {
         });
     }, [series]);
 
+    // Helper function to check if an item is a series
+    const isItemSeries = (ott) => {
+        // Check if it has seriesType (primary check)
+        if (ott.seriesType === 'series') {
+            return true;
+        }
+        
+        // Check if it has episodes (from streams table)
+        if (ott.episodes && Array.isArray(ott.episodes) && ott.episodes.length > 0) {
+            return true;
+        }
+        
+        // Check tags for series indicator
+        let tags = [];
+        try {
+            tags = ott.tags ? (Array.isArray(ott.tags) ? ott.tags : JSON.parse(ott.tags)) : [];
+        } catch (e) {
+            tags = [];
+        }
+        
+        const tagsString = Array.isArray(tags) ? tags.join(',').toLowerCase() : String(tags).toLowerCase();
+        const bodyText = (ott.body || '').toLowerCase();
+        
+        return tagsString.includes('series') || 
+               tagsString.includes('show') ||
+               bodyText.includes('series') ||
+               bodyText.includes('season') ||
+               bodyText.includes('episode');
+    };
+
+    // Helper function to check if a series has finished (endDate has passed)
+    const isSeriesFinished = (item) => {
+        // Only check for series items
+        if (!isItemSeries(item)) {
+            return false;
+        }
+        
+        // If no endDate, it's not finished (streaming indefinitely)
+        if (!item.endDate) {
+            return false;
+        }
+        
+        // Check if endDate has passed
+        const today = moment().startOf('day');
+        const endDate = moment(item.endDate).startOf('day');
+        return today.isAfter(endDate);
+    };
+
     // Filter and merge otts and series based on selected digital sub-tab
     const filteredOtts = useMemo(() => {
         let allItems = [];
         
-        if (digitalSubTab === 'FILM') {
-            // Show only films (OTT items that are not series, exclude all series)
-            const films = otts.filter(ott => {
-                // Check if item has tags that indicate type
-                let tags = [];
-                try {
-                    tags = ott.tags ? (Array.isArray(ott.tags) ? ott.tags : JSON.parse(ott.tags)) : [];
-                } catch (e) {
-                    tags = [];
-                }
-                
-                const tagsString = Array.isArray(tags) ? tags.join(',').toLowerCase() : String(tags).toLowerCase();
-                const bodyText = (ott.body || '').toLowerCase();
-                
-                // Filter for films - exclude items with series/show indicators
-                const isSeries = tagsString.includes('series') || 
-                                tagsString.includes('show') ||
-                                bodyText.includes('series') ||
-                                bodyText.includes('season') ||
-                                bodyText.includes('episode');
-                return !isSeries;
-            });
+        if (digitalSubTab === 'MOVIES') {
+            // Show only films (OTT items that are not series)
+            const films = otts.filter(ott => !isItemSeries(ott));
             allItems = films;
         } else if (digitalSubTab === 'SERIES') {
-            // Show only series (both from series table and OTT items tagged as series)
-            const ottSeries = otts.filter(ott => {
-                let tags = [];
-                try {
-                    tags = ott.tags ? (Array.isArray(ott.tags) ? ott.tags : JSON.parse(ott.tags)) : [];
-                } catch (e) {
-                    tags = [];
-                }
-                
-                const tagsString = Array.isArray(tags) ? tags.join(',').toLowerCase() : String(tags).toLowerCase();
-                const bodyText = (ott.body || '').toLowerCase();
-                
-                const isSeries = tagsString.includes('series') || 
-                                tagsString.includes('show') ||
-                                bodyText.includes('series') ||
-                                bodyText.includes('season') ||
-                                bodyText.includes('episode');
-                return isSeries;
-            });
-            
-            // Include transformed series data
+            // Show only series (from streams table and old series table for backward compatibility)
+            // Filter out series whose endDate has passed
+            const ottSeries = otts.filter(ott => isItemSeries(ott) && !isSeriesFinished(ott));
+            // Include transformed series data from old series table for backward compatibility
+            // Note: transformSeriesToOttFormat sets endDate to null, so they won't be filtered
             allItems = [...ottSeries, ...transformSeriesToOttFormat];
         } else if (digitalSubTab === 'ALL') {
             // Show both films and series together
-            const films = otts.filter(ott => {
-                let tags = [];
-                try {
-                    tags = ott.tags ? (Array.isArray(ott.tags) ? ott.tags : JSON.parse(ott.tags)) : [];
-                } catch (e) {
-                    tags = [];
-                }
-                
-                const tagsString = Array.isArray(tags) ? tags.join(',').toLowerCase() : String(tags).toLowerCase();
-                const bodyText = (ott.body || '').toLowerCase();
-                
-                const isSeries = tagsString.includes('series') || 
-                                tagsString.includes('show') ||
-                                bodyText.includes('series') ||
-                                bodyText.includes('season') ||
-                                bodyText.includes('episode');
-                return !isSeries;
-            });
-            
-            const ottSeries = otts.filter(ott => {
-                let tags = [];
-                try {
-                    tags = ott.tags ? (Array.isArray(ott.tags) ? ott.tags : JSON.parse(ott.tags)) : [];
-                } catch (e) {
-                    tags = [];
-                }
-                
-                const tagsString = Array.isArray(tags) ? tags.join(',').toLowerCase() : String(tags).toLowerCase();
-                const bodyText = (ott.body || '').toLowerCase();
-                
-                const isSeries = tagsString.includes('series') || 
-                                tagsString.includes('show') ||
-                                bodyText.includes('series') ||
-                                bodyText.includes('season') ||
-                                bodyText.includes('episode');
-                return isSeries;
-            });
-            
+            const films = otts.filter(ott => !isItemSeries(ott));
+            // Filter out series whose endDate has passed
+            const ottSeries = otts.filter(ott => isItemSeries(ott) && !isSeriesFinished(ott));
             // Include both films, OTT series, and transformed series data
             allItems = [...films, ...ottSeries, ...transformSeriesToOttFormat];
         }
@@ -535,7 +614,7 @@ const getSeries = async () => {
                         loading={ottsLoading || seriesLoading}
                         hasMore={(hasMoreOtts || hasMoreSeries) && isConnected}
                         onLoadMore={() => {
-                            if (digitalSubTab === 'FILM') {
+                            if (digitalSubTab === 'MOVIES') {
                                 getOtts();
                             } else if (digitalSubTab === 'SERIES') {
                                 getSeries();
@@ -547,6 +626,8 @@ const getSeries = async () => {
                         }}
                         onFilterPress={() => setShowFilterModal(true)}
                         filterLabel={digitalSubTab}
+                        viewMode={digitalViewMode}
+                        onToggleViewMode={handleDigitalViewToggle}
                         onDelete={(itemId, seriesId) => {
                             // Remove from appropriate list based on whether it's a series or digital
                             if (seriesId) {
@@ -597,18 +678,18 @@ const getSeries = async () => {
                                 <Pressable 
                                     style={[
                                         styles.filterOption,
-                                        digitalSubTab === 'FILM' && styles.filterOptionActive
+                                        digitalSubTab === 'MOVIES' && styles.filterOptionActive
                                     ]}
                                     onPress={() => {
-                                        handleDigitalSubTabPress('FILM');
+                                        handleDigitalSubTabPress('MOVIES');
                                         setShowFilterModal(false);
                                     }}
                                 >
                                     <Text style={[
                                         styles.filterOptionText,
-                                        digitalSubTab === 'FILM' && styles.filterOptionTextActive
-                                    ]}>FILM</Text>
-                                    {digitalSubTab === 'FILM' && (
+                                        digitalSubTab === 'MOVIES' && styles.filterOptionTextActive
+                                    ]}>MOVIES</Text>
+                                    {digitalSubTab === 'MOVIES' && (
                                         <Icon name="check" size={hp(2)} color={theme.colors.primary} />
                                     )}
                                 </Pressable>
@@ -662,6 +743,8 @@ const getSeries = async () => {
                     loading={releasesLoading}
                     hasMore={hasMoreReleases && isConnected}
                     onLoadMore={getReleases}
+                    viewMode={theatreViewMode}
+                    onToggleViewMode={handleTheatreViewToggle}
                     onDelete={(releaseId) => {
                         setReleases(prevReleases => 
                             prevReleases.filter(release => release.id !== releaseId)

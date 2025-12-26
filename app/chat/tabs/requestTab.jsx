@@ -1,11 +1,12 @@
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import React, { useState, useEffect } from 'react';
-import { hp, wp } from '@/helpers/common';
+import { hp, wp, truncateUsername } from '@/helpers/common';
 import theme from '../../../constants/theme';
 import Icon from '@/assets/icons';
 import Avatar from '../../../components/Avatar';
 import { friendRequestService } from '../../../services/requestService';
 import { useToast } from '../../../contexts/ToastContext';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
 // Dark theme colors
 const darkTheme = {
@@ -22,15 +23,37 @@ const darkTheme = {
   }
 };
 
-const RequestTab = () => {
+const RequestTab = ({ initialTab }) => {
   const [loading, setLoading] = useState(false);
+  const [followersLoading, setFollowersLoading] = useState(false);
+  const [followingLoading, setFollowingLoading] = useState(false);
   const { showToast } = useToast();
   const [requests, setRequests] = useState({ incoming: [], outgoing: [] });
-  const [activeSection, setActiveSection] = useState('incoming'); // 'incoming' or 'outgoing'
+  const [followers, setFollowers] = useState([]);
+  const [following, setFollowing] = useState([]);
+  const params = useLocalSearchParams();
+  const router = useRouter();
+  
+  // Initialize activeSection from initialTab prop, params, or default to 'incoming'
+  const [activeSection, setActiveSection] = useState(initialTab || params?.tab || 'incoming'); // 'incoming', 'outgoing', 'followers', 'following'
   
   useEffect(() => {
     fetchRequests();
-  }, []);
+    if (activeSection === 'followers') {
+      fetchFollowers();
+    } else if (activeSection === 'following') {
+      fetchFollowing();
+    }
+  }, [activeSection]);
+  
+  // Handle navigation params and initialTab prop
+  useEffect(() => {
+    if (initialTab) {
+      setActiveSection(initialTab);
+    } else if (params?.tab) {
+      setActiveSection(params.tab);
+    }
+  }, [initialTab, params?.tab]);
   
   const fetchRequests = async () => {
     setLoading(true);
@@ -79,6 +102,100 @@ const RequestTab = () => {
     }
   };
   
+  const fetchFollowers = async () => {
+    setFollowersLoading(true);
+    try {
+      const res = await friendRequestService.getFollowers();
+      if (res.success) {
+        setFollowers(res.data || []);
+      } else {
+        showToast('success', 'Failed to fetch followers');
+      }
+    } catch (error) {
+      console.error('Error fetching followers:', error);
+      showToast('success', 'Something went wrong');
+    } finally {
+      setFollowersLoading(false);
+    }
+  };
+  
+  const fetchFollowing = async () => {
+    setFollowingLoading(true);
+    try {
+      const res = await friendRequestService.getFollowing();
+      if (res.success) {
+        setFollowing(res.data || []);
+      } else {
+        showToast('success', 'Failed to fetch following');
+      }
+    } catch (error) {
+      console.error('Error fetching following:', error);
+      showToast('success', 'Something went wrong');
+    } finally {
+      setFollowingLoading(false);
+    }
+  };
+  
+  const renderFollowerItem = ({ item }) => (
+    <TouchableOpacity 
+      style={styles.requestItem}
+      onPress={() => {
+        if (item?.id) {
+          router.push({
+            pathname: '/xprofile',
+            params: { userId: item.id }
+          });
+        }
+      }}
+    >
+      <View style={styles.userInfo}>
+        <Avatar
+          uri={item?.image}
+          size={hp(6)}
+          rounded={theme.radius.xl}
+        />
+        <View style={styles.requestText}>
+          <Text style={styles.username}>{truncateUsername(item?.name || '')}</Text>
+          {item?.bio && (
+            <Text style={styles.requestTime} numberOfLines={1}>
+              {item.bio}
+            </Text>
+          )}
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+  
+  const renderFollowingItem = ({ item }) => (
+    <TouchableOpacity 
+      style={styles.requestItem}
+      onPress={() => {
+        if (item?.id) {
+          router.push({
+            pathname: '/xprofile',
+            params: { userId: item.id }
+          });
+        }
+      }}
+    >
+      <View style={styles.userInfo}>
+        <Avatar
+          uri={item?.image}
+          size={hp(6)}
+          rounded={theme.radius.xl}
+        />
+        <View style={styles.requestText}>
+          <Text style={styles.username}>{truncateUsername(item?.name || '')}</Text>
+          {item?.bio && (
+            <Text style={styles.requestTime} numberOfLines={1}>
+              {item.bio}
+            </Text>
+          )}
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+  
   const renderIncomingRequest = ({ item }) => (
     <View style={styles.requestItem}>
       <View style={styles.userInfo}>
@@ -88,7 +205,7 @@ const RequestTab = () => {
           rounded={theme.radius.xl}
         />
         <View style={styles.requestText}>
-          <Text style={styles.username}>{item.sender?.name}</Text>
+          <Text style={styles.username}>{truncateUsername(item.sender?.name || '')}</Text>
           <Text style={styles.requestTime}>
             Sent request {new Date(item.created_at).toLocaleDateString()}
           </Text>
@@ -135,37 +252,127 @@ const RequestTab = () => {
     </View>
   );
   
-  const SectionTab = ({ title, isActive, onPress }) => (
+  const SectionTab = ({ title, isActive, onPress, count }) => (
     <TouchableOpacity 
       style={[styles.sectionTab, isActive && styles.activeSectionTab]}
       onPress={onPress}
     >
       <Text style={[styles.sectionTabText, isActive && styles.activeSectionTabText]}>
-        {title} {title === 'Incoming' ? `(${requests.incoming.length})` : `(${requests.outgoing.length})`}
+        {title} {count !== undefined && `(${count})`}
       </Text>
     </TouchableOpacity>
   );
   
-  if (loading && !requests.incoming.length && !requests.outgoing.length) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={darkTheme.colors.primary} />
-        <Text style={styles.loadingText}>Loading requests...</Text>
-      </View>
-    );
-  }
-  
-  if (!loading && !requests.incoming.length && !requests.outgoing.length) {
-    return (
-      <View style={styles.emptyContainer}>
-        <Icon name="user" size={hp(8)} color={darkTheme.colors.textLight} />
-        <Text style={styles.emptyText}>No friend requests yet</Text>
-        <Text style={styles.emptySubtext}>
-          When someone sends you a friend request, it will appear here
-        </Text>
-      </View>
-    );
-  }
+  const renderContent = () => {
+    if (activeSection === 'incoming' || activeSection === 'outgoing') {
+      if (loading && !requests.incoming.length && !requests.outgoing.length) {
+        return (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={darkTheme.colors.primary} />
+            <Text style={styles.loadingText}>Loading requests...</Text>
+          </View>
+        );
+      }
+      
+      if (!loading && !requests.incoming.length && !requests.outgoing.length) {
+        return (
+          <View style={styles.emptyContainer}>
+            <Icon name="user" size={hp(8)} color={darkTheme.colors.textLight} />
+            <Text style={styles.emptyText}>No friend requests yet</Text>
+            <Text style={styles.emptySubtext}>
+              When someone sends you a friend request, it will appear here
+            </Text>
+          </View>
+        );
+      }
+      
+      if (activeSection === 'incoming') {
+        return (
+          <FlatList
+            data={requests.incoming}
+            renderItem={renderIncomingRequest}
+            keyExtractor={item => item.id.toString()}
+            contentContainerStyle={styles.requestsList}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No incoming requests</Text>
+              </View>
+            }
+          />
+        );
+      } else {
+        return (
+          <FlatList
+            data={requests.outgoing}
+            renderItem={renderOutgoingRequest}
+            keyExtractor={item => item.id.toString()}
+            contentContainerStyle={styles.requestsList}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No outgoing requests</Text>
+              </View>
+            }
+          />
+        );
+      }
+    } else if (activeSection === 'followers') {
+      if (followersLoading) {
+        return (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={darkTheme.colors.primary} />
+            <Text style={styles.loadingText}>Loading followers...</Text>
+          </View>
+        );
+      }
+      
+      return (
+        <FlatList
+          data={followers}
+          renderItem={renderFollowerItem}
+          keyExtractor={item => item?.id?.toString() || Math.random().toString()}
+          contentContainerStyle={styles.requestsList}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Icon name="user" size={hp(8)} color={darkTheme.colors.textLight} />
+              <Text style={styles.emptyText}>No followers yet</Text>
+              <Text style={styles.emptySubtext}>
+                People who follow you will appear here
+              </Text>
+            </View>
+          }
+        />
+      );
+    } else if (activeSection === 'following') {
+      if (followingLoading) {
+        return (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={darkTheme.colors.primary} />
+            <Text style={styles.loadingText}>Loading following...</Text>
+          </View>
+        );
+      }
+      
+      return (
+        <FlatList
+          data={following}
+          renderItem={renderFollowingItem}
+          keyExtractor={item => item?.id?.toString() || Math.random().toString()}
+          contentContainerStyle={styles.requestsList}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Icon name="user" size={hp(8)} color={darkTheme.colors.textLight} />
+              <Text style={styles.emptyText}>Not following anyone yet</Text>
+              <Text style={styles.emptySubtext}>
+                People you follow will appear here
+              </Text>
+            </View>
+          }
+        />
+      );
+    }
+    
+    return null;
+  };
   
   return (
     <View style={styles.container}>
@@ -174,39 +381,29 @@ const RequestTab = () => {
           title="Incoming" 
           isActive={activeSection === 'incoming'} 
           onPress={() => setActiveSection('incoming')}
+          count={requests.incoming.length}
         />
         <SectionTab 
           title="Outgoing" 
           isActive={activeSection === 'outgoing'} 
           onPress={() => setActiveSection('outgoing')}
+          count={requests.outgoing.length}
+        />
+        <SectionTab 
+          title="Followers" 
+          isActive={activeSection === 'followers'} 
+          onPress={() => setActiveSection('followers')}
+          count={followers.length}
+        />
+        <SectionTab 
+          title="Following" 
+          isActive={activeSection === 'following'} 
+          onPress={() => setActiveSection('following')}
+          count={following.length}
         />
       </View>
       
-      {activeSection === 'incoming' ? (
-        <FlatList
-          data={requests.incoming}
-          renderItem={renderIncomingRequest}
-          keyExtractor={item => item.id.toString()}
-          contentContainerStyle={styles.requestsList}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No incoming requests</Text>
-            </View>
-          }
-        />
-      ) : (
-        <FlatList
-          data={requests.outgoing}
-          renderItem={renderOutgoingRequest}
-          keyExtractor={item => item.id.toString()}
-          contentContainerStyle={styles.requestsList}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No outgoing requests</Text>
-            </View>
-          }
-        />
-      )}
+      {renderContent()}
     </View>
   );
 };
@@ -221,10 +418,12 @@ const styles = StyleSheet.create({
   sectionTabs: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: darkTheme.colors.borderColor
+    borderBottomColor: darkTheme.colors.borderColor,
+    flexWrap: 'wrap'
   },
   sectionTab: {
     flex: 1,
+    minWidth: wp(20),
     paddingVertical: hp(1.5),
     alignItems: 'center'
   },

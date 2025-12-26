@@ -1,5 +1,5 @@
-import { Image, StyleSheet, Text, TouchableOpacity, View, Modal } from 'react-native'
-import React, { useState, useEffect } from 'react'
+import { Image, StyleSheet, Text, TouchableOpacity, View, Modal, Animated } from 'react-native'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { wp, hp } from '@/helpers/common'
 import theme from '../constants/theme'
 import moment from 'moment/moment'
@@ -16,6 +16,12 @@ import { adminIds } from '../constants/admin'
 import { useAuth } from '../contexts/AuthContext'
 import { fetchAverageRating, fetchAverageRatingDirect } from '../services/releaseService'
 import { deleteSeries } from '../services/seriesService'
+import {
+  subscribeToReleaseNotifications,
+  unsubscribeFromReleaseNotifications,
+  checkSubscriptionStatus
+} from '../services/releaseNotificationSubscriptionService.js'
+import { playBellActivateSound, playBellDeactivateSound } from '../services/bellSoundService.js'
 
 const OttCard = ({
     item,
@@ -45,6 +51,29 @@ const OttCard = ({
     // State for delete confirmation modal
     const [deleteModalVisible, setDeleteModalVisible] = useState(false);
     const [deleting, setDeleting] = useState(false);
+    // State for notification subscription
+    const [isSubscribed, setIsSubscribed] = useState(false);
+    const [subscriptionLoading, setSubscriptionLoading] = useState(false);
+    // Animation values for bell icon
+    const bellScale = useRef(new Animated.Value(1)).current;
+    const bellRotation = useRef(new Animated.Value(0)).current;
+
+    // Compute if item is a series using useMemo
+    const isSeriesItem = useMemo(() => {
+        // Check for old series format (from separate series table)
+        if (item?.isSeries && item?.originalId) {
+            return true;
+        }
+        // Check for new series format (from streams table with episodes)
+        if (item?.episodes && Array.isArray(item.episodes) && item.episodes.length > 0) {
+            return true;
+        }
+        // Check seriesType
+        if (item?.seriesType === 'series') {
+            return true;
+        }
+        return false;
+    }, [item?.isSeries, item?.originalId, item?.episodes, item?.seriesType]);
 
     // Fetch the average rating when component mounts
     useEffect(() => {
@@ -54,6 +83,22 @@ const OttCard = ({
             getAverageRatingOfDirect();
         }
     }, [item?.id]);
+
+    // Check subscription status on mount
+    useEffect(() => {
+        const checkSubscription = async () => {
+            if (!currentUser?.id || !item?.id) return;
+            try {
+                const result = await checkSubscriptionStatus(currentUser.id, item.id, 'digital');
+                if (result.success) {
+                    setIsSubscribed(result.isSubscribed);
+                }
+            } catch (error) {
+                console.error("Error checking subscription:", error);
+            }
+        };
+        checkSubscription();
+    }, [currentUser?.id, item?.id]);
 
 
     const getAverageRating = async () => {
@@ -106,8 +151,15 @@ const OttCard = ({
         setIsNavigating(true);
         
         // Check if this is a series item
-        if (item.isSeries && item.originalId) {
-            router.push({ pathname: 'seriesDetails', params: { seriesId: item.originalId } });
+        if (isSeriesItem) {
+            // For old series table format
+            if (item.isSeries && item.originalId) {
+                router.push({ pathname: 'seriesDetails', params: { seriesId: item.originalId } });
+            } else {
+                // For new series format from streams table, navigate to stream details
+                // Series reviews should work since they're in streams table
+                router.push({ pathname: 'streamInfo', params: { streamId: item.id } });
+            }
         } else {
             router.push({ pathname: 'streamInfo', params: { streamId: item.id } });
         }
@@ -129,11 +181,17 @@ const OttCard = ({
     // Handle edit press
     const handleEditPress = (e) => {
         e.stopPropagation(); // Prevent card press event
-        // For series items, navigate directly to edit page
+        // For series items from old series table, navigate to createSeries
         if (item.isSeries && item.originalId) {
             router.push({ pathname: 'createSeries', params: { id: item.originalId } });
-        } else {
-            router.push({ pathname: 'editDigitals', params: { ...item } });
+        } 
+        // For direct-release series in streams table, open full series editor (newOtt)
+        else if (item.seriesType === 'series') {
+            router.push({ pathname: 'newOtt', params: { ...item, id: item.id } });
+        } 
+        // For normal (non-series) streams, use lightweight editDigitals
+        else {
+            router.push({ pathname: 'editDigitals', params: { id: item.id } });
         }
         setShowDropdown(false);
     };
@@ -159,10 +217,11 @@ const OttCard = ({
         setDeleting(true);
         try {
             let result;
-            // Check if it's a series or a digital (stream)
+            // Check if it's a series from old series table
             if (item.isSeries && item.originalId) {
                 result = await deleteSeries(item.originalId);
             } else {
+                // For both normal and series from streams table, use deleteStream
                 result = await deleteStream(item.id);
             }
             
@@ -264,6 +323,96 @@ const OttCard = ({
      const releaseAt = item?.rDate ? moment(item.rDate).format('MMM D') : '';
      const show = releaseAt && moment(item.rDate).isSameOrBefore(moment(), 'day');
 
+    // Animation function for bell toggle
+    const animateBell = () => {
+        // Scale down then up with rotation
+        Animated.sequence([
+            Animated.parallel([
+                Animated.spring(bellScale, {
+                    toValue: 0.8,
+                    useNativeDriver: true,
+                    tension: 300,
+                    friction: 7,
+                }),
+                Animated.timing(bellRotation, {
+                    toValue: 1,
+                    duration: 200,
+                    useNativeDriver: true,
+                }),
+            ]),
+            Animated.parallel([
+                Animated.spring(bellScale, {
+                    toValue: 1.2,
+                    useNativeDriver: true,
+                    tension: 300,
+                    friction: 7,
+                }),
+                Animated.timing(bellRotation, {
+                    toValue: 0,
+                    duration: 200,
+                    useNativeDriver: true,
+                }),
+            ]),
+            Animated.spring(bellScale, {
+                toValue: 1,
+                useNativeDriver: true,
+                tension: 300,
+                friction: 7,
+            }),
+        ]).start();
+    };
+
+    // Handle notification bell toggle
+    const handleNotificationToggle = async (e) => {
+        e.stopPropagation(); // Prevent card press event
+        if (!currentUser?.id || !item?.id || subscriptionLoading) return;
+
+        // Start animation
+        animateBell();
+
+        setSubscriptionLoading(true);
+        try {
+            if (isSubscribed) {
+                // Play deactivation sound
+                playBellDeactivateSound();
+                
+                // Unsubscribe
+                const result = await unsubscribeFromReleaseNotifications(
+                    currentUser.id,
+                    item.id,
+                    'digital'
+                );
+                if (result.success) {
+                    setIsSubscribed(false);
+                    showToast('success', 'Notifications disabled for this release');
+                } else {
+                    showToast('error', result.msg || 'Failed to unsubscribe');
+                }
+            } else {
+                // Play activation sound
+                playBellActivateSound();
+                
+                // Subscribe
+                const result = await subscribeToReleaseNotifications(
+                    currentUser.id,
+                    item.id,
+                    'digital'
+                );
+                if (result.success) {
+                    setIsSubscribed(true);
+                    showToast('success', 'You will be notified when this release is available');
+                } else {
+                    showToast('error', result.msg || 'Failed to subscribe');
+                }
+            }
+        } catch (error) {
+            console.error('Error toggling notification:', error);
+            showToast('error', 'Something went wrong');
+        } finally {
+            setSubscriptionLoading(false);
+        }
+    };
+
     return (
         <TouchableOpacity 
             style={[styles.container, hasShadow && shadowStyle]}
@@ -271,9 +420,9 @@ const OttCard = ({
             activeOpacity={0.9}
         >
             <View style={styles.imageContainer}>
-                {item?.file?.includes('postImage') && (
+                {(item?.file || item?.filel) && (
                     <Image
-                        source={getSupabaseFileUrl(item?.file)}
+                        source={getSupabaseFileUrl(item?.file || item?.filel)}
                         style={styles.postMedia}
                         resizeMode="cover"
                     />
@@ -360,7 +509,41 @@ const OttCard = ({
                                 </Text>
                             )}
                         </View>
-                        <View style={styles.emptySpace} />
+                        <View style={styles.bottomRightContainer}>
+                            {/* Notification bell button - Bottom right */}
+                            {currentUser?.id && (
+                                <TouchableOpacity 
+                                    style={[
+                                        styles.notificationButton,
+                                        isSubscribed && styles.notificationButtonActive
+                                    ]} 
+                                    onPress={handleNotificationToggle}
+                                    activeOpacity={0.7}
+                                    disabled={subscriptionLoading}
+                                >
+                                    <Animated.View
+                                        style={{
+                                            transform: [
+                                                { scale: bellScale },
+                                                {
+                                                    rotate: bellRotation.interpolate({
+                                                        inputRange: [0, 1],
+                                                        outputRange: ['0deg', '15deg'],
+                                                    }),
+                                                },
+                                            ],
+                                        }}
+                                    >
+                                        <Text style={[
+                                            styles.notificationIcon,
+                                            isSubscribed && styles.notificationIconActive
+                                        ]}>
+                                            {isSubscribed ? '🔔' : '🔕'}
+                                        </Text>
+                                    </Animated.View>
+                                </TouchableOpacity>
+                            )}
+                        </View>
                     </View>
                 </View>
                 
@@ -375,7 +558,7 @@ const OttCard = ({
                             <Text style={styles.dropdownText}>Edit</Text>
                         </TouchableOpacity>
                         {/* Show End Date option only for non-series items */}
-                        {!item.isSeries && (
+                        {!isSeriesItem && (
                             <>
                                 <View style={styles.divider} />
                                 <TouchableOpacity 
@@ -474,7 +657,7 @@ const OttCard = ({
                         <View style={styles.deleteModalContent}>
                             <Text style={styles.deleteModalTitle}>Confirm Delete</Text>
                             <Text style={styles.deleteModalMessage}>
-                                Are you sure you want to delete this {item.isSeries ? 'series' : 'digital'}? This action cannot be undone.
+                                Are you sure you want to delete this {isSeriesItem ? 'series' : 'digital'}? This action cannot be undone.
                             </Text>
                             <View style={styles.deleteModalButtons}>
                                 <TouchableOpacity
@@ -546,6 +729,11 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
     },
+    rightTopButtons: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: wp(1),
+    },
     rightTopSection: {
         flexDirection: 'row',
         alignItems: 'flex-start',
@@ -595,6 +783,29 @@ const styles = StyleSheet.create({
         fontSize: hp(1.8),
         fontWeight: '400',
         marginTop: 2
+    },
+    bottomRightContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    notificationButton: {
+        padding: hp(0.8),
+        borderRadius: hp(2),
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minWidth: hp(3.5),
+        minHeight: hp(3.5),
+    },
+    notificationButtonActive: {
+        backgroundColor: 'rgba(229, 9, 20, 0.3)',
+    },
+    notificationIcon: {
+        fontSize: hp(2.2),
+        color: theme.colors.light || '#E0E0E0',
+    },
+    notificationIconActive: {
+        color: theme.colors.primary || '#E50914',
     },
     moreButton: {
         padding: hp(0.8),

@@ -8,7 +8,8 @@ import { createPostLike, removePostLike } from '../services/postService';
 const LikeButton = ({ 
   item, 
   currentUser, 
-  updatePost = () => {} 
+  updatePost = () => {},
+  iconType = 'heart' // 'heart' for spotlight, 'popcorn' for home
 }) => {
   const [likes, setLikes] = useState([]);
   
@@ -64,14 +65,18 @@ const LikeButton = ({
   
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={onLike} activeOpacity={0.7}>
+      <TouchableOpacity 
+        onPress={onLike} 
+        activeOpacity={0.7}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      >
         <View>
           <Icon 
-            name='heart' 
+            name={iconType} 
             size={24} 
-            fill={liked ? theme.colors.blue : 'transparent'} 
-            strokeWidth={1.4} 
-            color={liked ? theme.colors.blue : theme.colors.blue}
+            fill={iconType === 'popcorn' ? 'transparent' : (liked ? theme.colors.blue : 'transparent')} 
+            strokeWidth={iconType === 'popcorn' && liked ? 2.5 : 1.4} 
+            color={iconType === 'popcorn' && liked ? '#FFD700' : (liked ? theme.colors.blue : theme.colors.blue)}
           />
         </View>
       </TouchableOpacity>

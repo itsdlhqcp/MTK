@@ -3,7 +3,7 @@ import React, { useRef, useState, useEffect } from 'react'
 import ScreenWrapper from '../components/ScreenWrapper'
 import Header from '../components/Header'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import { hp, wp } from '@/helpers/common'
+import { hp, wp, truncateUsername } from '@/helpers/common'
 import theme from '../constants/theme'
 import Icon from '@/assets/icons'
 import Avatar from '../components/Avatar'
@@ -33,6 +33,8 @@ const NewRelease = () => {
   const [rating, setRating] = useState(null);
   const [userRatingImpact, setUserRatingImpact] = useState(0);
   const [tags, setTags] = useState([]); 
+  const [imdb, setImdb] = useState('');
+  const [showDetails, setShowDetails] = useState(true);
   
   // Film information fields as individual state variables
   const [lang, setLang] = useState('');
@@ -78,6 +80,7 @@ const NewRelease = () => {
       if (post.dop) setDop(post.dop);
       if (post.edit) setEdit(post.edit);
       if (post.cast) setCast(post.cast);
+      if (post.imdb) setImdb(post.imdb);
       if (post.tags) {
         const tagArray = Array.isArray(post.tags) ? post.tags : 
                        (typeof post.tags === 'string' ? [post.tags] : []);
@@ -264,7 +267,8 @@ const NewRelease = () => {
       defRating: rating,
       userRatImpact: userRatingImpact,
       type: tags, 
-      endDate: normalizeDate(selectedEndate)
+      endDate: normalizeDate(selectedEndate),
+      imdb: imdb?.trim() || null,
     }
     
     // Add film information only if provided
@@ -298,6 +302,7 @@ const NewRelease = () => {
       setDop('');
       setEdit('');
       setCast('');
+      setImdb('');
       
       Alert.alert('Release uploaded successfully');
       router.push('/upcoming');
@@ -309,9 +314,9 @@ const NewRelease = () => {
   const handleEditorChange = (body) => {
     bodyRef.current = body;
   };
-
+ 
   return (
-    <ScreenWrapper bg="white">
+    <ScreenWrapper bg="#121212">
       <Header title={post?.id ? "Edit Release" : "Create Release"}
          showBackButton={true} />
       <View style={styles.container}>
@@ -324,7 +329,7 @@ const NewRelease = () => {
             />
             <View style={{ gap: 2 }}>
               <Text style={styles.username}>
-                {user?.name}
+                {truncateUsername(user?.name || '')}
               </Text>
               <Text style={styles.publicText}>
                 Public
@@ -447,13 +452,44 @@ const NewRelease = () => {
           {!post?.id && (
             <TagInput tags={tags} setTags={setTags} />
           )}
-          
 
-          {/* Film Information Section */}
+          {/* Theatre & IMDB Section */}
           <View style={styles.sectionDivider}>
-            <Text style={styles.sectionTitle}>Film Information (If present looks gd)</Text>
+            <Text style={styles.sectionTitle}>Theatre & IMDB</Text>
           </View>
 
+          {/* IMDB Link Field */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>IMDB Link</Text>
+            <TextInput
+              style={styles.input}
+              value={imdb}
+              onChangeText={setImdb}
+              placeholder="https://www.imdb.com/title/..."
+              placeholderTextColor="#9E9E9E"
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+          </View>
+          
+          {/* Film Details Section (collapsible) */}
+          <View style={styles.sectionDivider}>
+            <TouchableOpacity 
+              style={styles.detailsHeader} 
+              onPress={() => setShowDetails(prev => !prev)}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.sectionTitle}>Film Details (Optional)</Text>
+              <Icon 
+                name={showDetails ? 'chevron-up' : 'chevron-down'} 
+                size={18} 
+                color={theme.colors.dark} 
+              />
+            </TouchableOpacity>
+          </View>
+
+          {showDetails && (
+          <>
           {/* Language Field */}
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>Language</Text>
@@ -462,6 +498,7 @@ const NewRelease = () => {
               value={lang}
               onChangeText={(text) => setLang(text)}
               placeholder="Enter film language"
+              placeholderTextColor="#9E9E9E"
             />
           </View>
 
@@ -473,6 +510,7 @@ const NewRelease = () => {
               value={genre}
               onChangeText={(text) => setGenre(text)}
               placeholder="Enter film genre"
+              placeholderTextColor="#9E9E9E"
             />
           </View>
 
@@ -485,6 +523,7 @@ const NewRelease = () => {
               onChangeText={handleDurationChange}
               placeholder="Enter film duration (HH:MM:SS)"
               keyboardType="default"
+              placeholderTextColor="#9E9E9E"
             />
             {durationError ? (
               <Text style={styles.errorText}>{durationError}</Text>
@@ -499,6 +538,7 @@ const NewRelease = () => {
               value={director}
               onChangeText={(text) => setDirector(text)}
               placeholder="Enter film director"
+              placeholderTextColor="#9E9E9E"
             />
           </View>
 
@@ -510,6 +550,7 @@ const NewRelease = () => {
               value={writer}
               onChangeText={(text) => setWriter(text)}
               placeholder="Enter film writer"
+              placeholderTextColor="#9E9E9E"
             />
           </View>
 
@@ -521,6 +562,7 @@ const NewRelease = () => {
               value={music}
               onChangeText={(text) => setMusic(text)}
               placeholder="Enter music composer"
+              placeholderTextColor="#9E9E9E"
             />
           </View>
 
@@ -532,6 +574,7 @@ const NewRelease = () => {
               value={dop}
               onChangeText={(text) => setDop(text)}
               placeholder="Enter DOP"
+              placeholderTextColor="#9E9E9E"
             />
           </View>
 
@@ -543,6 +586,7 @@ const NewRelease = () => {
               value={edit}
               onChangeText={(text) => setEdit(text)}
               placeholder="Enter film editor"
+              placeholderTextColor="#9E9E9E"
             />
           </View>
 
@@ -556,8 +600,11 @@ const NewRelease = () => {
               placeholder="Enter cast members"
               multiline={true}
               numberOfLines={4}
+              placeholderTextColor="#9E9E9E"
             />
           </View>
+          </>
+          )}
 
           <View style={styles.sectionDivider}>
             <Text style={styles.sectionTitle}>Release Information</Text>
@@ -610,6 +657,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     paddingHorizontal: wp(4), 
     gap: 15,
+    backgroundColor: '#121212',
   },
   file: {
     height: hp(32),
@@ -618,7 +666,7 @@ const styles = StyleSheet.create({
     borderCurve: 'continuous',
     paddingVertical: wp(8),
     borderWidth: 1,
-    borderColor: theme.colors.gray,
+    borderColor: '#333333',
     borderRadius: theme.radius.md,
     padding: 7,
     justifyContent: 'center',
@@ -634,12 +682,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: wp(4),
     borderRadius: theme.radius.md, 
     borderCurve: 'continuous', 
-    borderColor: theme.colors.gray
+    borderColor: '#333333',
+    backgroundColor: '#181818',
   },
   title: {
     fontSize: hp(2.5),
     fontWeight: theme.fonts.semibold,
-    color: theme.colors.text,
+    color: '#FFFFFF',
     textAlign: 'center'
   },
   header: {
@@ -650,7 +699,7 @@ const styles = StyleSheet.create({
   username: {
     fontSize: hp(2.2),
     fontWeight: theme.fonts.semibold,
-    color: theme.colors.text,
+    color: '#FFFFFF',
   },
   mediaIcons: {
     flexDirection: 'row', 
@@ -674,7 +723,7 @@ const styles = StyleSheet.create({
   publicText: {
     fontSize: hp(1.7),
     fontWeight: theme.fonts.medium,
-    color: theme.colors.textLight,
+    color: '#B3B3B3',
   },
   closeIcon: {
     position: 'absolute',
@@ -688,16 +737,16 @@ const styles = StyleSheet.create({
     fontSize: hp(2),
     fontWeight: hp(4.5),
     paddingStart: 10,
-    color: theme.colors.text,
+    color: '#FFFFFF',
     paddingBottom: 5
   },
   dateInput: {
     fontSize: hp(2),
     fontWeight: theme.fonts.semibold,
-    color: theme.colors.text,
+    color: '#FFFFFF',
     padding: 24,
     borderWidth: 1,
-    borderColor: theme.colors.gray,
+    borderColor: '#333333',
     borderRadius: theme.radius.md,
     borderCurve: 'continuous',
     marginTop: 10,
@@ -707,12 +756,17 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     paddingVertical: 6,
     borderBottomWidth: 1,
-    borderColor: theme.colors.gray,
+    borderColor: '#333333',
   },
   sectionTitle: {
     fontSize: hp(2.2),
     fontWeight: theme.fonts.bold,
-    color: theme.colors.primary,
+    color: '#FFFFFF',
+  },
+  detailsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   inputContainer: {
     marginBottom: 10,
@@ -720,16 +774,18 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: hp(1.8),
     fontWeight: theme.fonts.medium,
-    color: theme.colors.text,
+    color: '#E0E0E0',
     marginBottom: 4,
   },
   input: {
     borderWidth: 1,
-    borderColor: theme.colors.gray,
+    borderColor: '#333333',
     borderRadius: theme.radius.sm,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: hp(1.8),
+    color: '#FFFFFF',
+    backgroundColor: '#181818',
   },
   multilineInput: {
     minHeight: hp(10),

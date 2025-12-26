@@ -136,7 +136,7 @@ export default function ResetPasswordScreen() {
     setConfirmPassword('');
     router.dismissAll();
     DevSettings.reload();
-    router.replace('/home');
+    router.replace('/feeds');
   };
 
   return (

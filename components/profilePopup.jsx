@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Modal, StyleSheet, TouchableOpacity, Dimensions, Alert, ActivityIndicator } from 'react-native';
 import Avatar from './Avatar';
 import theme from '../constants/theme';
-import { hp, wp } from '../helpers/common';
+import { hp, wp, truncateUsername } from '../helpers/common';
 import Icon from '@/assets/icons';
 import { friendRequestService } from '../services/requestService';
 import { useAuth } from '../contexts/AuthContext';
@@ -108,8 +108,16 @@ const ProfilePopup = ({ user, visible, onClose, router }) => {
             />
           </View>
 
-          <Text style={styles.name}>{user.name}</Text>
-          {user.bio && <Text style={styles.bio}>{user.bio}</Text>}
+          <Text style={styles.name}>{truncateUsername(user.name)}</Text>
+          {user.bio && (
+            <Text 
+              style={styles.bio}
+              numberOfLines={2}
+              ellipsizeMode="tail"
+            >
+              {user.bio}
+            </Text>
+          )}
 
           <View style={styles.buttonContainer}>
             <TouchableOpacity 
@@ -199,6 +207,7 @@ const styles = StyleSheet.create({
     marginBottom: hp(2),
     textAlign: 'center',
     paddingHorizontal: wp(3),
+    maxWidth: wp(75), // Limit width to ensure 26 chars per line
   },
   buttonContainer: {
     flexDirection: 'row',

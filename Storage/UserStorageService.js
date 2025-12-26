@@ -7,6 +7,7 @@ const POSTS_CACHE_KEY = 'posts_cache';
 const PROFILE_STATS_KEY = 'profile_stats';
 const LAST_SYNC_KEY = 'last_sync_time';
 const CONNECTION_STATUS_KEY = 'connection_status';
+const SUGGESTIONS_CACHE_KEY = 'suggestions_cache';
 const IMAGE_CACHE_DIR = `${FileSystem.cacheDirectory}image_cache/`;
 
 /**
@@ -395,6 +396,60 @@ export const UserStorageService = {
       return true;
     } catch (error) {
       console.error('Error clearing image cache:', error);
+      return false;
+    }
+  },
+
+  /**
+   * Cache user suggestions
+   * @param {Array} suggestions - Array of suggested user objects
+   * @param {Object} followingStates - Object mapping user IDs to their friendship status
+   * @returns {Promise<boolean>} - Whether the operation was successful
+   */
+  cacheSuggestions: async (suggestions, followingStates = {}) => {
+    try {
+      if (!suggestions || !Array.isArray(suggestions)) return false;
+      
+      const cacheData = {
+        timestamp: Date.now(),
+        data: suggestions,
+        followingStates: followingStates || {}
+      };
+      
+      await SecureStore.setItemAsync(SUGGESTIONS_CACHE_KEY, JSON.stringify(cacheData));
+      return true;
+    } catch (error) {
+      console.error('Error caching suggestions:', error);
+      return false;
+    }
+  },
+
+  /**
+   * Get cached suggestions
+   * @returns {Promise<Object|null>} - Cached suggestions with metadata or null if not found
+   */
+  getCachedSuggestions: async () => {
+    try {
+      const suggestionsString = await SecureStore.getItemAsync(SUGGESTIONS_CACHE_KEY);
+      if (!suggestionsString) return null;
+      
+      return JSON.parse(suggestionsString);
+    } catch (error) {
+      console.error('Error getting cached suggestions:', error);
+      return null;
+    }
+  },
+
+  /**
+   * Clear cached suggestions
+   * @returns {Promise<boolean>} - Whether the operation was successful
+   */
+  clearCachedSuggestions: async () => {
+    try {
+      await SecureStore.deleteItemAsync(SUGGESTIONS_CACHE_KEY);
+      return true;
+    } catch (error) {
+      console.error('Error clearing cached suggestions:', error);
       return false;
     }
   },

@@ -185,7 +185,7 @@ const onPasswordlessGrid = () => {
 
     const reloadAndNavigate = () => {
         DevSettings.reload();
-        router.push('/home');
+        router.push('/feeds');
         router.dismissAll();
     };
 

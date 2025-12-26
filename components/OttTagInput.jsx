@@ -85,6 +85,7 @@ const TagInput = ({ tags = [], setTags }) => {
           onChangeText={handleInputChange}
           style={styles.tagInput}
           placeholder={tags.length >= MAX_TAGS ? "" : "Add streaming platform tags"}
+          placeholderTextColor="#9E9E9E"
           returnKeyType="done"
           onSubmitEditing={handleAddTag}
           maxLength={MAX_TAG_LENGTH}
@@ -119,7 +120,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: hp(2),
     fontWeight: theme.fonts.semibold,
-    color: theme.colors.text,
+    color: '#E0E0E0',
     marginBottom: 8,
     paddingStart: 10,
   },
@@ -129,15 +130,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     minHeight: hp(6),
     borderWidth: 1,
-    borderColor: theme.colors.gray,
+    borderColor: '#333333',
     borderRadius: theme.radius.md,
     borderCurve: 'continuous',
     padding: 8,
+    backgroundColor: '#181818',
   },
   tag: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.primary + '20',
+    backgroundColor: '#262626',
     borderRadius: theme.radius.sm,
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -146,14 +148,14 @@ const styles = StyleSheet.create({
   },
   tagText: {
     fontSize: hp(1.8),
-    color: theme.colors.primary,
+    color: '#E0E0E0',
     fontWeight: theme.fonts.medium,
   },
   removeTag: {
     marginLeft: 4,
   },
   removeTagText: {
-    color: theme.colors.text,
+    color: '#E0E0E0',
     fontSize: hp(2),
     marginTop: -2,
   },
@@ -164,7 +166,7 @@ const styles = StyleSheet.create({
     fontSize: hp(1.8),
     padding: 0,
     marginLeft: 5,
-    color: theme.colors.text,
+    color: '#FFFFFF',
   },
   addButton: {
     backgroundColor: theme.colors.primary,

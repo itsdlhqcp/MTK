@@ -1,7 +1,7 @@
 import { StyleSheet, Text, TouchableOpacity, View, Animated, Share, ActivityIndicator } from 'react-native'
 import React, { useEffect, useState, useRef } from 'react'
 import theme from '../constants/theme'
-import { hp } from '../helpers/common'
+import { hp, truncateUsername } from '../helpers/common'
 import * as Sharing from 'expo-sharing'
 import Avatar from './Avatar'
 import Icon from '@/assets/icons'
@@ -709,7 +709,7 @@ const PeoplesReviewItem = ({
           <View style={styles.nameContainer}>
             <TouchableOpacity onPress={handleUsernamePress}>
               <Text style={styles.text}>
-                {item?.user?.name}
+                {truncateUsername(item?.user?.name || '')}
               </Text>
             </TouchableOpacity>
             <Text style={styles.text}>•</Text>

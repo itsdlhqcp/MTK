@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, TextInput, StatusBar } from 'react-native';
 import React, { useState, useCallback } from 'react';
-import { hp, wp } from '@/helpers/common';
+import { hp, wp, truncateUsername } from '@/helpers/common';
 import theme from '../constants/theme';
 import Icon from '@/assets/icons';
 import Avatar from '../components/Avatar';
@@ -239,7 +239,7 @@ const UserSearchTab = () => {
           />
           <View style={styles.userText}>
             <Text style={styles.username} numberOfLines={1} ellipsizeMode="tail">
-              {item.name} {isSadmin && <Text style={styles.adminBadge}>· studio</Text>}
+              {truncateUsername(item.name || '')} {isSadmin && <Text style={styles.adminBadge}>· studio</Text>}
             </Text>
             {item.bio && (
               <Text style={styles.userBio} numberOfLines={1} ellipsizeMode="tail">
@@ -318,6 +318,16 @@ const UserSearchTab = () => {
           </TouchableOpacity>
         )}
       </View>
+      
+      {/* Informational message */}
+      {searchTerm.length === 0 && (
+        <View style={styles.infoBanner}>
+          <Icon name="community" size={hp(2.5)} color={instaTheme.colors.primary} />
+          <Text style={styles.infoText}>
+            Connect and make your friends - get real time notification for their reviews and comments
+          </Text>
+        </View>
+      )}
       
       {!loading && searchResults.length === 0 && searchTerm.length > 0 ? (
         <View style={styles.emptyContainer}>
@@ -472,5 +482,25 @@ const styles = StyleSheet.create({
     color: '#8E8E8E', 
     textAlign: 'center',
     marginTop: hp(1),
+  },
+  infoBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 149, 246, 0.1)',
+    borderRadius: theme.radius.md,
+    paddingHorizontal: wp(4),
+    paddingVertical: hp(1.5),
+    marginHorizontal: wp(4),
+    marginBottom: hp(1),
+    borderWidth: 1,
+    borderColor: 'rgba(0, 149, 246, 0.3)',
+    gap: wp(3),
+  },
+  infoText: {
+    flex: 1,
+    fontSize: hp(1.6),
+    color: instaTheme.colors.text,
+    fontWeight: theme.fonts.medium,
+    lineHeight: hp(2.2),
   },
 });

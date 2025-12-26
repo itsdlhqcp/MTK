@@ -3,7 +3,7 @@ import React, { useRef, useState, useEffect } from 'react'
 import ScreenWrapper from '../components/ScreenWrapper'
 import Header from '../components/Header'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import { hp, wp } from '@/helpers/common'
+import { hp, wp, truncateUsername } from '@/helpers/common'
 import theme from '../constants/theme'
 import Icon from '@/assets/icons'
 import Avatar from '../components/Avatar'
@@ -29,6 +29,7 @@ const CreateFeed = () => {
   const [tags, setTags] = useState(['official']);  
   const [currentTag, setCurrentTag] = useState('');
   const [filter, setFilter] = useState(''); // Changed to single string value
+  const [uploadProgress, setUploadProgress] = useState(null); // Progress tracking for uploads
   const { showToast } = useToast();
   
   // Define helper functions first
@@ -236,20 +237,39 @@ const CreateFeed = () => {
 
     // create Post
     setLoading(true);
-    let res = await createOrUpdatePost(data);
-    setLoading(false);
-    if(res.success){
-      showToast('success', 'PlotTwist updated success!!');
-      setFile(null); 
-      bodyRef.current = ''; 
-      editorRef.current?.setContentHTML('');
-      setTags(['official']); 
-      setFilter(''); // Reset filter to empty string
-      router.back();
-    }else{
-      Alert.alert('Post', res.msg);
+    // Reset progress when starting upload
+    if (file && typeof file === 'object') {
+      setUploadProgress({ percentage: 0, step: 0, message: "Preparing upload...", totalSteps: 2 });
     }
-    console.log('post res:', res);
+    
+    // Progress callback for tracking upload progress
+    const handleProgress = (progress) => {
+      setUploadProgress(progress);
+    };
+    
+    try {
+      let res = await createOrUpdatePost(data, handleProgress);
+      setLoading(false);
+      setUploadProgress(null); // Clear progress on completion
+      if(res.success){
+        showToast('success', 'PlotTwist updated success!!');
+        setFile(null); 
+        bodyRef.current = ''; 
+        editorRef.current?.setContentHTML('');
+        setTags(['official']); 
+        setFilter(''); // Reset filter to empty string
+        router.back();
+      }else{
+        setUploadProgress(null); // Clear progress on error
+        Alert.alert('Post', res.msg);
+      }
+      console.log('post res:', res);
+    } catch (error) {
+      setLoading(false);
+      setUploadProgress(null); // Clear progress on error
+      console.error('Error creating post:', error);
+      Alert.alert('Error', 'Failed to create post. Please try again.');
+    }
   };
 
   const handleEditorChange = (body) => {
@@ -257,7 +277,7 @@ const CreateFeed = () => {
   };
 
   return (
-    <ScreenWrapper bg="white">
+    <ScreenWrapper bg="#121212">
       <Header title={post?.id ? "Edit Feed" : "Create PlotTwist Feed"}
          showBackButton={true} />
       <View style={styles.container}>
@@ -273,7 +293,7 @@ const CreateFeed = () => {
             />
             <View style={{ gap: 2 }}>
               <Text style={styles.username}>
-                {user?.name}
+                {truncateUsername(user?.name || '')}
               </Text>
               <Text style={styles.publicText}>
                 Public
@@ -425,10 +445,10 @@ const CreateFeed = () => {
             <Text style={styles.addImageText}>Add new feed</Text>
             <View style={styles.mediaIcons}>
               <TouchableOpacity onPress={() => onPick(true)}>
-                <Icon name="image" size={30} color={theme.colors.dark} />
+                <Icon name="image" size={30} color={"#FFFFFF"} />
               </TouchableOpacity>
               <TouchableOpacity onPress={() => onPick(false)}>
-                <Icon name="video" size={37} color={theme.colors.dark} />
+                <Icon name="video" size={37} color={"#FFFFFF"} />
               </TouchableOpacity>
             </View>
           </View>
@@ -440,6 +460,23 @@ const CreateFeed = () => {
           onPress={onSubmit}
           hasShadow={false}
         />
+        {/* Progress Bar for Post Upload */}
+        {uploadProgress && (
+          <View style={styles.progressContainer}>
+            <View style={styles.progressHeader}>
+              <Text style={styles.progressText}>{uploadProgress.message}</Text>
+              <Text style={styles.progressPercentage}>{Math.round(uploadProgress.percentage)}%</Text>
+            </View>
+            <View style={styles.progressBarBackground}>
+              <View 
+                style={[
+                  styles.progressBarFill,
+                  { width: `${uploadProgress.percentage}%` }
+                ]} 
+              />
+            </View>
+          </View>
+        )}
       </View>
     </ScreenWrapper>
   );
@@ -454,6 +491,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     paddingHorizontal: wp(4), 
     gap: 15,
+    backgroundColor: '#121212',
   },
   file: {
     height: hp(32),
@@ -462,7 +500,7 @@ const styles = StyleSheet.create({
     borderCurve: 'continuous',
     paddingVertical: wp(8),
     borderWidth: 1,
-    borderColor: theme.colors.gray,
+    borderColor: '#333333',
     borderRadius: theme.radius.md,
     padding: 7,
     justifyContent: 'center',
@@ -478,12 +516,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: wp(4),
     borderRadius: theme.radius.md, 
     borderCurve: 'continuous', 
-    borderColor: theme.colors.gray
+    borderColor: '#333333',
+    backgroundColor: '#181818',
   },
   title: {
     fontSize: hp(2.5),
     fontWeight: theme.fonts.semibold,
-    color: theme.colors.text,
+    color: '#FFFFFF',
     textAlign: 'center'
   },
   header: {
@@ -494,7 +533,7 @@ const styles = StyleSheet.create({
   username: {
     fontSize: hp(2.2),
     fontWeight: theme.fonts.semibold,
-    color: theme.colors.text,
+    color: '#FFFFFF',
   },
   mediaIcons: {
     flexDirection: 'row', 
@@ -505,7 +544,7 @@ const styles = StyleSheet.create({
   addImageText: {
     fontSize: hp(2),
     fontWeight: theme.fonts.semibold,
-    color: theme.colors.text,
+    color: '#FFFFFF',
   },
   avatar: {
     height: hp(6.5),
@@ -518,7 +557,7 @@ const styles = StyleSheet.create({
   publicText: {
     fontSize: hp(1.7),
     fontWeight: theme.fonts.medium,
-    color: theme.colors.textLight,
+    color: '#B3B3B3',
   },
   closeIcon: {
     position: 'absolute',
@@ -535,14 +574,14 @@ const styles = StyleSheet.create({
   tagsSectionTitle: {
     fontSize: hp(2),
     fontWeight: theme.fonts.semibold,
-    color: theme.colors.text,
+    color: '#FFFFFF',
     marginBottom: hp(1),
   },
   tagInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: theme.colors.gray,
+    borderColor: '#333333',
     borderRadius: theme.radius.md,
     overflow: 'hidden',
   },
@@ -550,7 +589,8 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: hp(1.5),
     fontSize: hp(1.8),
-    color: theme.colors.text,
+    color: '#FFFFFF',
+    backgroundColor: '#181818',
   },
   addTagButton: {
     padding: hp(1),
@@ -570,14 +610,14 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.secondary,
+    borderColor: '#333333',
+    backgroundColor: '#262626',
     gap: 5,
   },
   tagPillText: {
     fontSize: hp(1.4),
     fontWeight: '600',
-    color: theme.colors.primary,
+    color: '#E0E0E0',
   },
   addButtonText: {
     color: 'white',
@@ -595,8 +635,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: theme.colors.primary,
-    backgroundColor: 'transparent',
+    borderColor: '#444444',
+    backgroundColor: '#181818',
   },
   selectedTagBubble: {
     backgroundColor: theme.colors.primary,
@@ -604,7 +644,7 @@ const styles = StyleSheet.create({
   tagBubbleText: {
     fontSize: hp(1.6),
     fontWeight: '500',
-    color: theme.colors.primary,
+    color: '#E0E0E0',
   },
   selectedTagBubbleText: {
     color: 'white',
@@ -637,5 +677,41 @@ const styles = StyleSheet.create({
   },
   selectedFilterPillText: {
     color: '#FF8C00',
-  }
+  },
+  // Progress bar styles
+  progressContainer: {
+    marginTop: hp(1.5),
+    paddingVertical: hp(1),
+    paddingHorizontal: wp(4),
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: hp(0.8),
+  },
+  progressText: {
+    fontSize: hp(1.6),
+    fontWeight: theme.fonts.medium,
+    color: theme.colors.text,
+    flex: 1,
+  },
+  progressPercentage: {
+    fontSize: hp(1.6),
+    fontWeight: theme.fonts.semibold,
+    color: theme.colors.primary,
+    marginLeft: wp(2),
+  },
+  progressBarBackground: {
+    height: hp(0.6),
+    backgroundColor: '#333333',
+    borderRadius: hp(0.3),
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: theme.colors.primary,
+    borderRadius: hp(0.3),
+    transition: 'width 0.3s ease',
+  },
 })

@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import theme from '../constants/theme'
 import ScreenWrapper from '../components/ScreenWrapper'
-import { wp, hp } from '../helpers/common'
+import { wp, hp, truncateUsername } from '../helpers/common'
 import Icon from '@/assets/icons'
 import { supabase } from '../lib/supabase'
 import Avatar from '../components/Avatar'
@@ -221,7 +221,7 @@ const InstagramProfile = React.memo(({ user, router, handleLogout, theme, postCo
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={[styles.username, { color: theme.colors.textDark }]}>{user?.name}</Text>
+        <Text style={[styles.username, { color: theme.colors.textDark }]}>{truncateUsername(user?.name || '')}</Text>
         <TouchableOpacity 
           style={[styles.logoutButton]} 
           onPress={handleLogout}
@@ -268,8 +268,16 @@ const InstagramProfile = React.memo(({ user, router, handleLogout, theme, postCo
 
       {/* Bio Section */}
       <View style={styles.bioSection}>
-        <Text style={[styles.bioName, { color: theme.colors.textDark }]}>{user?.name}</Text>
-        {user?.bio && <Text style={[styles.bio, { color: theme.colors.text }]}>{user.bio}</Text>}
+        <Text style={[styles.bioName, { color: theme.colors.textDark }]}>{truncateUsername(user?.name || '')}</Text>
+        {user?.bio && (
+          <Text 
+            style={[styles.bio, { color: theme.colors.text }]} 
+            numberOfLines={2}
+            ellipsizeMode="tail"
+          >
+            {user.bio}
+          </Text>
+        )}
         <Text style={[styles.joinedDate, { color: theme.colors.textLight }]}>Joined {formattedDate}</Text>
         {user?.address && <Text style={[styles.joinedDate, { color: theme.colors.textLight }]}>{user.address}</Text>}
       </View>
@@ -366,6 +374,7 @@ const styles = StyleSheet.create({
   bio: {
     fontSize: hp(1.6),
     marginBottom: hp(0.5),
+    maxWidth: wp(90), // Limit width to ensure 26 chars per line
   },
   joinedDate: {
     fontSize: hp(1.4),

@@ -138,7 +138,7 @@ const AnimeFanPage = () => {
         throw new Error(response.msg);
       }
       router.dismissAll();
-      router.replace('/home');
+      router.replace('/feeds');
     } catch (error) {
       Alert.alert('Error', error.message);
     } finally {
@@ -306,6 +306,7 @@ const AnimeFanPage = () => {
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
+    backgroundColor: '#0A0A0A', // Dark fallback background
   },
   backgroundImage: {
     flex: 1,

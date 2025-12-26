@@ -5,44 +5,50 @@ import { hp } from '../helpers/common';
 import DigitalTabSkeleton from './DigitalTabSkeleton';
 import TheatreTabSkeleton from './TheatreTabSkeleton';
 
-const DigitalReviewTabs = ({ children, loading = false }) => {
+const DigitalReviewTabs = ({ children, loading = false, showOnlyDigital = false }) => {
   const [activeTab, setActiveTab] = useState(0);
-  const tabs = ['Digital', 'Theatre'];
+  // If showOnlyDigital is true (for series), only show Digital tab
+  const tabs = showOnlyDigital ? ['Digital'] : ['Digital', 'Theatre'];
+
+  // If showOnlyDigital, always show first child (Digital reviews)
+  const contentToShow = showOnlyDigital ? 0 : activeTab;
 
   return (
     <View style={styles.tabContainer}>
-      <View style={styles.tabHeader}>
-        {tabs.map((tab, index) => (
-          <TouchableOpacity
-            key={index}
-            style={[
-              styles.tabButton,
-              activeTab === index && styles.activeTabButton
-            ]}
-            onPress={() => setActiveTab(index)}
-            disabled={loading}
-          >
-            <Text 
+      {!showOnlyDigital && (
+        <View style={styles.tabHeader}>
+          {tabs.map((tab, index) => (
+            <TouchableOpacity
+              key={index}
               style={[
-                styles.tabText,
-                activeTab === index && styles.activeTabText,
-                loading && styles.disabledTabText
+                styles.tabButton,
+                activeTab === index && styles.activeTabButton
               ]}
+              onPress={() => setActiveTab(index)}
+              disabled={loading}
             >
-              {tab}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+              <Text 
+                style={[
+                  styles.tabText,
+                  activeTab === index && styles.activeTabText,
+                  loading && styles.disabledTabText
+                ]}
+              >
+                {tab}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
       <View style={styles.tabContent}>
         {loading ? (
-          activeTab === 0 ? (
+          contentToShow === 0 ? (
             <DigitalTabSkeleton count={3} />
           ) : (
             <TheatreTabSkeleton count={3} />
           )
         ) : (
-          children[activeTab]
+          children[contentToShow]
         )}
       </View>
     </View>

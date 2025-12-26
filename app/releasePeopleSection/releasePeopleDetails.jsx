@@ -26,6 +26,7 @@ import TheatreReviewTabs from "../../components/TheatreReviewTabs";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import moment from "moment";
 import { useToast } from "../../contexts/ToastContext";
+import { playReviewSound } from '../../services/bellSoundService.js';
 
 const MIN_CHARS = 0;
 
@@ -66,6 +67,7 @@ const ReleasePeopleDetails = () => {
     const { showToast } = useToast();
     const [hasUserPostedReview, setHasUserPostedReview] = useState(false);
     const route = useRoute();
+    const hasHandledOpenReview = useRef(false); // Track if we've already handled openReview param
 
     const buttonSlideAnim = useRef(new Animated.Value(100)).current;
 
@@ -167,6 +169,17 @@ useEffect(() => {
                 };
             }, []);
 
+            // Effect to remove openReview param from URL immediately when detected
+            useEffect(() => {
+                if (openReview === 'true' && !hasHandledOpenReview.current) {
+                    hasHandledOpenReview.current = true;
+                    // Remove param immediately to prevent it from persisting
+                    router.setParams({
+                        releaseId: releaseId,
+                    });
+                }
+            }, [openReview, releaseId, router]);
+
          // Removed checkUserReview function - now handled in getReleaseDetails with hasUserReviewed flag
 
           const getThPeoplesReleaseDetails = async () => {
@@ -199,6 +212,23 @@ useEffect(() => {
 
     const getReleaseDetails = async () => {
         setStartLoading(true);
+        
+        // Check current params directly (not the snapshot variable) and remove openReview param BEFORE fetching data
+        const currentOpenReview = params.openReview;
+        if (currentOpenReview === 'true' && user?.id && !hasHandledOpenReview.current) {
+            hasHandledOpenReview.current = true; // Mark as handled immediately
+            // Remove openReview param from URL immediately to prevent reopening on refresh
+            router.setParams({
+                releaseId: releaseId,
+                // Explicitly remove openReview by not including it
+            });
+            
+            // Open rating modal after a small delay to ensure page is fully loaded
+            setTimeout(() => {
+                setRatingModalVisible(true);
+            }, 500);
+        }
+        
         let res = await fetchPeoplesReleaseDetails(releaseId, user?.id);
         if (res.success) {
             setRelease(res.data);
@@ -208,14 +238,6 @@ useEffect(() => {
             }
         }
         setStartLoading(false);
-        
-        // Open rating modal if openReview param is present
-        if (openReview === 'true' && user?.id) {
-            // Small delay to ensure page is fully loaded
-            setTimeout(() => {
-                setRatingModalVisible(true);
-            }, 500);
-        }
     };
 
     // below is the code to handle review replies 
@@ -478,6 +500,9 @@ useEffect(() => {
             try {
                 let res = await createPeopleReleaseReview(data);
                 if(res.success){
+                    // Play review sound on successful submission
+                    playReviewSound();
+                    
                     const newReview = {
                         ...res.data,
                         user: {
@@ -485,7 +510,7 @@ useEffect(() => {
                             ...user
                         }
                     };
-        
+
                     setRelease(prevRelease => ({
                         ...prevRelease,
                         peoplesReview: [newReview, ...prevRelease.peoplesReview],
@@ -493,7 +518,14 @@ useEffect(() => {
                     }));
                     // Update hasUserPostedReview flag
                     setHasUserPostedReview(true);
-        
+
+                    // Remove openReview param after successful submission
+                    if (openReview === 'true') {
+                        router.setParams({
+                            releaseId: releaseId,
+                        });
+                    }
+
                     if(user.id !== release.userId){
                         let notify = {
                             senderId: user.id,
@@ -503,7 +535,7 @@ useEffect(() => {
                         }
                         createNotifications(notify);
                     }
-        
+
                     inputRef?.current?.clear();
                     reviewRef.current = "";
                     setReviewText('');
@@ -626,6 +658,9 @@ useEffect(() => {
                         try {
                             let res = await createReleaseReview(data);
                             if(res.success){
+                                // Play review sound on successful submission
+                                playReviewSound();
+                                
                                 // Create the new review object with user data
                                 const newReview = {
                                     ...res.data,
@@ -888,7 +923,16 @@ useEffect(() => {
                        <RatingBottomSheet 
                              item={release}
                              visible={ratingModalVisible}
-                             onClose={() => setRatingModalVisible(false)}
+                             onClose={() => {
+                                 setRatingModalVisible(false);
+                                 // Ensure openReview param is removed when closing modal
+                                 // Params are already checked via the openReview variable
+                                 if (params.openReview === 'true') {
+                                     router.setParams({
+                                         releaseId: releaseId,
+                                     });
+                                 }
+                             }}
                              onSubmit={handleFinalReviewSubmit}
                              router={router}
                         />              

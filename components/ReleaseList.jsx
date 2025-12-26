@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Animated } from 'react-native';
 import moment from 'moment';
 import ReleaseCard from '../components/RelesaeCard';
 import FeedLoader from './FeedLoader';
@@ -9,6 +9,15 @@ import { getSupabaseFileUrl } from '../services/imageService';
 import PratingStars from './pRatingStars';
 import { fetchAverageRating } from '../services/releaseService';
 import CustomDotIndicator from './CutomDotIndicator';
+import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
+import {
+  subscribeToReleaseNotifications,
+  unsubscribeFromReleaseNotifications,
+  checkSubscriptionStatus
+} from '../services/releaseNotificationSubscriptionService.js';
+import { playBellActivateSound, playBellDeactivateSound } from '../services/bellSoundService.js';
+import theme from '../constants/theme';
 
 // Modified header with toggle button that only shows for the first header
 const ReleaseDateHeader = ({ date, viewMode, onToggleView, isFirstHeader }) => (
@@ -35,9 +44,15 @@ const ReleaseDateHeader = ({ date, viewMode, onToggleView, isFirstHeader }) => (
 );
 
 // Grid version of ReleaseCard with date added above rating
-const ReleaseGridCard = ({ item, router }) => {
+const ReleaseGridCard = ({ item, router, currentUser }) => {
   const [avgRating, setAvgRating] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [subscriptionLoading, setSubscriptionLoading] = useState(false);
+  const { showToast } = useToast();
+  // Animation values for bell icon
+  const bellScale = useRef(new Animated.Value(1)).current;
+  const bellRotation = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     // Fetch the average rating when component mounts
@@ -56,6 +71,112 @@ const ReleaseGridCard = ({ item, router }) => {
 
     getAverageRating();
   }, [item?.id]);
+
+  // Check subscription status on mount
+  useEffect(() => {
+    const checkSubscription = async () => {
+      if (!currentUser?.id || !item?.id) return;
+      try {
+        const result = await checkSubscriptionStatus(currentUser.id, item.id, 'theatre');
+        if (result.success) {
+          setIsSubscribed(result.isSubscribed);
+        }
+      } catch (error) {
+        console.error("Error checking subscription:", error);
+      }
+    };
+    checkSubscription();
+  }, [currentUser?.id, item?.id]);
+
+  // Animation function for bell toggle
+  const animateBell = () => {
+    // Scale down then up with rotation
+    Animated.sequence([
+      Animated.parallel([
+        Animated.spring(bellScale, {
+          toValue: 0.8,
+          useNativeDriver: true,
+          tension: 300,
+          friction: 7,
+        }),
+        Animated.timing(bellRotation, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.parallel([
+        Animated.spring(bellScale, {
+          toValue: 1.2,
+          useNativeDriver: true,
+          tension: 300,
+          friction: 7,
+        }),
+        Animated.timing(bellRotation, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.spring(bellScale, {
+        toValue: 1,
+        useNativeDriver: true,
+        tension: 300,
+        friction: 7,
+      }),
+    ]).start();
+  };
+
+  // Handle notification bell toggle
+  const handleNotificationToggle = async (e) => {
+    e.stopPropagation(); // Prevent card press event
+    if (!currentUser?.id || !item?.id || subscriptionLoading) return;
+
+    // Start animation
+    animateBell();
+
+    setSubscriptionLoading(true);
+    try {
+      if (isSubscribed) {
+        // Play deactivation sound
+        playBellDeactivateSound();
+        
+        // Unsubscribe
+        const result = await unsubscribeFromReleaseNotifications(
+          currentUser.id,
+          item.id,
+          'theatre'
+        );
+        if (result.success) {
+          setIsSubscribed(false);
+          showToast('success', 'Notifications disabled for this release');
+        } else {
+          showToast('error', result.msg || 'Failed to unsubscribe');
+        }
+      } else {
+        // Play activation sound
+        playBellActivateSound();
+        
+        // Subscribe
+        const result = await subscribeToReleaseNotifications(
+          currentUser.id,
+          item.id,
+          'theatre'
+        );
+        if (result.success) {
+          setIsSubscribed(true);
+          showToast('success', 'You will be notified when this release is available');
+        } else {
+          showToast('error', result.msg || 'Failed to subscribe');
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling notification:', error);
+      showToast('error', 'Something went wrong');
+    } finally {
+      setSubscriptionLoading(false);
+    }
+  };
 
   const handleCardPress = () => {
     if (!item?.id) return null;
@@ -80,17 +201,56 @@ const ReleaseGridCard = ({ item, router }) => {
             resizeMode="cover"
           />
           
+          {/* Notification bell button - Top right */}
+          {currentUser?.id && (
+            <TouchableOpacity 
+              style={[
+                styles.gridNotificationButton,
+                isSubscribed && styles.gridNotificationButtonActive
+              ]} 
+              onPress={handleNotificationToggle}
+              activeOpacity={0.7}
+              disabled={subscriptionLoading}
+            >
+              <Animated.View
+                style={{
+                  transform: [
+                    { scale: bellScale },
+                    {
+                      rotate: bellRotation.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: ['0deg', '15deg'],
+                      }),
+                    },
+                  ],
+                }}
+              >
+                <Text style={[
+                  styles.gridNotificationIcon,
+                  isSubscribed && styles.gridNotificationIconActive
+                ]}>
+                  {isSubscribed ? '🔔' : '🔕'}
+                </Text>
+              </Animated.View>
+            </TouchableOpacity>
+          )}
 
             <View style={styles.gridRatingContainer}>
-                 {show && avgRating?.average ? ( 
+                 {show ? ( 
                     <> <PratingStars 
-                            rating={avgRating?.average} 
+                            rating={avgRating?.average || 0} 
                             showRatingText={false} 
                             starSize={hp(1.6)}
+                            isLoading={isLoading || avgRating?.average === undefined || avgRating?.average === null}
                           />
-                          <Text style={styles.gridRatingText}>
-                            {isLoading ? '...' : `${avgRating?.average}/5`}
-                          </Text></>
+                          {isLoading || avgRating?.average === undefined || avgRating?.average === null ? (
+                            <View style={styles.skeletonRatingText} />
+                          ) : (
+                            <Text style={styles.gridRatingText}>
+                              {avgRating?.average}/5
+                            </Text>
+                          )}
+                        </>
                            
                         ) : (
                           <Text style={styles.gridRatingText}>
@@ -105,9 +265,7 @@ const ReleaseGridCard = ({ item, router }) => {
   );
 };
 
-const ReleaseList = ({ releases, currentUser, router, loading, hasMore, onLoadMore, onDelete }) => {
-  // Add view mode state
-  const [viewMode, setViewMode] = useState('grid'); 
+const ReleaseList = ({ releases, currentUser, router, loading, hasMore, onLoadMore, onDelete, viewMode = 'grid', onToggleViewMode }) => { 
   // Map to store average ratings for each release
   const [ratingsMap, setRatingsMap] = useState({});
   // Loading state for ratings
@@ -190,8 +348,7 @@ const ReleaseList = ({ releases, currentUser, router, loading, hasMore, onLoadMo
     if (diffDays > 14) return 'LATER';
     
     // Past dates
-    if (diffDays >= -7) return 'COMING STREAMS';
-    if (diffDays < -7) return 'COMING STREAMS';
+
     return releaseDate.format('MMMM YYYY').toUpperCase();
   };
 
@@ -270,10 +427,11 @@ const ReleaseList = ({ releases, currentUser, router, loading, hasMore, onLoadMo
       });
   }, [releases]);
 
-  // Toggle view mode between list and grid
-  const toggleViewMode = () => {
-    setViewMode(prevMode => prevMode === 'list' ? 'grid' : 'list');
-  };
+  // Toggle view mode between list and grid (use prop if provided, otherwise use local handler)
+  const toggleViewMode = onToggleViewMode || (() => {
+    // Fallback if no handler provided (shouldn't happen, but for safety)
+    console.warn('onToggleViewMode not provided to ReleaseList');
+  });
 
   // Helper function to chunk array into groups of specified size (for grid view)
   function chunk(array, size) {
@@ -293,7 +451,7 @@ const ReleaseList = ({ releases, currentUser, router, loading, hasMore, onLoadMo
       return (
         <ReleaseDateHeader 
           date={item.header} 
-          viewMode={viewMode} 
+          viewMode={viewMode || 'grid'} 
           onToggleView={toggleViewMode}
           isFirstHeader={isFirstHeader}
         />
@@ -331,6 +489,7 @@ const ReleaseList = ({ releases, currentUser, router, loading, hasMore, onLoadMo
             key={`grid-item-${release.id || index}`}
             item={release}
             router={router}
+            currentUser={currentUser}
           />
         ))}
         {/* Add placeholder items to fill the row if needed */}
@@ -355,7 +514,7 @@ const ReleaseList = ({ releases, currentUser, router, loading, hasMore, onLoadMo
       <View style={styles.gridSection}>
         <ReleaseDateHeader 
           date={item.header} 
-          viewMode={viewMode} 
+          viewMode={viewMode || 'grid'} 
           onToggleView={toggleViewMode}
           isFirstHeader={isFirstHeader}
         />
@@ -403,7 +562,7 @@ const ReleaseList = ({ releases, currentUser, router, loading, hasMore, onLoadMo
 
   return (
     <>
-      {viewMode === 'list' ? (
+      {(viewMode || 'grid') === 'list' ? (
         // List View
         <FlatList
           key="list"
@@ -459,12 +618,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     position: 'relative',
     width: '100%',
+    paddingHorizontal: wp(15), // Add padding to ensure space for button
   },
   headerPill: {
     backgroundColor: '#424242',
     paddingHorizontal: 16,
     paddingVertical: 2,
     borderRadius: 20,
+    maxWidth: '70%', // Limit pill width to prevent touching button
   },
   headerText: {
     fontSize: 11,
@@ -553,6 +714,36 @@ gridRatingText: {
   fontSize: hp(1.4),
   fontWeight: '500',
   color: '#00ac62',
+},
+skeletonRatingText: {
+  width: wp(8),
+  height: hp(1.4),
+  backgroundColor: 'rgba(0, 172, 98, 0.2)',
+  borderRadius: 4,
+  marginLeft: wp(1),
+},
+gridNotificationButton: {
+  position: 'absolute',
+  top: hp(0.5),
+  right: wp(2),
+  padding: hp(0.6),
+  borderRadius: hp(1.5),
+  backgroundColor: 'rgba(0,0,0,0.6)',
+  justifyContent: 'center',
+  alignItems: 'center',
+  minWidth: hp(3),
+  minHeight: hp(3),
+  zIndex: 10,
+},
+gridNotificationButtonActive: {
+  backgroundColor: 'rgba(229, 9, 20, 0.6)',
+},
+gridNotificationIcon: {
+  fontSize: hp(1.8),
+  color: theme.colors.light || '#E0E0E0',
+},
+gridNotificationIconActive: {
+  color: theme.colors.primary || '#E50914',
 },
 });
 

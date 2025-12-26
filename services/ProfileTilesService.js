@@ -396,3 +396,197 @@ export const fetchUserDreviewForRelease = async (userId, releaseId) => {
     return { success: false, msg: "Could not fetch your review", error: error.message };
   }
 };
+
+// Fetch "now showing" and "now streaming" releases (for Watch Now component)
+export const fetchWatchNowReleases = async (limit = 10) => {
+  try {
+    const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+    const todayDate = new Date(today);
+
+    // Fetch "now showing" theatre releases
+    const { data: theatreReleasesRaw, error: theatreError } = await supabase
+      .from('releases')
+      .select(`
+        id,
+        body,
+        rDate,
+        endDate,
+        file,
+        filel
+      `)
+      .lte('rDate', today)
+      .order('rDate', { ascending: false })
+      .limit(limit);
+
+    // Filter client-side: keep only releases where endDate is null or endDate >= today
+    const theatreReleases = (theatreReleasesRaw || []).filter(release => {
+      if (!release.endDate) return true;
+      const endDate = new Date(release.endDate);
+      return endDate >= todayDate;
+    }).map(release => ({
+      id: release.id,
+      body: release.body,
+      rDate: release.rDate,
+      endDate: release.endDate,
+      file: release.file,
+      filel: release.filel,
+      poster: release.file || release.filel,
+      type: 'theatre',
+      label: 'NOW SHOWING'
+    }));
+
+    if (theatreError) {
+      console.error("Error fetching theatre releases:", theatreError);
+    }
+
+    // Fetch "now streaming" digital releases
+    const { data: digitalReleasesRaw, error: digitalError } = await supabase
+      .from('streams')
+      .select(`
+        id,
+        body,
+        rDate,
+        endDate,
+        file,
+        filel,
+        seriesType
+      `)
+      .lte('rDate', today)
+      .order('rDate', { ascending: false })
+      .limit(limit);
+
+    // Filter client-side: keep only releases where endDate is null or endDate >= today
+    const digitalReleases = (digitalReleasesRaw || []).filter(release => {
+      if (!release.endDate) return true;
+      const endDate = new Date(release.endDate);
+      return endDate >= todayDate;
+    }).map(release => ({
+      id: release.id,
+      body: release.body,
+      rDate: release.rDate,
+      endDate: release.endDate,
+      file: release.file,
+      filel: release.filel,
+      poster: release.file || release.filel,
+      seriesType: release.seriesType,
+      type: release.seriesType === 'series' ? 'series' : 'digital',
+      label: 'NOW STREAMING'
+    }));
+
+    if (digitalError) {
+      console.error("Error fetching digital releases:", digitalError);
+    }
+
+    // Combine and sort by rDate, then take top limit
+    const allReleases = [...theatreReleases, ...digitalReleases]
+      .sort((a, b) => new Date(b.rDate) - new Date(a.rDate))
+      .slice(0, limit);
+
+    return { 
+      success: true, 
+      data: allReleases 
+    };
+  } catch (error) {
+    console.error("Error in fetchWatchNowReleases:", error);
+    return { success: false, msg: "Could not fetch watch now releases", error: error.message };
+  }
+};
+
+// Fetch latest reviews from all users (for feeds page)
+export const fetchLatestReviews = async (limit = 5) => {
+  try {
+    // Fetch latest theatre reviews
+    const { data: theatreReviews, error: theatreError } = await supabase
+      .from('peoplesReview')
+      .select(`
+        id,
+        text,
+        favour,
+        created_at,
+        userRating,
+        cupOfTea,
+        userId,
+        user: users(id, name, image),
+        release: releases(id, rDate, body, file)
+      `)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    // Fetch latest digital reviews
+    const { data: digitalReviews, error: digitalError } = await supabase
+      .from('dpeopreviews')
+      .select(`
+        id,
+        text,
+        favour,
+        created_at,
+        userRating,
+        cupOfTea,
+        userId,
+        user: users(id, name, image),
+        stream: streams(id, rDate, body, file, seriesType)
+      `)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (theatreError) {
+      console.error("Error fetching theatre reviews:", theatreError);
+    }
+
+    if (digitalError) {
+      console.error("Error fetching digital reviews:", digitalError);
+    }
+
+    // Transform theatre reviews
+    const formattedTheatreReviews = (theatreReviews || []).map(review => ({
+      id: review.id,
+      text: review.text,
+      created_at: review.created_at,
+      userRating: review.userRating,
+      cupOfTea: review.cupOfTea,
+      favour: review.favour,
+      userId: review.userId,
+      userName: review.user?.name,
+      userImage: review.user?.image,
+      releaseId: review.release?.id,
+      releaseDate: review.release?.rDate,
+      releaseBody: review.release?.body,
+      releasePoster: review.release?.file,
+      original_table: 'peoplesReview',
+      reviewType: 'theatre'
+    }));
+
+    // Transform digital reviews
+    const formattedDigitalReviews = (digitalReviews || []).map(review => ({
+      id: review.id,
+      text: review.text,
+      created_at: review.created_at,
+      userRating: review.userRating,
+      cupOfTea: review.cupOfTea,
+      favour: review.favour,
+      userId: review.userId,
+      userName: review.user?.name,
+      userImage: review.user?.image,
+      releaseId: review.stream?.id,
+      releaseDate: review.stream?.rDate,
+      releaseBody: review.stream?.body,
+      releasePoster: review.stream?.file,
+      seriesType: review.stream?.seriesType,
+      original_table: 'dpeopreviews',
+      reviewType: review.stream?.seriesType === 'series' ? 'series' : 'digital'
+    }));
+
+    // Combine and sort by created_at, then take top limit
+    const allReviews = [...formattedTheatreReviews, ...formattedDigitalReviews]
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+      .slice(0, limit);
+
+    return { 
+      success: true, 
+      data: allReviews 
+    };
+  } catch (error) {
+    console.error("Error in fetchLatestReviews:", error);
+    return { success: false, msg: "Could not fetch latest reviews", error: error.message };
+  }
+};

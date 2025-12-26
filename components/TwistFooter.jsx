@@ -4,7 +4,7 @@ import * as Sharing from 'expo-sharing';
 import { captureRef } from 'react-native-view-shot';
 import Icon from '../assets/icons';
 import theme from '../constants/theme';
-import { hp, stripHtmlTags } from '../helpers/common';
+import { hp, stripHtmlTags, truncateUsername } from '../helpers/common';
 import { createTwistLikes, removeTwistLikes, removeTwistUnlikes } from '../services/homeService';
 import { getSupabaseFileUrl } from '../services/imageService';
 import { useFocusEffect } from 'expo-router';
@@ -17,7 +17,7 @@ const PosterView = React.forwardRef(({ item }, ref) => {
       {/* Header with app branding */}
       <View style={posterStyles.header}>
         <Text style={posterStyles.appName}>PlotTwist</Text>
-        <Text style={posterStyles.username}>@{item?.user?.name || 'user'}</Text>
+        <Text style={posterStyles.username}>@{truncateUsername(item?.user?.name || 'user')}</Text>
       </View>
 
       {/* Content area */}
@@ -237,11 +237,11 @@ const TwistFooter = ({
           <View style={styles.footerButton}>
             <TouchableOpacity onPress={onLike} activeOpacity={0.7}>
               <Icon 
-                name='thumbsup'
+                name='popcorn'
                 size={24} 
-                fill={twistliked ? theme.colors.blue || '#0066B1' : 'transparent'} 
-                strokeWidth={1.4} 
-                color={twistliked ? theme.colors.blue || '#0066B1' : theme.colors.light || '#E0E0E0'}
+                fill='transparent'
+                strokeWidth={twistliked ? 2.5 : 1.4} 
+                color={twistliked ? '#FFD700' : theme.colors.light || '#E0E0E0'}
               />  
             </TouchableOpacity>
             <Text style={styles.count}>

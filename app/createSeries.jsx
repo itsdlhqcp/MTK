@@ -3,7 +3,7 @@ import React, { useRef, useState, useEffect } from 'react'
 import ScreenWrapper from '../components/ScreenWrapper'
 import Header from '../components/Header'
 import { useRouter, useLocalSearchParams } from 'expo-router'
-import { hp, wp } from '@/helpers/common'
+import { hp, wp, truncateUsername } from '@/helpers/common'
 import theme from '../constants/theme'
 import Icon from '@/assets/icons'
 import Avatar from '../components/Avatar'
@@ -27,6 +27,7 @@ const CreateSeries = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [seriesId, setSeriesId] = useState(null);
   const [initialContentSet, setInitialContentSet] = useState(false);
+  const isSubmittingRef = useRef(false); // Ref to prevent double submission
   
   // Series basic info
   const [seriesName, setSeriesName] = useState('');
@@ -247,6 +248,11 @@ const CreateSeries = () => {
   }, [params?.id]);
 
   const onSubmit = async () => {
+    // Prevent double submission
+    if (isSubmittingRef.current || loading) {
+      return;
+    }
+
     if (!seriesName.trim()) {
       Alert.alert('Error', 'Please enter series name');
       return;
@@ -257,6 +263,8 @@ const CreateSeries = () => {
       return;
     }
 
+    // Set submission flag immediately
+    isSubmittingRef.current = true;
     setLoading(true);
 
     try {
@@ -411,11 +419,12 @@ const CreateSeries = () => {
       Alert.alert('Error', `Failed to ${isEditMode ? 'update' : 'create'} series. Please try again.`);
     } finally {
       setLoading(false);
+      isSubmittingRef.current = false; // Reset submission flag
     }
   };
 
   return (
-    <ScreenWrapper bg="white">
+    <ScreenWrapper bg="#121212">
       <Header title={isEditMode ? "Edit Series" : "Create Series"} showBackButton={true} />
       <View style={styles.container}>
         <ScrollView contentContainerStyle={{ gap: 20 }} showsVerticalScrollIndicator={false}>
@@ -427,7 +436,7 @@ const CreateSeries = () => {
             />
             <View style={{ gap: 2 }}>
               <Text style={styles.username}>
-                {user?.name}
+                {truncateUsername(user?.name || '')}
               </Text>
               <Text style={styles.publicText}>
                 Public
@@ -642,6 +651,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     paddingHorizontal: wp(4), 
     gap: 15,
+    backgroundColor: '#121212',
   },
   header: {
     flexDirection: 'row',
@@ -651,12 +661,12 @@ const styles = StyleSheet.create({
   username: {
     fontSize: hp(2.2),
     fontWeight: theme.fonts.semibold,
-    color: theme.colors.text,
+    color: '#FFFFFF',
   },
   publicText: {
     fontSize: hp(1.7),
     fontWeight: theme.fonts.medium,
-    color: theme.colors.textLight,
+    color: '#B3B3B3',
   },
   inputContainer: {
     marginBottom: 10,
@@ -664,17 +674,18 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: hp(1.8),
     fontWeight: theme.fonts.medium,
-    color: theme.colors.text,
+    color: '#E0E0E0',
     marginBottom: 4,
   },
   input: {
     borderWidth: 1,
-    borderColor: theme.colors.gray,
+    borderColor: '#333333',
     borderRadius: theme.radius.sm,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: hp(1.8),
-    color: theme.colors.text,
+    color: '#FFFFFF',
+    backgroundColor: '#181818',
   },
   multilineInput: {
     minHeight: hp(8),
@@ -684,18 +695,19 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     padding: 15,
     borderWidth: 1,
-    borderColor: theme.colors.gray,
+    borderColor: '#333333',
     borderRadius: theme.radius.md,
+    backgroundColor: '#181818',
   },
   sectionTitle: {
     fontSize: hp(2.2),
     fontWeight: theme.fonts.bold,
-    color: theme.colors.primary,
+    color: '#FFFFFF',
     marginBottom: 4,
   },
   sectionSubtitle: {
     fontSize: hp(1.6),
-    color: theme.colors.textLight,
+    color: '#B3B3B3',
     marginBottom: 12,
   },
   addImageButton: {

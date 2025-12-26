@@ -1,5 +1,5 @@
-import { Image, StyleSheet, Text, TouchableOpacity, View, Modal } from 'react-native'
-import React, { useState, useEffect } from 'react'
+import { Image, StyleSheet, Text, TouchableOpacity, View, Modal, Animated } from 'react-native'
+import React, { useState, useEffect, useRef } from 'react'
 import { wp, hp } from '@/helpers/common'
 import theme from '../constants/theme'
 import { getSupabaseFileUrl } from '../services/userProfileImage'
@@ -13,6 +13,12 @@ import { fetchAverageRating, updateReleaseEndDate, deleteRelease } from '../serv
 import { useToast } from '../contexts/ToastContext'
 import { adminIds } from '../constants/admin'
 import { useAuth } from '../contexts/AuthContext'
+import {
+  subscribeToReleaseNotifications,
+  unsubscribeFromReleaseNotifications,
+  checkSubscriptionStatus
+} from '../services/releaseNotificationSubscriptionService.js'
+import { playBellActivateSound, playBellDeactivateSound } from '../services/bellSoundService.js'
 
 const ReleaseCard = ({
     item,
@@ -43,6 +49,12 @@ const ReleaseCard = ({
     // State for delete confirmation modal
     const [deleteModalVisible, setDeleteModalVisible] = useState(false);
     const [deleting, setDeleting] = useState(false);
+    // State for notification subscription
+    const [isSubscribed, setIsSubscribed] = useState(false);
+    const [subscriptionLoading, setSubscriptionLoading] = useState(false);
+    // Animation values for bell icon
+    const bellScale = useRef(new Animated.Value(1)).current;
+    const bellRotation = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
         // Fetch the average rating when component mounts
@@ -61,6 +73,22 @@ const ReleaseCard = ({
 
         getAverageRating();
     }, [item?.id, item?.sconnectedId]);
+
+    // Check subscription status on mount
+    useEffect(() => {
+        const checkSubscription = async () => {
+            if (!currentUser?.id || !item?.id) return;
+            try {
+                const result = await checkSubscriptionStatus(currentUser.id, item.id, 'theatre');
+                if (result.success) {
+                    setIsSubscribed(result.isSubscribed);
+                }
+            } catch (error) {
+                console.error("Error checking subscription:", error);
+            }
+        };
+        checkSubscription();
+    }, [currentUser?.id, item?.id]);
     
     const shadowStyle = {
         shadowOffset: {
@@ -229,6 +257,96 @@ const ReleaseCard = ({
     const releaseAt = item?.rDate ? moment(item.rDate).format('MMM D') : '';
     const show = releaseAt && moment(item.rDate).isSameOrBefore(moment(), 'day');
 
+    // Animation function for bell toggle
+    const animateBell = () => {
+        // Scale down then up with rotation
+        Animated.sequence([
+            Animated.parallel([
+                Animated.spring(bellScale, {
+                    toValue: 0.8,
+                    useNativeDriver: true,
+                    tension: 300,
+                    friction: 7,
+                }),
+                Animated.timing(bellRotation, {
+                    toValue: 1,
+                    duration: 200,
+                    useNativeDriver: true,
+                }),
+            ]),
+            Animated.parallel([
+                Animated.spring(bellScale, {
+                    toValue: 1.2,
+                    useNativeDriver: true,
+                    tension: 300,
+                    friction: 7,
+                }),
+                Animated.timing(bellRotation, {
+                    toValue: 0,
+                    duration: 200,
+                    useNativeDriver: true,
+                }),
+            ]),
+            Animated.spring(bellScale, {
+                toValue: 1,
+                useNativeDriver: true,
+                tension: 300,
+                friction: 7,
+            }),
+        ]).start();
+    };
+
+    // Handle notification bell toggle
+    const handleNotificationToggle = async (e) => {
+        e.stopPropagation(); // Prevent card press event
+        if (!currentUser?.id || !item?.id || subscriptionLoading) return;
+
+        // Start animation
+        animateBell();
+
+        setSubscriptionLoading(true);
+        try {
+            if (isSubscribed) {
+                // Play deactivation sound
+                playBellDeactivateSound();
+                
+                // Unsubscribe
+                const result = await unsubscribeFromReleaseNotifications(
+                    currentUser.id,
+                    item.id,
+                    'theatre'
+                );
+                if (result.success) {
+                    setIsSubscribed(false);
+                    showToast('success', 'Notifications disabled for this release');
+                } else {
+                    showToast('error', result.msg || 'Failed to unsubscribe');
+                }
+            } else {
+                // Play activation sound
+                playBellActivateSound();
+                
+                // Subscribe
+                const result = await subscribeToReleaseNotifications(
+                    currentUser.id,
+                    item.id,
+                    'theatre'
+                );
+                if (result.success) {
+                    setIsSubscribed(true);
+                    showToast('success', 'You will be notified when this release is available');
+                } else {
+                    showToast('error', result.msg || 'Failed to subscribe');
+                }
+            }
+        } catch (error) {
+            console.error('Error toggling notification:', error);
+            showToast('error', 'Something went wrong');
+        } finally {
+            setSubscriptionLoading(false);
+        }
+    };
+
     return (
         <TouchableOpacity
             style={[styles.container, hasShadow && shadowStyle]}
@@ -274,23 +392,16 @@ const ReleaseCard = ({
                 <View style={styles.overlay}>
                     {/* Top section with rating and more button */}
                     <View style={styles.topContainer}>
-                        {/* {show &&(
+                        {/* Left side - Rating */}
+                        {show && avgRating?.average ? (
                             <View style={styles.ratingSection}>
-                            {renderRating()}
-                        </View>
-                        )} */}
-
-
-                       {show && avgRating?.average ? (
-                            <View style={styles.ratingSection}>
-                            {renderRating()}
-                        </View>
+                                {renderRating()}
+                            </View>
                         ) : (
-                            <Text style={styles.statusText}> 
-                        </Text>
+                            <View style={styles.ratingSection} />
                         )}
                         
-                        {/* More button */}
+                        {/* Right side - More button */}
                         {showMoreIcon && isadmin && (
                             <TouchableOpacity 
                                 style={styles.moreButton} 
@@ -329,7 +440,41 @@ const ReleaseCard = ({
                                 )}
                           
                         </View>
-                        <View style={styles.emptySpace} />
+                        <View style={styles.bottomRightContainer}>
+                            {/* Notification bell button - Bottom right */}
+                            {currentUser?.id && (
+                                <TouchableOpacity 
+                                    style={[
+                                        styles.notificationButton,
+                                        isSubscribed && styles.notificationButtonActive
+                                    ]} 
+                                    onPress={handleNotificationToggle}
+                                    activeOpacity={0.7}
+                                    disabled={subscriptionLoading}
+                                >
+                                    <Animated.View
+                                        style={{
+                                            transform: [
+                                                { scale: bellScale },
+                                                {
+                                                    rotate: bellRotation.interpolate({
+                                                        inputRange: [0, 1],
+                                                        outputRange: ['0deg', '15deg'],
+                                                    }),
+                                                },
+                                            ],
+                                        }}
+                                    >
+                                        <Text style={[
+                                            styles.notificationIcon,
+                                            isSubscribed && styles.notificationIconActive
+                                        ]}>
+                                            {isSubscribed ? '🔔' : '🔕'}
+                                        </Text>
+                                    </Animated.View>
+                                </TouchableOpacity>
+                            )}
+                        </View>
                     </View>
                 </View>
                 
@@ -503,10 +648,15 @@ const styles = StyleSheet.create({
     },
     topContainer: {
         flexDirection: 'row',
-        justifyContent: 'space-between', 
+        justifyContent: 'space-between',
         alignItems: 'flex-start',
         width: '100%',
         zIndex: 10,
+    },
+    rightTopButtons: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: wp(1),
     },
     ratingSection: {
         flex: 1,
@@ -524,6 +674,29 @@ const styles = StyleSheet.create({
         marginLeft: 5,
         fontSize: hp(1.7),
         fontWeight: '500'
+    },
+    bottomRightContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    notificationButton: {
+        padding: hp(0.8),
+        borderRadius: hp(2),
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minWidth: hp(3.5),
+        minHeight: hp(3.5),
+    },
+    notificationButtonActive: {
+        backgroundColor: 'rgba(229, 9, 20, 0.3)',
+    },
+    notificationIcon: {
+        fontSize: hp(2.2),
+        color: theme.colors.light || '#E0E0E0',
+    },
+    notificationIconActive: {
+        color: theme.colors.primary || '#E50914',
     },
     moreButton: {
         padding: hp(0.8),

@@ -387,6 +387,7 @@ export default SignUp;
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
+    backgroundColor: '#0A0A0A', // Dark fallback background
   },
   backgroundImage: {
     flex: 1,
@@ -532,7 +533,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   goButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: '#FF1744',
     paddingHorizontal: 35,
     paddingVertical: 15,
     borderRadius: 8,
@@ -540,11 +541,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderColor: '#FF1744',
+    shadowColor: '#FF1744',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 6,
   },
   goButtonDisabled: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(229, 9, 20, 0.3)',
+    borderColor: 'rgba(229, 9, 20, 0.3)',
+    shadowOpacity: 0,
+    elevation: 0,
   },
   goButtonText: {
     color: '#fff',

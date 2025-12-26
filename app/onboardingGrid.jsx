@@ -21,102 +21,102 @@ const OnboardingGrid = () => {
         {
             id: 1,
             name: 'BLINDER',
-            url: 'https://firebasestorage.googleapis.com/v0/b/chat-web-app-46b89.appspot.com/o/chat%2F-OEc42DEriXDT_CajhEn%2F1734765720792BLINDER.jpg?alt=media&token=c0983db4-efc6-40bd-a0cd-f719b2a43c4c'
+            source: require('../assets/on/1734765720792BLINDER.jpg')
         },
         {
             id: 2,
             name: 'KIRATA',
-            url: 'https://firebasestorage.googleapis.com/v0/b/chat-web-app-46b89.appspot.com/o/chat%2F-OEc42DEriXDT_CajhEn%2F1734765720795KIRATA.jpg?alt=media&token=123ad8bc-b23f-4ab8-86f2-58623cb2c955'
+            source: require('../assets/on/1734765720795KIRATA.jpg')
         },
         {
             id: 3,
             name: 'SHAP',
-            url: 'https://firebasestorage.googleapis.com/v0/b/chat-web-app-46b89.appspot.com/o/chat%2F-OEc42DEriXDT_CajhEn%2F1734765720795SHAP.jpg?alt=media&token=b611e025-473d-4c29-a922-750ba8b1ed8d'
+            source: require('../assets/on/1734765720795SHAP.jpg')
         },
         {
             id: 4,
             name: 'HERITIC',
-            url: 'https://firebasestorage.googleapis.com/v0/b/chat-web-app-46b89.appspot.com/o/chat%2F-OEc42DEriXDT_CajhEn%2F1734765720795HERITIC.jpg?alt=media&token=6640f5d5-6314-4f5d-98d6-ddb5ec04853a'
+            source: require('../assets/on/1734765720795HERITIC.jpg')
         },
         {
             id: 5,
             name: 'spy',
-            url: 'https://firebasestorage.googleapis.com/v0/b/chat-web-app-46b89.appspot.com/o/chat%2F-OEc42DEriXDT_CajhEn%2F1734767810179SPY.jpg?alt=media&token=df81aa04-1eaa-4f4f-b918-b172f43f7fff'
+            source: require('../assets/on/1734767810179SPY.jpg')
         },
         {
           id: 6,
           name: 'sonic',
-          url: 'https://firebasestorage.googleapis.com/v0/b/chat-web-app-46b89.appspot.com/o/chat%2F-OEc42DEriXDT_CajhEn%2F1734767810180SONIC.jpg?alt=media&token=f48181b4-1110-4040-8571-d403ad521e57'
+          source: require('../assets/on/1734767810180SONIC.jpg')
       },
       {
         id: 7,
         name: 'kraven',
-        url: 'https://firebasestorage.googleapis.com/v0/b/chat-web-app-46b89.appspot.com/o/chat%2F-OEc42DEriXDT_CajhEn%2F1734768273687kraven.jpg?alt=media&token=000bad96-bdb5-4c5d-b5fc-816073f71477'
+        source: require('../assets/on/1734768273687kraven.jpg')
     },
         {
         id: 8,
         name: 'thelionKing',
-        url: 'https://firebasestorage.googleapis.com/v0/b/chat-web-app-46b89.appspot.com/o/chat%2F-OEc42DEriXDT_CajhEn%2F1734768273687lionKing.jpg?alt=media&token=f8fcce32-8062-403f-a1d4-6bc1a35871b2'
+        source: require('../assets/on/1734768273687lionKing.jpg')
     },
     {
         id: 9,
         name: 'thelionKing',
-        url: 'https://firebasestorage.googleapis.com/v0/b/chat-web-app-46b89.appspot.com/o/chat%2F-OEc42DEriXDT_CajhEn%2F1734768273687lastofus.jpg?alt=media&token=0119a36d-7a17-4e83-b2db-cc1500cacd2a'
+        source: require('../assets/on/1734768273687lastofus.jpg')
     },
     {
     id: 10,
     name: 'michael',
-    url: 'https://firebasestorage.googleapis.com/v0/b/chat-web-app-46b89.appspot.com/o/chat%2F-OEc42DEriXDT_CajhEn%2F1734768340051michael.jpg?alt=media&token=2e86a937-2b74-44a2-85f7-ec0ccbcccaf7'
+    source: require('../assets/on/1734768340051michael.jpg')
     },
     {
     id: 11,
     name: 'michael',
-    url: 'https://firebasestorage.googleapis.com/v0/b/chat-web-app-46b89.appspot.com/o/chat%2F-OEc42DEriXDT_CajhEn%2F1734765720795SUPER.jpg?alt=media&token=9af80502-9ab4-4dc8-a2f7-fe3468475c76'
+    source: require('../assets/on/1734765720795SUPER.jpg')
     },
     {
     id: 12,
     name: 'michael',
-    url: 'https://firebasestorage.googleapis.com/v0/b/chat-web-app-46b89.appspot.com/o/chat%2F-OEc42DEriXDT_CajhEn%2F1734768340051pushpa2.jpg?alt=media&token=fc4460ed-b87a-42fd-996f-2b61d13f847a'
+    source: require('../assets/on/1734768340051pushpa2.jpg')
     },
     {
     id: 13,
     name: 'michael',
-    url: 'https://firebasestorage.googleapis.com/v0/b/chat-web-app-46b89.appspot.com/o/chat%2F-OEc42DEriXDT_CajhEn%2F1734768340051mura.jpg?alt=media&token=2eda53c6-c553-4d6a-ae98-98dff21a2df2'
+    source: require('../assets/on/1734768340051mura.jpg')
     },
     {
     id: 14,
     name: 'michael',
-    url: 'https://firebasestorage.googleapis.com/v0/b/chat-web-app-46b89.appspot.com/o/chat%2F-OEc42DEriXDT_CajhEn%2F1734768273687fromToday.jpg?alt=media&token=9b388d46-15ef-4055-812b-3adc8aaca302'
+    source: require('../assets/on/1734768273687fromToday.jpg')
     },
     {
     id: 15,
     name: 'michael',
-    url: 'https://firebasestorage.googleapis.com/v0/b/chat-web-app-46b89.appspot.com/o/chat%2F-OEc42DEriXDT_CajhEn%2F1734769177738redone.jpg?alt=media&token=896a60cd-361b-4b15-9f25-83a4748fd564'
+    source: require('../assets/on/1734769177738redone.jpg')
     },
     {
     id: 16,
     name: 'michael',
-    url: 'https://firebasestorage.googleapis.com/v0/b/chat-web-app-46b89.appspot.com/o/chat%2F-OEc42DEriXDT_CajhEn%2F1734769273312kaatta.jpg?alt=media&token=9e71711c-3f41-416b-b02e-597d56f474c1'
+    source: require('../assets/on/1734767810180SONIC.jpg')
     },
     {
         id: 17,
         name: 'sonic',
-        url: 'https://firebasestorage.googleapis.com/v0/b/chat-web-app-46b89.appspot.com/o/chat%2F-OEc42DEriXDT_CajhEn%2F1734768273687lastofus.jpg?alt=media&token=0119a36d-7a17-4e83-b2db-cc1500cacd2a'
+        source: require('../assets/on/1734768273687lastofus.jpg')
     },
     {
     id: 18,
     name: 'kraven',
-    url: 'https://firebasestorage.googleapis.com/v0/b/chat-web-app-46b89.appspot.com/o/chat%2F-OEc42DEriXDT_CajhEn%2F1734768273687kraven.jpg?alt=media&token=000bad96-bdb5-4c5d-b5fc-816073f71477'
+    source: require('../assets/on/1734768273687kraven.jpg')
     },
     {
     id: 19,
     name: 'thelionKing',
-    url: 'https://firebasestorage.googleapis.com/v0/b/chat-web-app-46b89.appspot.com/o/chat%2F-OEc42DEriXDT_CajhEn%2F1734768273687lionKing.jpg?alt=media&token=f8fcce32-8062-403f-a1d4-6bc1a35871b2'
+    source: require('../assets/on/1734768273687lionKing.jpg')
     },
     {
     id: 20,
     name: 'thelionKing',
-    url: 'https://firebasestorage.googleapis.com/v0/b/chat-web-app-46b89.appspot.com/o/chat%2F-OEc42DEriXDT_CajhEn%2F1734768273687lastofus.jpg?alt=media&token=0119a36d-7a17-4e83-b2db-cc1500cacd2a'
+    source: require('../assets/on/1734768273687lastofus.jpg')
     },
     ];
 
@@ -126,6 +126,35 @@ const OnboardingGrid = () => {
         { iconName: 'calender', text: 'Track New Movies', color: '#FFFFFF' },
         { iconName: 'star', text: 'Get Fastest Ratings', color: '#FFFFFF' },
     ];
+
+    // Preload all images to reduce latency
+    useEffect(() => {
+        const preloadImages = async () => {
+            try {
+                const imagePromises = gridImages.map((item) => {
+                    try {
+                        const resolvedSource = Image.resolveAssetSource(item.source);
+                        // For local images, prefetch the resolved URI
+                        if (resolvedSource?.uri) {
+                            return Image.prefetch(resolvedSource.uri).catch(() => {
+                                // Silently ignore prefetch errors - local images are already bundled
+                                return Promise.resolve();
+                            });
+                        }
+                    } catch (error) {
+                        // Ignore resolution errors
+                    }
+                    return Promise.resolve();
+                });
+                // Prefetch all images in parallel for faster loading
+                await Promise.allSettled(imagePromises);
+            } catch (error) {
+                // Ignore prefetch errors - images will still load normally
+            }
+        };
+        // Start preloading immediately when component mounts
+        preloadImages();
+    }, []);
 
     // Auto transformation effect
     useEffect(() => {
@@ -335,9 +364,11 @@ const logo = require('../assets/images/appicontrans.png'); // adjust path as nee
                                     onPress={() => console.log(`Pressed ${item.name}`)}
                                 >
                                     <Image
-                                        source={{ uri: item.url }}
+                                        source={item.source}
                                         style={styles.image}
                                         resizeMode="cover"
+                                        progressiveRenderingEnabled={true}
+                                        fadeDuration={200}
                                     />
                                     {/* Additional blur overlay on individual images */}
                                     <View style={styles.imageOverlay} />
@@ -405,6 +436,7 @@ const SPACING = 0;
 const styles = StyleSheet.create({
     mainContainer: {
         flex: 1,
+        backgroundColor: '#0A0A0A', // Dark fallback background
     },
     backgroundGradient: {
         position: 'absolute',
@@ -431,15 +463,17 @@ const styles = StyleSheet.create({
     },
     gridItem: {
         width: (SCREEN_WIDTH - (SPACING * (COLUMN_COUNT + 1))) / COLUMN_COUNT,
+        aspectRatio: 0.655,
         marginBottom: SPACING,
         marginRight: SPACING,
         position: 'relative',
+        overflow: 'hidden',
     },
     image: {
         width: '100%',
-        aspectRatio: 0.655, 
+        height: '100%',
         borderRadius: 0,
-        opacity: 0.7, 
+        opacity: 0.7,
     },
     // NEW: Image overlay for additional blur effect
     imageOverlay: {

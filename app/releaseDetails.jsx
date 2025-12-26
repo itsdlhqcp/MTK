@@ -5,6 +5,7 @@ import Input from '../components/Input';
 import { createReleaseReview, fetchReleaseDetails, removeReview ,createReviewReply, fetchReviewReplies } from "../services/releaseService";
 import { View } from "react-native";
 import { createNotifications } from '../services/notificationService'
+import { playReviewSound } from '../services/bellSoundService.js';
 import ReviewItem from "../components/ReviewItem";
 import { hp, wp } from '../helpers/common';
 import theme from '../constants/theme';
@@ -205,6 +206,9 @@ const ReleaseDetails = () => {
         try {
             let res = await createReleaseReview(data);
             if(res.success){
+                // Play review sound on successful submission
+                playReviewSound();
+                
                 const newReview = {
                     ...res.data,
                     user: {

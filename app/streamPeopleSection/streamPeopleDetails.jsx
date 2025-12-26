@@ -3,7 +3,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { StyleSheet, TouchableOpacity, Alert, Animated, RefreshControl, Easing } from "react-native";
 import Input from '../../components/Input';
 import { fetchPeopleReviewReplies, removeReplyPeopleReview, fetchPeoplesReleaseDetailsx, hasUserPostedAnyReview, fetchReleaseDetailsx, hasUserPostedAnyReviewInDirect } from "../../services/releaseService";
-import { createReviewReply, removeReview, fetchReviewReplies, fetchReleaseDetails, createReleaseReview, fetchPeoplesReleaseDetails, createPeopleReleaseReview, removePeopleReview} from "../../services/ottService"
+import { createReviewReply, removeReview, fetchReviewReplies, fetchReleaseDetails, createReleaseReview, fetchPeoplesReleaseDetails, createPeopleReleaseReview, removePeopleReview, fetchDigitalById} from "../../services/ottService"
 import { View } from "react-native";
 import { createNotifications } from '../../services/notificationService'
 import ReviewItem from "../../components/ReviewItem";
@@ -27,6 +27,7 @@ import DigitalReviewTabs from "../../components/DigitalReviewTabs";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import { useToast } from "../../contexts/ToastContext";
 import moment from "moment";
+import { playReviewSound } from '../../services/bellSoundService.js';
 
 const MIN_CHARS = 0;
 
@@ -64,6 +65,7 @@ const StreamPeopleDetails = () => {
     const [thReview, setThReview] = useState(null);  // THeatre RENDER VARIABLE
     const [hasUserPostedReview, setHasUserPostedReview] = useState(false);
     const [tharelease, setTharelease] = useState(null);
+    const hasHandledOpenReview = useRef(false); // Track if we've already handled openReview param
 
     const buttonSlideAnim = useRef(new Animated.Value(100)).current;
 
@@ -138,6 +140,17 @@ const StreamPeopleDetails = () => {
             }
         };
     }, [streamId]);
+
+    // Effect to remove openReview param from URL immediately when detected
+    useEffect(() => {
+        if (openReview === 'true' && !hasHandledOpenReview.current) {
+            hasHandledOpenReview.current = true;
+            // Remove param immediately to prevent it from persisting
+            router.setParams({
+                streamId: streamId,
+            });
+        }
+    }, [openReview, streamId, router]);
 
       // Removed checkUserReview and checkUserReviewDirect functions - now handled with hasUserReviewed flag
 
@@ -220,23 +233,47 @@ const StreamPeopleDetails = () => {
 
     const getReleaseDetails = async () => {
         setStartLoading(true);
-        let res = await fetchPeoplesReleaseDetails(streamId, user?.id);
-        if (res.success) {
-            setRelease(res.data);
-            // Set hasUserPostedReview flag from the response (for direct releases)
-            if (res.data?.hasUserReviewed !== undefined) {
-                setHasUserPostedReview(res.data.hasUserReviewed);
-            }
-        }
-        setStartLoading(false);
         
-        // Open rating modal if openReview param is present
-        if (openReview === 'true' && user?.id) {
-            // Small delay to ensure page is fully loaded
+        // Check current params directly using useLocalSearchParams hook result
+        // We need to get fresh params, so we'll check the openReview from the hook
+        // Note: openReview is already destructured from useLocalSearchParams at component level
+        if (openReview === 'true' && user?.id && !hasHandledOpenReview.current) {
+            hasHandledOpenReview.current = true; // Mark as handled immediately
+            // Remove openReview param from URL immediately to prevent reopening on refresh
+            router.setParams({
+                streamId: streamId,
+                // Explicitly remove openReview by not including it
+            });
+            
+            // Open rating modal after a small delay to ensure page is fully loaded
             setTimeout(() => {
                 setRatingModalVisible(true);
             }, 500);
         }
+        
+        let res = await fetchPeoplesReleaseDetails(streamId, user?.id);
+        if (res.success) {
+            let releaseData = res.data;
+            
+            // Fetch episodes if it's a series
+            if (releaseData?.seriesType === 'series' || (releaseData?.episodes && Array.isArray(releaseData.episodes) && releaseData.episodes.length > 0)) {
+                const digitalRes = await fetchDigitalById(streamId);
+                if (digitalRes.success && digitalRes.data?.episodes) {
+                    releaseData = {
+                        ...releaseData,
+                        episodes: digitalRes.data.episodes,
+                        seriesType: digitalRes.data.seriesType || releaseData.seriesType,
+                    };
+                }
+            }
+            
+            setRelease(releaseData);
+            // Set hasUserPostedReview flag from the response (for direct releases)
+            if (releaseData?.hasUserReviewed !== undefined) {
+                setHasUserPostedReview(releaseData.hasUserReviewed);
+            }
+        }
+        setStartLoading(false);
     };
 
     // below is the code to handle review replies 
@@ -499,6 +536,9 @@ const StreamPeopleDetails = () => {
             try {
                 let res = await createPeopleReleaseReview(data);
                 if(res.success){
+                    // Play review sound on successful submission
+                    playReviewSound();
+                    
                     const newReview = {
                         ...res.data,
                         user: {
@@ -514,6 +554,13 @@ const StreamPeopleDetails = () => {
                     }));
                     // Update hasUserPostedReview flag
                     setHasUserPostedReview(true);
+
+                    // Remove openReview param after successful submission
+                    if (openReview === 'true') {
+                        router.setParams({
+                            streamId: streamId,
+                        });
+                    }
         
                     if(user.id !== release?.userId){
                         let notify = {
@@ -670,6 +717,9 @@ const StreamPeopleDetails = () => {
                               try {
                                   let res = await createReleaseReview(data);
                                   if(res.success){
+                                      // Play review sound on successful submission
+                                      playReviewSound();
+                                      
                                       // Create the new review object with user data
                                       const newReview = {
                                           ...res.data,
@@ -908,7 +958,7 @@ const StreamPeopleDetails = () => {
                             </View>
                         )}      
                        
-                       <DigitalReviewTabs>
+                       <DigitalReviewTabs showOnlyDigital={release?.seriesType === 'series' || (release?.episodes && Array.isArray(release.episodes) && release.episodes.length > 0)}>
   {/* Tab 1: Digital Reviews */}
   <View>
     <PeoplesPreviewList
@@ -924,7 +974,7 @@ const StreamPeopleDetails = () => {
     />
   </View>
   
-  {/* Tab 2: Theatre Reviews */}
+  {/* Tab 2: Theatre Reviews - Only shown for non-series */}
   <View>
     {thReview?.peoplesReview ? (
       <PeoplesReviewList
@@ -980,7 +1030,15 @@ const StreamPeopleDetails = () => {
                     <RatingBottomSheet 
                         item={release}
                         visible={ratingModalVisible}
-                        onClose={() => setRatingModalVisible(false)}
+                        onClose={() => {
+                            setRatingModalVisible(false);
+                            // Remove openReview param when closing modal
+                            if (openReview === 'true') {
+                                router.setParams({
+                                    streamId: streamId,
+                                });
+                            }
+                        }}
                         onSubmit={handleFinalReviewSubmit}
                         router={router}
                     />

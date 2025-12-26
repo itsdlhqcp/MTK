@@ -3,7 +3,7 @@ import React, { useRef, useState, useEffect } from 'react'
 import ScreenWrapper from '../components/ScreenWrapper'
 import Header from '../components/Header'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import { hp, wp } from '@/helpers/common'
+import { hp, wp, truncateUsername } from '@/helpers/common'
 import theme from '../constants/theme'
 import Icon from '@/assets/icons'
 import Avatar from '../components/Avatar'
@@ -50,6 +50,7 @@ const CreateFeed = () => {
   const [currentTag, setCurrentTag] = useState('');
   const [youtubeLink, setYoutubeLink] = useState('');
   const [initialContentSet, setInitialContentSet] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(null); // Progress tracking for uploads
   const [sectionsLoaded, setSectionsLoaded] = useState(false);
   const { showToast } = useToast();
   
@@ -273,7 +274,7 @@ const CreateFeed = () => {
       // Remove corresponding editor ref
       sectionEditorRefs.current = sectionEditorRefs.current.filter((_, i) => i !== index);
     } else {
-      Alert.alert('Error', 'At least one section is required');
+      Alert.alert('Error', 'At least one chapter is required');
     }
   };
 
@@ -395,7 +396,7 @@ const CreateFeed = () => {
           section.text_content?.trim() || section.image_file || section.video_file || section.pdf_file
         );
         if (!hasContent) {
-          Alert.alert("Error", `Please add content to at least one section${creationMethod === 'pdf' ? ' (PDF file)' : ''}.`);
+          Alert.alert("Error", `Please add content to at least one chapter${creationMethod === 'pdf' ? ' (PDF file)' : ''}.`);
           return;
         }
         if (!episodeTitle.trim()) {
@@ -441,14 +442,26 @@ const CreateFeed = () => {
           data.id = post.id;
         }
 
-        let res = await createOrUpdatePost(data);
+        // Reset progress when starting upload (only if file is being uploaded)
+        if (file && typeof file === 'object') {
+          setUploadProgress({ percentage: 0, step: 0, message: "Preparing upload...", totalSteps: 2 });
+        }
+        
+        // Progress callback for tracking upload progress
+        const handleProgress = (progress) => {
+          setUploadProgress(progress);
+        };
+
+        let res = await createOrUpdatePost(data, handleProgress);
         setLoading(false);
+        setUploadProgress(null); // Clear progress on completion
         
         if (res.success) {
           showToast('success', 'Post created successfully!');
           resetForm();
           router.back();
         } else {
+          setUploadProgress(null); // Clear progress on error
           Alert.alert('Post Error', res.msg || 'Unknown error occurred');
         }
       } else {
@@ -481,6 +494,7 @@ const CreateFeed = () => {
       }
     } catch (error) {
       setLoading(false);
+      setUploadProgress(null); // Clear progress on error
       console.error('Exception in onSubmit:', error);
       Alert.alert('Error', 'An unexpected error occurred while submitting.');
     }
@@ -519,7 +533,7 @@ const CreateFeed = () => {
             />
             <View style={{ gap: 2 }}>
               <Text style={[styles.username, { color: darkTheme.colors.text }]}>
-                {user?.name}
+                {truncateUsername(user?.name || '')}
               </Text>
               <Text style={[styles.publicText, { color: darkTheme.colors.textLight }]}>
                 Public
@@ -697,13 +711,13 @@ const CreateFeed = () => {
           {(creationMethod === 'pdf' || creationMethod === 'section_based') && (
             <View style={styles.sectionsContainer}>
               <View style={styles.sectionsHeader}>
-                <Text style={[styles.sectionTitle, { color: darkTheme.colors.text }]}>Sections</Text>
+                <Text style={[styles.sectionTitle, { color: darkTheme.colors.text }]}>Chapters</Text>
                 <TouchableOpacity
                   style={[styles.addSectionButton, { backgroundColor: darkTheme.colors.primary }]}
                   onPress={addSection}
                 >
                   <Icon name="plus" size={20} color="#fff" />
-                  <Text style={styles.addSectionText}>Add Section</Text>
+                  <Text style={styles.addSectionText}>Add Chapter</Text>
                 </TouchableOpacity>
               </View>
 
@@ -711,7 +725,7 @@ const CreateFeed = () => {
                 <View key={index} style={[styles.sectionCard, { backgroundColor: darkTheme.colors.cardBackground }]}>
                   <View style={styles.sectionHeader}>
                     <Text style={[styles.sectionNumber, { color: darkTheme.colors.text }]}>
-                      Section {index + 1}
+                      Chapter {index + 1}
                     </Text>
                     {sections.length > 1 && (
                       <TouchableOpacity
@@ -732,7 +746,7 @@ const CreateFeed = () => {
                       theme="dark"
                       textColor={darkTheme.colors.text}
                       backgroundColor={darkTheme.colors.input}
-                      placeholder={`Section ${index + 1} content...`}
+                      placeholder={`Chapter ${index + 1} content...`}
                     />
                   </View>
 
@@ -904,6 +918,26 @@ const CreateFeed = () => {
           onPress={onSubmit}
           hasShadow={false}
         />
+        {/* Progress Bar for Post Upload */}
+        {uploadProgress && creationMethod === 'regular' && (
+          <View style={styles.progressContainer}>
+            <View style={styles.progressHeader}>
+              <Text style={[styles.progressText, { color: darkTheme.colors.text }]}>{uploadProgress.message}</Text>
+              <Text style={[styles.progressPercentage, { color: darkTheme.colors.primary }]}>{Math.round(uploadProgress.percentage)}%</Text>
+            </View>
+            <View style={styles.progressBarBackground}>
+              <View 
+                style={[
+                  styles.progressBarFill,
+                  { 
+                    width: `${uploadProgress.percentage}%`,
+                    backgroundColor: darkTheme.colors.primary
+                  }
+                ]} 
+              />
+            </View>
+          </View>
+        )}
       </View>
     </ScreenWrapper>
   );
@@ -1240,5 +1274,38 @@ const styles = StyleSheet.create({
   tagPillText: {
     fontSize: hp(1.4),
     fontWeight: '600',
+  },
+  // Progress bar styles
+  progressContainer: {
+    marginTop: hp(1.5),
+    paddingVertical: hp(1),
+    paddingHorizontal: wp(4),
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: hp(0.8),
+  },
+  progressText: {
+    fontSize: hp(1.6),
+    fontWeight: theme.fonts.medium,
+    flex: 1,
+  },
+  progressPercentage: {
+    fontSize: hp(1.6),
+    fontWeight: theme.fonts.semibold,
+    marginLeft: wp(2),
+  },
+  progressBarBackground: {
+    height: hp(0.6),
+    backgroundColor: '#333333',
+    borderRadius: hp(0.3),
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: hp(0.3),
+    transition: 'width 0.3s ease',
   },
 });

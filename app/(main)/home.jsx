@@ -1,4 +1,4 @@
-import { Text, View, StyleSheet, FlatList, Pressable, TextInput, RefreshControl, Modal, Animated, TouchableOpacity, Dimensions, PanResponder, Alert } from 'react-native'
+import { Text, View, StyleSheet, FlatList, Pressable, TextInput, RefreshControl, Modal, Animated, TouchableOpacity, Dimensions, PanResponder, Alert, Image } from 'react-native'
 import React, { useEffect, useRef, useState, memo, useCallback, useMemo } from 'react'
 import { useRouter } from 'expo-router'
 import theme from '../../constants/theme'
@@ -7,7 +7,7 @@ import ScreenWrapper from '@/components/ScreenWrapper'
 import PollCard from '../../components/PollCard';
 import { fetchPolls } from '../../services/pollservice';
 import { supabase } from '../../lib/supabase'
-import { wp, hp } from '@/helpers/common'
+import { wp, hp, truncateUsername } from '@/helpers/common'
 import Avatar from '../../components/Avatar'
 import { fetchPosts, searchTwists } from '../../services/homeService'
 import { getUserData } from '../../services/userServices'
@@ -24,6 +24,8 @@ import CustomDotIndicator from '../../components/CutomDotIndicator'
 import EpisodeGridSection from '../../components/EpisodeGridSection'
 import EpisodeGrid from '../../components/EpisodeGrid'
 import { friendRequestService } from '../../services/requestService'
+// import { BannerAd, BannerAdSize } from 'react-native-google-mobile-ads'
+// import { getBannerAdUnitId } from '../../constants/ads'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -55,7 +57,42 @@ const FooterComponent = memo(({ loading, hasMore, postsLength }) => {
     <View style={{ marginVertical: 0, paddingBottom: 16 }}>
       {loading && <FeedLoader />}
       {!hasMore && postsLength > 0 && (
-        <Text style={styles.noPosts}>No more feeds to load !!</Text>
+        <>
+          {/* <Text style={styles.noPosts}>No more feeds to load !!</Text> */}
+          {/* PlotTwist App Advertisement Footer */}
+          <View style={styles.appAdContainer}>
+            <View style={styles.appAdContent}>
+              <View style={styles.appAdHeader}>
+                <Image 
+                  source={require('../../assets/last-test.png')} 
+                  style={styles.appIcon}
+                  resizeMode="contain"
+                />
+                <View style={styles.appAdTitleContainer}>
+                  <Text style={styles.appAdTitle}>PlotTwist</Text>
+                  <Text style={styles.appAdSubtitle}>For Cinemaphiles</Text>
+                </View>
+              </View>
+              <Text style={styles.appAdDescription}>
+                Discover, discuss, and share your favorite movies and shows with a community of film enthusiasts
+              </Text>
+              <View style={styles.appAdFeatures}>
+                <View style={styles.appAdFeature}>
+                  <Icon name="star" size={hp(2.2)} color="#FFD700" />
+                  <Text style={styles.appAdFeatureText}>Rate & Review</Text>
+                </View>
+                <View style={styles.appAdFeature}>
+                  <Icon name="spotlight" size={hp(2.2)} color="#FFD700" />
+                  <Text style={styles.appAdFeatureText}>Spotlight Feed</Text>
+                </View>
+                <View style={styles.appAdFeature}>
+                  <Icon name="community" size={hp(2.2)} color="#FFD700" />
+                  <Text style={styles.appAdFeatureText}>Join Community</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        </>
       )}
     </View>
   );
@@ -72,165 +109,10 @@ const EmptyListComponent = memo(({ loading, isSearching }) => {
   );
 });
 
-// Side Navbar Component
-const SideNavbar = memo(({ visible, onClose, router, setIsNavigating, isNavigating, isadmin, slideAnim, panResponder, onLogoutPress }) => {
-  const handleNavItemPress = (path) => {
-    if (!isNavigating) {
-      setIsNavigating(true);
-      router.push(path);
-      onClose();
-    }
-  };
-
-  return (
-    <Modal
-      visible={visible}
-      transparent={true}
-      animationType="none"
-      onRequestClose={onClose}
-    >
-      <View style={styles.sideNavOverlay} pointerEvents="box-none" {...panResponder.panHandlers}>
-        <TouchableOpacity 
-          style={styles.sideNavBackdrop}
-          activeOpacity={1}
-          onPress={onClose}
-        />
-        <Animated.View 
-          style={[
-            styles.sideNavContainer,
-            {
-              transform: [{ translateX: slideAnim }]
-            }
-          ]}
-          {...panResponder.panHandlers}
-        >
-          <View style={styles.sideNavHeader}>
-            <Text style={styles.sideNavTitle}>Menu</Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Icon name="close" size={hp(2.5)} color='white' />
-            </TouchableOpacity>
-          </View>
-          
-          <ScrollView style={styles.sideNavContent} showsVerticalScrollIndicator={false}>
-            {/* Community Tab */}
-            <TouchableOpacity 
-              style={styles.sideNavItem}
-              onPress={() => handleNavItemPress('community')}
-              disabled={true}
-            >
-              <View style={styles.sideNavItemContent}>
-                <Icon name="community" size={hp(2.8)} color='white' />
-                <Text style={styles.sideNavItemText}>Community</Text>
-                <Text style={styles.comingSoonBadge}>Coming Soon</Text>
-              </View>
-            </TouchableOpacity>
-            
-            {/* Library Tab */}
-            <TouchableOpacity 
-              style={styles.sideNavItem}
-              onPress={() => handleNavItemPress('library')}
-              disabled={isNavigating}
-            >
-              <View style={styles.sideNavItemContent}>
-                <Icon name="library" size={hp(2.8)} color='white' />
-                <Text style={styles.sideNavItemText}>Library</Text>
-              </View>
-            </TouchableOpacity>
-            
-            {/* Admin Only Tabs */}
-            {isadmin && (
-              <>
-                {/* Add Twist Tab */}
-                <TouchableOpacity 
-                  style={styles.sideNavItem}
-                  onPress={() => handleNavItemPress('addTwist')}
-                  disabled={isNavigating}
-                >
-                  <View style={styles.sideNavItemContent}>
-                    <Icon name="plus" size={hp(2.8)} color='white' />
-                    <Text style={styles.sideNavItemText}>Create Post</Text>
-                  </View>
-                </TouchableOpacity>
-                
-                {/* Poll Screen Tab */}
-                <TouchableOpacity 
-                  style={styles.sideNavItem}
-                  onPress={() => handleNavItemPress('pollScreen')}
-                  disabled={isNavigating}
-                >
-                  <View style={styles.sideNavItemContent}>
-                    <Icon name="rocket" size={hp(2.8)} color={theme.colors.blue} />
-                    <Text style={styles.sideNavItemText}>Create Poll</Text>
-                  </View>
-                </TouchableOpacity>
-              </>
-            )}
-          </ScrollView>
-          
-          {/* Logout Button at Bottom */}
-          <View style={styles.sideNavFooter}>
-            <TouchableOpacity 
-              style={styles.sideNavLogoutItem}
-              onPress={onLogoutPress}
-              disabled={isNavigating}
-            >
-              <View style={styles.sideNavItemContent}>
-                <Icon name="lgout" size={hp(2.8)} color='#FF3B30' />
-                <Text style={[styles.sideNavItemText, styles.sideNavLogoutText]}>Logout</Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-        </Animated.View>
-      </View>
-    </Modal>
-  );
-});
-
 // Lightweight Header component
-const Header = memo(({ username, router, setIsNavigating, isNavigating, isadmin, requestCount, onMenuPress }) => (
+const Header = memo(({ username, router, setIsNavigating, isNavigating, isadmin, requestCount }) => (
   <View style={styles.header}>
-    <Pressable 
-      style={styles.welcomeContainer}
-      onPress={onMenuPress}
-    >
-      <Text style={styles.username}>{username}</Text>
-    </Pressable>
-
-    <View style={styles.icons}>
-      {/* Search User Button */}
-      <Pressable 
-        disabled={isNavigating}
-        onPress={() => {
-          if (!isNavigating) {
-            setIsNavigating(true);
-            router.push('find');
-          }
-        }}
-        style={styles.iconContainer}
-      >
-        <Icon name="addfriend" size={hp(3.3)} color='white' />
-      </Pressable>
-      {/* Notification Button - Keep in header */}
-      <Pressable 
-        disabled={isNavigating}
-        onPress={() => {
-          if (!isNavigating) {
-            setIsNavigating(true);
-            router.push('/messenger');
-          }
-        }}
-        style={styles.iconContainer}
-      >
-        <Icon name="notsqr" size={hp(3.3)} color='white' />
-        {requestCount > 0 && (
-          <View style={styles.badgeContainer}>
-            <Text style={styles.badgeText}>
-              {requestCount > 99 ? '99+' : requestCount}
-            </Text>
-          </View>
-        )}
-      </Pressable>
-    </View>
+    <Text style={styles.username}>{truncateUsername(username)}</Text>
   </View>
 ));
 
@@ -296,7 +178,7 @@ const TrendingItem = memo(({ post, router }) => (
     />
     <View style={styles.trendingOverlay}>
       <Text style={styles.trendingUsername}>
-        {post.user?.userName || "Anonymous"}
+        {truncateUsername(post.user?.userName || "Anonymous")}
       </Text>
       <Text numberOfLines={2} style={styles.trendingBody}>
         {post.body || ""}
@@ -390,110 +272,14 @@ const Feeds = () => {
   const [polls, setPolls] = useState([]);
   const [allFeedItems, setAllFeedItems] = useState([]);
   const [incomingRequestCount, setIncomingRequestCount] = useState(0);
-  const [sideNavVisible, setSideNavVisible] = useState(false);
-  const [logoutAlertVisible, setLogoutAlertVisible] = useState(false);
-  const slideAnim = useRef(new Animated.Value(-SCREEN_WIDTH * 0.8)).current;
-  const dragX = useRef(0);
-  const isDragging = useRef(false);
   const { showToast } = useToast();
   const ITEMS_PER_PAGE = 25;
-  const NAVBAR_WIDTH = SCREEN_WIDTH * 0.8; 
 
   useFocusEffect(
     React.useCallback(() => {
       setIsNavigating(false);
-      // Close side navbar when page loses focus
-      setSideNavVisible(false);
-      // Home page is now active - no redirect needed
     }, [router])
   );
-
-  // PanResponder for dragging the navbar
-  const panResponder = useMemo(() => PanResponder.create({
-    onStartShouldSetPanResponder: (evt, gestureState) => {
-      // Only respond if starting from left edge (within 20px) or if navbar is open
-      const startX = evt.nativeEvent.pageX;
-      return (startX < 20 && !sideNavVisible) || (sideNavVisible && !isDragging.current);
-    },
-    onMoveShouldSetPanResponder: (evt, gestureState) => {
-      // Respond to horizontal movements
-      return Math.abs(gestureState.dx) > Math.abs(gestureState.dy) && Math.abs(gestureState.dx) > 10;
-    },
-    onPanResponderGrant: (evt, gestureState) => {
-      isDragging.current = true;
-      if (!sideNavVisible && evt.nativeEvent.pageX < 20) {
-        // Opening from left edge
-        setSideNavVisible(true);
-        slideAnim.setValue(-NAVBAR_WIDTH);
-      }
-      dragX.current = 0;
-      slideAnim.setOffset(slideAnim._value);
-      slideAnim.setValue(0);
-    },
-    onPanResponderMove: (evt, gestureState) => {
-      if (isDragging.current) {
-        dragX.current = gestureState.dx;
-        let newValue = gestureState.dx;
-        
-        // Clamp the value between -NAVBAR_WIDTH and 0
-        if (newValue < -NAVBAR_WIDTH) newValue = -NAVBAR_WIDTH;
-        if (newValue > 0) newValue = 0;
-        
-        slideAnim.setValue(newValue);
-      }
-    },
-    onPanResponderRelease: (evt, gestureState) => {
-      isDragging.current = false;
-      slideAnim.flattenOffset();
-      
-      const threshold = NAVBAR_WIDTH * 0.3; // Close if dragged more than 30% of width
-      
-      if (dragX.current < -threshold) {
-        // Close navbar
-        setSideNavVisible(false);
-        Animated.timing(slideAnim, {
-          toValue: -NAVBAR_WIDTH,
-          duration: 200,
-          useNativeDriver: true,
-        }).start();
-      } else {
-        // Snap back open
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }).start();
-      }
-    },
-    onPanResponderTerminate: () => {
-      isDragging.current = false;
-      slideAnim.flattenOffset();
-      if (sideNavVisible) {
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }).start();
-      }
-    },
-  }), [sideNavVisible, NAVBAR_WIDTH]);
-
-  // Handle side navbar open/close with animation
-  useEffect(() => {
-    if (sideNavVisible && !isDragging.current) {
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    } else if (!sideNavVisible && !isDragging.current) {
-      Animated.timing(slideAnim, {
-        toValue: -NAVBAR_WIDTH,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [sideNavVisible, NAVBAR_WIDTH]);
 
   // Use refs for post handlers to avoid recreating functions
   const postsRef = useRef(posts);
@@ -1016,6 +802,17 @@ const keyExtractor = useCallback((item) => `${item.type}-${item?.id.toString()}`
               maxItems={6}
             />
           )}
+
+          {/* Banner Ad below Top Picks for You */}
+          {/* <View style={styles.adContainer}>
+            <BannerAd
+              unitId={getBannerAdUnitId()}
+              size={BannerAdSize.FULL_BANNER}
+              requestOptions={{
+                requestNonPersonalizedAdsOnly: true,
+              }}
+            />
+          </View> */}
         </>
       )}
     </View>
@@ -1045,7 +842,7 @@ const keyExtractor = useCallback((item) => `${item.type}-${item?.id.toString()}`
           </View>
         )}
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <View style={styles.container} {...(!sideNavVisible ? panResponder.panHandlers : {})}>
+        <View style={styles.container}>
           {/* Memoized Header */}
           <Header
            username="PlotTwist"
@@ -1054,66 +851,14 @@ const keyExtractor = useCallback((item) => `${item.type}-${item?.id.toString()}`
            isNavigating={isNavigating}
            requestCount={incomingRequestCount}
            isadmin={isadmin}
-           onMenuPress={() => setSideNavVisible(true)}
           />
-          
-          {/* Side Navbar */}
-          <SideNavbar
-            visible={sideNavVisible}
-            onClose={() => setSideNavVisible(false)}
-            router={router}
-            setIsNavigating={setIsNavigating}
-            isNavigating={isNavigating}
-            isadmin={isadmin}
-            slideAnim={slideAnim}
-            panResponder={panResponder}
-            onLogoutPress={() => setLogoutAlertVisible(true)}
-          />
-          
-          {/* Logout Confirmation Modal */}
-          <Modal
-            transparent={true}
-            visible={logoutAlertVisible}
-            animationType="fade"
-            onRequestClose={() => setLogoutAlertVisible(false)}
-          >
-            <View style={styles.logoutModalOverlay}>
-              <View style={styles.logoutModalContent}>
-                <Text style={styles.logoutModalTitle}>Confirm</Text>
-                <Text style={styles.logoutModalMessage}>Are you sure you want to logout?</Text>
-                <View style={styles.logoutModalButtons}>
-                  <TouchableOpacity
-                    style={[styles.logoutModalButton, styles.logoutModalCancelButton]}
-                    onPress={() => setLogoutAlertVisible(false)}
-                  >
-                    <Text style={styles.logoutModalCancelText}>Cancel</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.logoutModalButton, styles.logoutModalConfirmButton]}
-                    onPress={async () => {
-                      setLogoutAlertVisible(false);
-                      try {
-                        const { error } = await logout();
-                        if (error) {
-                          Alert.alert('Error', 'Failed to logout. Please try again.');
-                        }
-                      } catch (error) {
-                        Alert.alert('Error', 'Failed to logout. Please try again.');
-                      }
-                    }}
-                  >
-                    <Text style={styles.logoutModalConfirmText}>Logout</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-          </Modal>
 
           {/* Highly optimized FlatList */}
           <FlatList
             data={displayPosts}
             extraData={visibleItems}
             showsVerticalScrollIndicator={false}
+            showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.listStyle}
             keyExtractor={keyExtractor}
             renderItem={renderItem}
@@ -1137,6 +882,7 @@ const keyExtractor = useCallback((item) => `${item.type}-${item?.id.toString()}`
             maxToRenderPerBatch={5}
             windowSize={5}
             nestedScrollEnabled={true}
+            scrollEventThrottle={16}
             {...listProps}
           />
         </View>
@@ -1236,8 +982,79 @@ const styles = StyleSheet.create({
   },
   noPosts: {
     fontSize: hp(2),
+    textAlign: 'center', 
+    color: theme.colors.primary,
+    marginBottom: hp(3),
+  },
+  appAdContainer: {
+    marginTop: hp(2),
+    marginHorizontal: wp(4),
+    marginBottom: hp(3),
+    borderRadius: theme.radius.xl,
+    overflow: 'hidden',
+    backgroundColor: '#1A1A1A',
+    borderWidth: 1,
+    borderColor: '#2D2D2D',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  appAdContent: {
+    padding: hp(2.5),
+  },
+  appAdHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: hp(1.5),
+    gap: wp(3),
+  },
+  appIcon: {
+    width: hp(4),
+    height: hp(4),
+    borderRadius: theme.radius.sm,
+  },
+  appAdTitleContainer: {
+    flex: 1,
+  },
+  appAdTitle: {
+    fontSize: hp(2.8),
+    fontWeight: theme.fonts.bold,
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+  },
+  appAdSubtitle: {
+    fontSize: hp(1.6),
+    color: '#FFD700',
+    fontWeight: theme.fonts.medium,
+    marginTop: hp(0.2),
+  },
+  appAdDescription: {
+    fontSize: hp(1.7),
+    color: '#C0C0C0',
+    lineHeight: hp(2.4),
+    marginBottom: hp(2),
+    textAlign: 'left',
+  },
+  appAdFeatures: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: hp(1),
+    paddingTop: hp(2),
+    borderTopWidth: 1,
+    borderTopColor: '#2D2D2D',
+  },
+  appAdFeature: {
+    alignItems: 'center',
+    gap: hp(0.8),
+    flex: 1,
+  },
+  appAdFeatureText: {
+    fontSize: hp(1.5),
+    color: '#E0E0E0',
+    fontWeight: theme.fonts.medium,
     textAlign: 'center',
-    color: theme.colors.primary
   },
   loadingContainer: {
     flex: 1,
@@ -1376,140 +1193,9 @@ const styles = StyleSheet.create({
     fontSize: hp(1.4),
     fontWeight: '500',
   },
-  sideNavOverlay: {
-    flex: 1,
-    flexDirection: 'row',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  sideNavBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  sideNavContainer: {
-    width: SCREEN_WIDTH * 0.8,
-    backgroundColor: '#1E1E1E',
-    height: '100%',
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    shadowColor: '#000',
-    shadowOffset: { width: 2, height: 0 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  sideNavHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  adContainer: {
     alignItems: 'center',
-    paddingHorizontal: wp(5),
-    paddingVertical: hp(2),
-    borderBottomWidth: 1,
-    borderBottomColor: '#333333',
-    paddingTop: hp(4),
-  },
-  sideNavTitle: {
-    color: '#FFFFFF',
-    fontSize: hp(2.5),
-    fontWeight: 'bold',
-  },
-  closeButton: {
-    padding: wp(2),
-  },
-  sideNavContent: {
-    flex: 1,
-    paddingTop: hp(2),
-  },
-  sideNavItem: {
-    paddingHorizontal: wp(5),
-    paddingVertical: hp(2),
-    borderBottomWidth: 1,
-    borderBottomColor: '#2D2D2D',
-  },
-  sideNavItemContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: wp(4),
-  },
-  sideNavItemText: {
-    color: '#FFFFFF',
-    fontSize: hp(2),
-    fontWeight: '500',
-    flex: 1,
-  },
-  comingSoonBadge: {
-    color: '#888888',
-    fontSize: hp(1.3),
-    fontStyle: 'italic',
-  },
-  sideNavFooter: {
-    borderTopWidth: 1,
-    borderTopColor: '#2D2D2D',
-    paddingTop: hp(1),
-    paddingBottom: hp(2),
-  },
-  sideNavLogoutItem: {
-    paddingHorizontal: wp(5),
-    paddingVertical: hp(2),
-  },
-  sideNavLogoutText: {
-    color: '#FF3B30',
-  },
-  logoutModalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  logoutModalContent: {
-    backgroundColor: '#1E1E1E',
-    borderRadius: 12,
-    padding: wp(6),
-    width: wp(80),
-    alignItems: 'center',
-  },
-  logoutModalTitle: {
-    color: '#FFFFFF',
-    fontSize: hp(2.2),
-    fontWeight: 'bold',
-    marginBottom: hp(1),
-  },
-  logoutModalMessage: {
-    color: '#E0E0E0',
-    fontSize: hp(1.8),
-    textAlign: 'center',
-    marginBottom: hp(3),
-  },
-  logoutModalButtons: {
-    flexDirection: 'row',
-    gap: wp(3),
+    marginVertical: hp(2),
     width: '100%',
-  },
-  logoutModalButton: {
-    flex: 1,
-    paddingVertical: hp(1.5),
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  logoutModalCancelButton: {
-    backgroundColor: '#2D2D2D',
-  },
-  logoutModalConfirmButton: {
-    backgroundColor: '#FF3B30',
-  },
-  logoutModalCancelText: {
-    color: '#FFFFFF',
-    fontSize: hp(1.8),
-    fontWeight: '600',
-  },
-  logoutModalConfirmText: {
-    color: '#FFFFFF',
-    fontSize: hp(1.8),
-    fontWeight: '600',
   },
 });

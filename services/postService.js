@@ -1,10 +1,30 @@
 import { uploadProfileImage } from "./imageService";
 import { supabase } from "../lib/supabase";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { sendPushNotificationForNewPost } from "./pushNotificationService";
 
-export const createOrUpdatePost = async (post) => {
+export const createOrUpdatePost = async (post, onProgress) => {
   try {
-    if (post.file && typeof post.file === "object") {
+    const isNewPost = !post.id; // Check if this is a new post or update
+    
+    // Calculate total steps based on what needs to be done
+    const needsFileUpload = post.file && typeof post.file === "object";
+    let totalSteps = 1; // database save is always 1 step
+    if (needsFileUpload) totalSteps++;
+    
+    let currentStep = 0;
+
+    const updateProgress = (step, message) => {
+      currentStep = step;
+      const percentage = (step / totalSteps) * 100;
+      if (onProgress) {
+        onProgress({ percentage, step, message, totalSteps });
+      }
+    };
+
+    // Handle file upload if present
+    if (needsFileUpload) {
+      updateProgress(1, "Uploading media...");
       let isImage = post.file.type === "image";
       let folderName = isImage ? "postImage" : "postVideo";
       let fileResult = await uploadProfileImage(folderName, post.file.uri, isImage);
@@ -14,12 +34,34 @@ export const createOrUpdatePost = async (post) => {
         return fileResult;
       }
     }
+    
+    // Save to database
+    const dbStep = needsFileUpload ? 2 : 1;
+    updateProgress(dbStep, "Saving post...");
     const {data, error} = await supabase.from('posts').upsert(post).select().single();
 
     if (error){
       console.error("Error in createOrUpdatePost:", error);
       return { success: false, msg: "Could not create or update your post", error: error.message };
     }
+
+    updateProgress(totalSteps, "Complete!");
+
+    // Send push notification only for new posts (not updates)
+    if (isNewPost && data) {
+      console.log("📢 New post created, triggering push notification...", { postId: data.id, userId: data.userId });
+      // Don't await - send notification in background to avoid blocking the response
+      sendPushNotificationForNewPost(data)
+        .then(result => {
+          console.log("✅ Push notification result:", result);
+        })
+        .catch(err => {
+          console.error("❌ Error sending push notification:", err);
+        });
+    } else {
+      console.log("ℹ️ Skipping notification - isNewPost:", isNewPost, "hasData:", !!data);
+    }
+
     return {success: true, data};
   } catch (error) {
     console.error("Error in createOrUpdatePost:", error);
@@ -28,9 +70,91 @@ export const createOrUpdatePost = async (post) => {
 };
 
 // Modified fetchPosts function to sort unwatched posts first
-export const fetchPosts = async (limit = 60, userId, showOnlyUnwatched = false, filterCategory = 'All') => {
+// Added sinceTimestamp parameter for cursor-based pagination
+// userId: filter posts by author (if provided)
+// viewerUserId: filter unwatched posts by viewer (for showOnlyUnwatched)
+export const fetchPosts = async (limit = 60, userId = null, showOnlyUnwatched = false, filterCategory = 'All', sinceTimestamp = null, viewerUserId = null) => {
 
   try {
+    // If showOnlyUnwatched is true, we need viewerUserId to filter by current user's views
+    if (showOnlyUnwatched && !viewerUserId) {
+      // If no viewerUserId provided but showOnlyUnwatched is true, use userId as viewerUserId
+      viewerUserId = userId;
+    }
+
+    // If filtering unwatched posts, exclude posts viewed by the user at database level
+    if (showOnlyUnwatched && viewerUserId) {
+      // First, get all post IDs that the user has viewed
+      const { data: viewedPostIds, error: viewedError } = await supabase
+        .from('post_views')
+        .select('post_id')
+        .eq('user_id', viewerUserId);
+      
+      if (viewedError) {
+        console.error('Error fetching viewed posts:', viewedError);
+        // Fall through to alternative method
+      } else {
+        // Extract post IDs into an array
+        const viewedIds = viewedPostIds?.map(v => v.post_id) || [];
+        
+        // Build query excluding viewed posts
+        let query = supabase
+          .from('posts')
+          .select(`
+            *,
+            user: users (id, name, image),
+            postLikes(*),
+            comments(count)
+          `)
+          .order('created_at', { ascending: false });
+
+        // Exclude posts that the user has viewed
+        // Use .not() with 'in' operator to exclude viewed post IDs at database level
+        // This ensures viewed posts are never returned from the endpoint
+        if (viewedIds.length > 0) {
+          query = query.not('id', 'in', `(${viewedIds.join(',')})`);
+        }
+
+        // Filter posts created after the timestamp (for fetching new posts)
+        if (sinceTimestamp) {
+          query = query.gt('created_at', sinceTimestamp);
+        }
+
+        // Filter by specific user (post author) if userId provided
+        if (userId) {
+          query = query.eq('userId', userId);
+        }
+
+        // Apply category filter
+        if (filterCategory !== 'All') {
+          query = query.eq('filter', filterCategory);
+        }
+
+        // Execute query
+        const { data, error } = await query.limit(limit);
+        
+        if (error) {
+          console.error('Error fetching unwatched posts:', error);
+          // Fall through to alternative method below
+        } else {
+          // Add isWatched property (all will be false since we filtered out viewed posts)
+          const postsWithWatchStatus = data.map(post => ({
+            ...post,
+            isWatched: false,
+            post_views: [] // No views since we filtered them out
+          }));
+
+          // Sort by created_at (newest first)
+          const sortedPosts = postsWithWatchStatus.sort((a, b) => {
+            return new Date(b.created_at) - new Date(a.created_at);
+          });
+
+          return { success: true, data: sortedPosts };
+        }
+      }
+    }
+
+    // Standard query for when not filtering unwatched posts
     let query = supabase
       .from('posts')
       .select(`
@@ -38,19 +162,18 @@ export const fetchPosts = async (limit = 60, userId, showOnlyUnwatched = false, 
         user: users (id, name, image),
         postLikes(*),
         comments(count),
-        post_views!left (id, viewed_at)
+        post_views!left (id, viewed_at, user_id)
       `)
       .order('created_at', { ascending: false });
 
-
-    // Filter by specific user if userId provided
-    if (userId) {
-      query = query.eq('userId', userId);
+    // Filter posts created after the timestamp (for fetching new posts)
+    if (sinceTimestamp) {
+      query = query.gt('created_at', sinceTimestamp);
     }
 
-    // Filter only unwatched posts if requested
-    if (showOnlyUnwatched && userId) {
-      query = query.is('post_views.id', null);
+    // Filter by specific user (post author) if userId provided
+    if (userId) {
+      query = query.eq('userId', userId);
     }
 
     if (filterCategory !== 'All') {
@@ -77,16 +200,21 @@ export const fetchPosts = async (limit = 60, userId, showOnlyUnwatched = false, 
             user: users (id, name, image),
             postLikes(*),
             comments(count),
-            post_views!left (id, viewed_at)
+            post_views!left (id, viewed_at, user_id)
           `)
           .order('created_at', { ascending: false });
 
-        if (userId) {
+        if (userId && !showOnlyUnwatched) {
           retryQuery = retryQuery.eq('userId', userId);
         }
 
-        if (showOnlyUnwatched && userId) {
+        if (showOnlyUnwatched && viewerUserId) {
           retryQuery = retryQuery.is('post_views.id', null);
+        }
+
+        // Apply timestamp filter if provided
+        if (sinceTimestamp) {
+          retryQuery = retryQuery.gt('created_at', sinceTimestamp);
         }
 
         const { data: retryData, error: retryError } = await retryQuery.limit(limit * 2); // Get more to account for filtering
@@ -120,10 +248,32 @@ export const fetchPosts = async (limit = 60, userId, showOnlyUnwatched = false, 
     }
 
     // Add isWatched property to each post
-    const postsWithWatchStatus = data.map(post => ({
-      ...post,
-      isWatched: post.post_views && post.post_views.length > 0
-    }));
+    // Filter by viewerUserId if showOnlyUnwatched is true
+    let postsWithWatchStatus = data.map(post => {
+      // Check if this specific viewer has viewed the post
+      // post_views is an array from the left join
+      let hasViewed = false;
+      
+      if (post.post_views && Array.isArray(post.post_views)) {
+        // Check if any view in the array belongs to the current viewer
+        hasViewed = post.post_views.some(view => 
+          view && view.user_id === viewerUserId
+        );
+      } else if (post.post_views && post.post_views.user_id) {
+        // Handle case where it might be a single object instead of array
+        hasViewed = post.post_views.user_id === viewerUserId;
+      }
+      
+      return {
+        ...post,
+        isWatched: hasViewed
+      };
+    });
+
+    // If showOnlyUnwatched is true, filter out posts that the viewer has already seen
+    if (showOnlyUnwatched && viewerUserId) {
+      postsWithWatchStatus = postsWithWatchStatus.filter(post => !post.isWatched);
+    }
 
     // Sort posts with unwatched first, then watched (both groups still sorted by created_at desc)
     const sortedPosts = postsWithWatchStatus.sort((a, b) => {
@@ -140,6 +290,25 @@ export const fetchPosts = async (limit = 60, userId, showOnlyUnwatched = false, 
   } catch (error) {
     return { success: false, msg: 'Could not fetch the posts due to an exception' };
   }
+};
+
+/**
+ * Fetch new posts since a specific timestamp (for cursor-based pagination)
+ * This is optimized for refresh operations - only fetches posts newer than the timestamp
+ * @param {string} sinceTimestamp - ISO timestamp string
+ * @param {number} limit - Maximum number of posts to fetch
+ * @param {string} userId - Optional user ID filter
+ * @param {boolean} showOnlyUnwatched - Filter only unwatched posts
+ * @param {string} filterCategory - Filter by category (All, en, ml, etc.)
+ * @returns {Promise<{success: boolean, data: Array, msg?: string}>}
+ */
+export const fetchNewPostsSince = async (sinceTimestamp, limit = 60, userId = null, showOnlyUnwatched = false, filterCategory = 'All', viewerUserId = null) => {
+  if (!sinceTimestamp) {
+    // If no timestamp provided, fall back to regular fetchPosts
+    return await fetchPosts(limit, userId, showOnlyUnwatched, filterCategory, null, viewerUserId);
+  }
+
+  return await fetchPosts(limit, userId, showOnlyUnwatched, filterCategory, sinceTimestamp, viewerUserId);
 };
 
 // Mark a post as viewed

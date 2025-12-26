@@ -14,9 +14,12 @@ const EpisodeCard = ({ item, onPress, style, showDescription = false, showTitleO
 
   const episodeTitle = item?.episode_title || item?.body?.substring(0, 30) || 'Untitled Episode';
   const description = item?.description || '';
-  // For section-based episodes, show "Chapter's", otherwise show "Episode's"
+  // For section-based episodes, show "Chapter" or "Chapters" based on count, otherwise show "Episode's"
   const isSectionBased = item?.episode_type === 'section_based';
-  const episodeLabel = isSectionBased ? "Chapter's" : "Episode's";
+  const episodeCount = item?.episode_number || 0;
+  const episodeLabel = isSectionBased 
+    ? (episodeCount === 1 ? "Chapter" : "Chapters")
+    : "Episode's";
   const episodeNumber = item?.episode_number ? `${item.episode_number} ${episodeLabel}` : '';
 
   return (

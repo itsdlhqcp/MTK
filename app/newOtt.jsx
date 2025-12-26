@@ -3,7 +3,7 @@ import React, { useRef, useState, useEffect } from 'react'
 import ScreenWrapper from '../components/ScreenWrapper'
 import Header from '../components/Header'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import { hp, wp } from '@/helpers/common'
+import { hp, wp, truncateUsername } from '@/helpers/common'
 import theme from '../constants/theme'
 import Icon from '@/assets/icons'
 import Avatar from '../components/Avatar'
@@ -14,7 +14,7 @@ import { getSupabaseFileUrl } from '../services/imageService'
 import * as ImagePicker from 'expo-image-picker';
 import DatePicker from '../components/DatePicker'
 import RatingInput from '../components/RatingInput'
-import { createOrUpdateOtt, fetchOtt, updateReleaseSconnectedId } from '../services/ottService'
+import { createOrUpdateOtt, fetchOtt, updateReleaseSconnectedId, fetchDigitalById } from '../services/ottService'
 import TagInput from '../components/OttTagInput'
 import { fetchReleases } from '../services/releaseService'
 import moment from 'moment'
@@ -29,12 +29,16 @@ const NewOtt = () => {
   const editorRef = useRef(null);
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const isSubmittingRef = useRef(false); // Ref to prevent double submission
   const [selectedDate, setSelectedDate] = useState(null);
   const [file, setFile] = useState(null);
-  const [filel, setFilel] = useState(null); 
+  const [filel, setFilel] = useState(null);
+  // Progress tracking for direct release series
+  const [uploadProgress, setUploadProgress] = useState(null); 
   const [rating, setRating] = useState(null);
   const [userRatingImpact, setUserRatingImpact] = useState(0);
   const [tags, setTags] = useState([]);
+  const [imdb, setImdb] = useState('');
   // New states for connected releases
   const [connectedId, setConnectedId] = useState(null);
   const [expiredReleases, setExpiredReleases] = useState([]);
@@ -44,6 +48,12 @@ const NewOtt = () => {
   const [loadingOtts, setLoadingOtts] = useState(false);
   // Add directRelease state variable, default to false
   const [directRelease, setDirectRelease] = useState(false);
+  // Add seriesType state variable, default to 'normal'
+  const [seriesType, setSeriesType] = useState('normal'); // 'normal' or 'series'
+  // Episodes state for series
+  const [episodes, setEpisodes] = useState([{ episode_number: 1, episode_title: '', release_date: null, description: '', duration: '' }]);
+  // Season number for series
+  const [seasonNumber, setSeasonNumber] = useState('');
    // Film information fields as individual state variables
    const [lang, setLang] = useState('');
    const [genre, setGenre] = useState('');
@@ -159,36 +169,93 @@ const NewOtt = () => {
   };
 
   useEffect(() => {
-    if(post && post.id){
-      bodyRef.current = post.body; 
-      setFile(post.file || null);
-      setFilel(post.filel || null); 
-      setTags(post.tags || []);
-      setConnectedId(post.connectedId || null);
-      setDirectRelease(post.directRelease || false);
+    const loadForEdit = async () => {
+      if (post && post.id) {
+        let source = post;
 
-      // Load film info if it exists
-      if (post.lang) setLang(post.lang);
-      if (post.genre) setGenre(post.genre);
-      if (post.duration) setDuration(post.duration);
-      if (post.director) setDirector(post.director);
-      if (post.writer) setWriter(post.writer);
-      if (post.music) setMusic(post.music);
-      if (post.dop) setDop(post.dop);
-      if (post.edit) setEdit(post.edit);
-      if (post.cast) setCast(post.cast);
-      if (post.tags) setTags(post.tags); // Load tags if they exist
+        // Prefer fresh data from backend (includes episodes, season, etc.)
+        try {
+          const res = await fetchDigitalById(post.id);
+          if (res.success && res.data) {
+            source = { ...source, ...res.data };
+          }
+        } catch (error) {
+          console.error('Error fetching digital for edit:', error);
+        }
 
-      setTimeout(() => {
-        editorRef?.current?.setContentHTML(post.body);
-      },300)
-    }
-  }, [post])
+        bodyRef.current = source.body || ''; 
+        setFile(source.file || null);
+        setFilel(source.filel || null); 
+        setTags(source.tags || []);
+        setConnectedId(source.connectedId || null);
+        setDirectRelease(!!source.directRelease);
+        setSeriesType(source.seriesType || 'normal');
+
+        // Dates
+        if (source.rDate) setSelectedDate(new Date(source.rDate));
+        if (source.endDate) setselectedEndate(new Date(source.endDate));
+
+        // Load film info if it exists
+        if (source.lang) setLang(source.lang);
+        if (source.genre) setGenre(source.genre);
+        if (source.duration) setDuration(source.duration);
+        if (source.director) setDirector(source.director);
+        if (source.writer) setWriter(source.writer);
+        if (source.music) setMusic(source.music);
+        if (source.dop) setDop(source.dop);
+        if (source.edit) setEdit(source.edit);
+        if (source.cast) setCast(source.cast);
+        if (source.imdb) setImdb(source.imdb);
+        if (source.seasonNumber != null) setSeasonNumber(String(source.seasonNumber));
+        if (source.tags) setTags(source.tags); // Load tags if they exist
+
+        // Load episodes for series
+        if (source.episodes && Array.isArray(source.episodes) && source.episodes.length > 0) {
+          const normalizedEpisodes = source.episodes.map((ep, idx) => ({
+            episode_number: ep.episode_number ?? idx + 1,
+            episode_title: ep.episode_title || '',
+            // Ensure release_date is a proper Date object for DatePicker
+            release_date: ep.release_date ? new Date(ep.release_date) : null,
+            description: ep.description || '',
+            duration: ep.duration || '',
+          }));
+          setEpisodes(normalizedEpisodes);
+        }
+
+        setTimeout(() => {
+          if (editorRef?.current?.setContentHTML && source.body) {
+            editorRef.current.setContentHTML(source.body);
+          }
+        }, 300);
+      }
+    };
+
+    loadForEdit();
+  }, [post?.id])
 
   // Toggle direct release function
   const toggleDirectRelease = () => {
     setDirectRelease(previousState => !previousState);
+    // Reset seriesType when disabling directRelease
+    if (directRelease) {
+      setSeriesType('normal');
+      setEpisodes([{ episode_number: 1, episode_title: '', release_date: null, description: '', duration: '' }]);
+    }
     console.log('Direct Release:', !directRelease);
+  };
+
+  // Toggle series type function
+  const toggleSeriesType = (type) => {
+    setSeriesType(type);
+    if (type === 'normal') {
+      // Reset episodes when switching to normal
+      setEpisodes([{ episode_number: 1, episode_title: '', release_date: null, description: '', duration: '' }]);
+    } else {
+      // Initialize episodes when switching to series
+      if (episodes.length === 0 || (episodes.length === 1 && !episodes[0].episode_title)) {
+        setEpisodes([{ episode_number: 1, episode_title: '', release_date: null, description: '', duration: '' }]);
+      }
+    }
   };
 
   // post selection
@@ -383,6 +450,11 @@ const NewOtt = () => {
   );
 
   const onSubmit = async () => {
+    // Prevent double submission
+    if (isSubmittingRef.current || loading) {
+      return;
+    }
+
     if (!selectedDate && !connectedId && !tags.length && !selectedEndate && !duration) {
       Alert.alert('Error', 'Enter Title, post img and release date, platforms');
       return;
@@ -427,6 +499,7 @@ const NewOtt = () => {
       tags: tags,
       connectedId: connectedId,  // Connected ID added to data object
       directRelease: directRelease, // Include directRelease in the data
+      seriesType: directRelease ? seriesType : 'normal', // Include seriesType when directRelease
       lang,
       genre,
       duration,
@@ -435,42 +508,73 @@ const NewOtt = () => {
       music,
       dop,
       edit,
-      cast
+      cast,
+      imdb: imdb?.trim() || null,
+      seasonNumber: seasonNumber ? Number(seasonNumber) : null,
+      // Include episodes if it's a series
+      ...(directRelease && seriesType === 'series' && { episodes })
     }
 
     // CREATING A NEW RELEASE 
+    // Set submission flag immediately
+    isSubmittingRef.current = true;
     setLoading(true);
-    let res = await createOrUpdateOtt(data);
-    setLoading(false);
-    if(res.success){
-      setFile(null);
-      setFilel(null); // Clear second file on success
-      bodyRef.current = ''; 
-      editorRef.current?.setContentHTML('');
-      setTags([]);
-      setConnectedId(null);
-      setDirectRelease(false); // Reset directRelease to default
-      setLang('');
-      setGenre('');
-      setDuration('');
-      setDirector('');
-      setWriter('');
-      setMusic('');
-      setDop('');
-      setEdit('');
-      Alert.alert('Stream uploaded successfully');
-      router.push('/upcoming');
-    }else{
-      Alert.alert('Release', res.msg);
+    // Reset progress when starting upload (only for direct release series)
+    if (directRelease && seriesType === 'series') {
+      setUploadProgress({ percentage: 0, step: 0, message: "Preparing upload...", totalSteps: 4 });
+    }
+    
+    // Progress callback for tracking upload progress
+    const handleProgress = (progress) => {
+      setUploadProgress(progress);
+    };
+    
+    try {
+      let res = await createOrUpdateOtt(data, handleProgress);
+      setLoading(false);
+      isSubmittingRef.current = false; // Reset submission flag
+      if(res.success){
+        setUploadProgress(null); // Clear progress on success
+        setFile(null);
+        setFilel(null); // Clear second file on success
+        bodyRef.current = ''; 
+        editorRef.current?.setContentHTML('');
+        setTags([]);
+        setConnectedId(null);
+        setDirectRelease(false); // Reset directRelease to default
+        setSeriesType('normal'); // Reset seriesType
+        setEpisodes([{ episode_number: 1, episode_title: '', release_date: null, description: '', duration: '' }]); // Reset episodes
+        setLang('');
+        setGenre('');
+        setDuration('');
+        setDirector('');
+        setWriter('');
+        setMusic('');
+        setDop('');
+        setEdit('');
+        setSeasonNumber('');
+        setImdb('');
+        Alert.alert('Stream uploaded successfully');
+        router.push('/upcoming');
+      }else{
+        setUploadProgress(null); // Clear progress on error
+        Alert.alert('Release', res.msg);
+      }
+    } catch (error) {
+      console.error('Error creating/updating OTT:', error);
+      setLoading(false);
+      isSubmittingRef.current = false; // Reset submission flag on error
+      setUploadProgress(null); // Clear progress on error
+      Alert.alert('Error', 'Failed to create/update stream. Please try again.');
     }
   };
 
   const handleEditorChange = (body) => {
     bodyRef.current = body;
   };
-
+ 
   return (
-    <ScreenWrapper bg="white">
+    <ScreenWrapper bg="#121212">
       <Header title={post?.id ? "Edit Ott Stream" : "Create Digital Stream"}
          showBackButton={true} />
       <View style={styles.container}>
@@ -484,7 +588,7 @@ const NewOtt = () => {
               />
               <View style={{ gap: 2 }}>
                 <Text style={styles.username}>
-                  {user?.name}
+                  {truncateUsername(user?.name || '')}
                 </Text>
                 <Text style={styles.publicText}>
                   Public
@@ -507,6 +611,41 @@ const NewOtt = () => {
             <>
             <View style={styles.directReleaseMessage}>
               <Text style={styles.directReleaseText}>Direct Release</Text>
+            </View>
+
+            {/* Series Type Toggle */}
+            <View style={styles.seriesTypeContainer}>
+              <Text style={styles.seriesTypeLabel}>Type:</Text>
+              <View style={styles.seriesTypeToggle}>
+                <TouchableOpacity
+                  style={[
+                    styles.seriesTypeButton,
+                    seriesType === 'normal' && styles.seriesTypeButtonActive
+                  ]}
+                  onPress={() => toggleSeriesType('normal')}
+                >
+                          <Text style={[
+                    styles.seriesTypeButtonText,
+                    seriesType === 'normal' && styles.seriesTypeButtonTextActive
+                  ]}>
+                    Movies
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.seriesTypeButton,
+                    seriesType === 'series' && styles.seriesTypeButtonActive
+                  ]}
+                  onPress={() => toggleSeriesType('series')}
+                >
+                  <Text style={[
+                    styles.seriesTypeButtonText,
+                    seriesType === 'series' && styles.seriesTypeButtonTextActive
+                  ]}>
+                    Series
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
             <View>
@@ -580,6 +719,140 @@ const NewOtt = () => {
               </TouchableOpacity>
             </View>
           </View>
+
+          {/* Film Information - Movies (Direct Release) */}
+          {seriesType === 'normal' && (
+            <>
+              <View style={styles.sectionDivider}>
+                <Text style={styles.sectionTitle}>Film Information</Text>
+              </View>
+
+              {/* IMDB Link Field */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>IMDB Link</Text>
+                <TextInput
+                  style={styles.input}
+                  value={imdb}
+                  onChangeText={setImdb}
+                  placeholder="https://www.imdb.com/title/..."
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  placeholderTextColor="#9E9E9E"
+                />
+              </View>
+
+              {/* Language Field */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Language</Text>
+                <TextInput
+                  style={styles.input}
+                  value={lang}
+                  onChangeText={setLang}
+                  placeholder="Enter film language"
+                  placeholderTextColor="#9E9E9E"
+                />
+              </View>
+
+              {/* Genre Field */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Genre</Text>
+                <TextInput
+                  style={styles.input}
+                  value={genre}
+                  onChangeText={setGenre}
+                  placeholder="Enter film genre"
+                  placeholderTextColor="#9E9E9E"
+                />
+              </View>
+
+              {/* Duration Field */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Duration (must include HH:MM:SS ✔️)</Text>
+                <TextInput
+                  style={styles.input}
+                  value={duration}
+                  onChangeText={setDuration}
+                  placeholder="Enter film duration (HH:MM:SS)"
+                  keyboardType="default"
+                  placeholderTextColor="#9E9E9E"
+                />
+              </View>
+
+              {/* Director Field */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Director</Text>
+                <TextInput
+                  style={styles.input}
+                  value={director}
+                  onChangeText={setDirector}
+                  placeholder="Enter film director"
+                  placeholderTextColor="#9E9E9E"
+                />
+              </View>
+
+              {/* Writer Field */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Writer</Text>
+                <TextInput
+                  style={styles.input}
+                  value={writer}
+                  onChangeText={setWriter}
+                  placeholder="Enter film writer"
+                  placeholderTextColor="#9E9E9E"
+                />
+              </View>
+
+              {/* Music Field */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Music</Text>
+                <TextInput
+                  style={styles.input}
+                  value={music}
+                  onChangeText={setMusic}
+                  placeholder="Enter music composer"
+                  placeholderTextColor="#9E9E9E"
+                />
+              </View>
+
+              {/* DOP Field */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Director of Photography</Text>
+                <TextInput
+                  style={styles.input}
+                  value={dop}
+                  onChangeText={setDop}
+                  placeholder="Enter DOP"
+                  placeholderTextColor="#9E9E9E"
+                />
+              </View>
+
+              {/* Edit Field */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Editor</Text>
+                <TextInput
+                  style={styles.input}
+                  value={edit}
+                  onChangeText={setEdit}
+                  placeholder="Enter film editor"
+                  placeholderTextColor="#9E9E9E"
+                />
+              </View>
+
+              {/* Cast Field */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Cast</Text>
+                <TextInput
+                  style={[styles.input, styles.multilineInput]}
+                  value={cast}
+                  onChangeText={setCast}
+                  placeholder="Enter cast members"
+                  multiline={true}
+                  numberOfLines={4}
+                  placeholderTextColor="#9E9E9E"
+                />
+              </View>
+            </>
+          )}
           </>
           )}
           
@@ -684,151 +957,133 @@ const NewOtt = () => {
             initialValue={post?.rating}
           /> */}
 
-          {/* Film Information Section */}
-
-          {directRelease && (
-             <View style={styles.sectionDivider}>
-            <Text style={styles.sectionTitle}>Film Information</Text>
-          </View>
-          )}
-         
-         {directRelease && (
-          <>
-              {/* Language Field */}
-          <View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>Language</Text>
-          <TextInput
-            style={styles.input}
-            value={lang}
-            onChangeText={setLang}
-            placeholder="Enter film language"
-          />
-        </View>
-          </>
-         )}
-         
-         {directRelease && (
-          <>
-               {/* Genre Field */}
-          <View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>Genre</Text>
-          <TextInput
-            style={styles.input}
-            value={genre}
-            onChangeText={setGenre}
-            placeholder="Enter film genre"
-          />
-            </View>
-          </>
-         )}
-          
-          {directRelease && (
+          {/* Episodes Section for Series */}
+          {directRelease && seriesType === 'series' && (
             <>
-               {/* Duration Field */}
-          <View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>Duration (must include HH:MM:SS ✔️)</Text>
-          <TextInput
-            style={styles.input}
-            value={duration}
-            onChangeText={setDuration}
-            placeholder="Enter film duration (HH:MM:SS)"
-            keyboardType="default"
-          />
-            </View>
+              {/* Season Number */}
+              <View style={styles.sectionDivider}>
+                <Text style={styles.sectionTitle}>Season Details</Text>
+              </View>
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Season Number</Text>
+                <TextInput
+                  style={styles.input}
+                  value={seasonNumber}
+                  onChangeText={setSeasonNumber}
+            placeholder="Enter season number (e.g., 1)"
+                  keyboardType="numeric"
+            placeholderTextColor="#9E9E9E"
+                />
+              </View>
+
+              <View style={styles.sectionDivider}>
+                <Text style={styles.sectionTitle}>Episodes</Text>
+              </View>
+              
+              {episodes.map((episode, index) => (
+                <View key={index} style={styles.episodeContainer}>
+                  <View style={styles.episodeHeader}>
+                    <Text style={styles.episodeNumber}>Episode {episode.episode_number}</Text>
+                    {episodes.length > 1 && (
+                      <TouchableOpacity
+                        onPress={() => {
+                          const newEpisodes = episodes.filter((_, i) => i !== index);
+                          // Renumber episodes
+                          newEpisodes.forEach((ep, i) => {
+                            ep.episode_number = i + 1;
+                          });
+                          setEpisodes(newEpisodes);
+                        }}
+                        style={styles.deleteEpisodeButton}
+                      >
+                        <Icon name="delete" size={hp(2)} color="red" />
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                  
+                  <View style={styles.inputContainer}>
+                    <Text style={styles.inputLabel}>Episode Title</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={episode.episode_title}
+                      onChangeText={(text) => {
+                        const newEpisodes = [...episodes];
+                        newEpisodes[index].episode_title = text;
+                        setEpisodes(newEpisodes);
+                      }}
+                      placeholder="Enter episode title"
+                      placeholderTextColor="#9E9E9E"
+                    />
+                  </View>
+                  
+                  <View style={styles.inputContainer}>
+                    <Text style={styles.inputLabel}>Release Date</Text>
+                    <DatePicker
+                      onDateSelect={(date) => {
+                        const newEpisodes = [...episodes];
+                        newEpisodes[index].release_date = date;
+                        setEpisodes(newEpisodes);
+                      }}
+                      initialDate={episode.release_date}
+                    />
+                  </View>
+                  
+                  <View style={styles.inputContainer}>
+                    <Text style={styles.inputLabel}>Duration (HH:MM:SS)</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={episode.duration}
+                      onChangeText={(text) => {
+                        const newEpisodes = [...episodes];
+                        newEpisodes[index].duration = text;
+                        setEpisodes(newEpisodes);
+                      }}
+                      placeholder="00:45:00"
+                      placeholderTextColor="#9E9E9E"
+                    />
+                  </View>
+                  
+                  <View style={styles.inputContainer}>
+                    <Text style={styles.inputLabel}>Description (Optional)</Text>
+                    <TextInput
+                      style={[styles.input, styles.multilineInput]}
+                      value={episode.description}
+                      onChangeText={(text) => {
+                        const newEpisodes = [...episodes];
+                        newEpisodes[index].description = text;
+                        setEpisodes(newEpisodes);
+                      }}
+                      placeholder="Enter episode description"
+                      multiline={true}
+                      numberOfLines={3}
+                      placeholderTextColor="#9E9E9E"
+                    />
+                  </View>
+                </View>
+              ))}
+              
+              <TouchableOpacity
+                style={styles.addEpisodeButton}
+                onPress={() => {
+                  setEpisodes([
+                    ...episodes,
+                    {
+                      episode_number: episodes.length + 1,
+                      episode_title: '',
+                      release_date: null,
+                      description: '',
+                      duration: ''
+                    }
+                  ]);
+                }}
+              >
+                <Icon name="add" size={hp(2.5)} color={theme.colors.primary} />
+                <Text style={styles.addEpisodeButtonText}>Add Episode</Text>
+              </TouchableOpacity>
             </>
           )}
+
         
-        {directRelease && (
-          <>
-              {/* Director Field */}
-           <View style={styles.inputContainer}>
-           <Text style={styles.inputLabel}>Director</Text>
-           <TextInput
-             style={styles.input}
-             value={director}
-             onChangeText={setDirector}
-             placeholder="Enter film director"
-           />
-         </View>
-          </>
-        )}
-         
-         {directRelease && (
-        <>
-              {/* Writer Field */}
-           <View style={styles.inputContainer}>
-           <Text style={styles.inputLabel}>Writer</Text>
-           <TextInput
-             style={styles.input}
-             value={writer}
-             onChangeText={setWriter}
-             placeholder="Enter film writer"
-           />
-         </View>
-        </>
-         )}
-         
-         {directRelease && (
-          <>
-             {/* Music Field */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Music</Text>
-            <TextInput
-              style={styles.input}
-              value={music}
-              onChangeText={setMusic}
-              placeholder="Enter music composer"
-            />
-          </View>
-          </>
-         )} 
-          
-         {directRelease && (
-          <>
-              {/* DOP Field */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Director of Photography</Text>
-            <TextInput
-              style={styles.input}
-              value={dop}
-              onChangeText={setDop}
-              placeholder="Enter DOP"
-            />
-          </View>
-          </>
-         )}
-         
-          {directRelease && (
-            <>
-               {/* Edit Field */}
-            <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Editor</Text>
-            <TextInput
-              style={styles.input}
-              value={edit}
-              onChangeText={setEdit}
-              placeholder="Enter film editor"
-            />
-          </View>
-            </>  
-          )}
-         
-         {directRelease && (
-          <>
-             {/* Cast Field */}
-          <View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>Cast</Text>
-          <TextInput
-            style={[styles.input, styles.multilineInput]}
-            value={cast}
-            onChangeText={setCast}
-            placeholder="Enter cast members"
-            multiline={true}
-            numberOfLines={4}
-          />
-        </View>
-          </>
-         )}
          
         </ScrollView>
         <Button
@@ -838,6 +1093,23 @@ const NewOtt = () => {
           onPress={onSubmit}
           hasShadow={false}
         />
+        {/* Progress Bar for Direct Release Series */}
+        {directRelease && seriesType === 'series' && uploadProgress && (
+          <View style={styles.progressContainer}>
+            <View style={styles.progressHeader}>
+              <Text style={styles.progressText}>{uploadProgress.message}</Text>
+              <Text style={styles.progressPercentage}>{Math.round(uploadProgress.percentage)}%</Text>
+            </View>
+            <View style={styles.progressBarBackground}>
+              <View 
+                style={[
+                  styles.progressBarFill,
+                  { width: `${uploadProgress.percentage}%` }
+                ]} 
+              />
+            </View>
+          </View>
+        )}
       </View>
     </ScreenWrapper>
   );
@@ -852,6 +1124,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     paddingHorizontal: wp(4), 
     gap: 15,
+    backgroundColor: '#121212',
   },
   file: {
     height: hp(32),
@@ -861,7 +1134,7 @@ const styles = StyleSheet.create({
     paddingVertical: wp(8),
     // Add these properties to make it visible
     borderWidth: 1,
-    borderColor: theme.colors.gray,
+    borderColor: '#333333',
     borderRadius: theme.radius.md,
     padding: 7,
     justifyContent: 'center',
@@ -877,13 +1150,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: wp(4),
     borderRadius: theme.radius.md, 
     borderCurve: 'continuous', 
-    borderColor: theme.colors.gray
+    borderColor: '#333333',
+    backgroundColor: '#181818',
   },
   title: {
     // marginBottom: 10,
     fontSize: hp(2.5),
     fontWeight: theme.fonts.semibold,
-    color: theme.colors.text,
+    color: '#FFFFFF',
     textAlign: 'center'
   },
   header: {
@@ -920,7 +1194,7 @@ const styles = StyleSheet.create({
   username: {
     fontSize: hp(2.2),
     fontWeight: theme.fonts.semibold,
-    color: theme.colors.text,
+    color: '#FFFFFF',
   },
   mediaIcons: {
     flexDirection: 'row', 
@@ -944,7 +1218,7 @@ const styles = StyleSheet.create({
   publicText: {
     fontSize: hp(1.7),
     fontWeight: theme.fonts.medium,
-    color: theme.colors.textLight,
+    color: '#B3B3B3',
   },
   closeIcon: {
     position: 'absolute',
@@ -958,16 +1232,16 @@ const styles = StyleSheet.create({
     fontSize: hp(2),
     fontWeight: hp(4.5),
     paddingStart: 10,
-    color: theme.colors.text,
+    color: '#FFFFFF',
     paddingBottom: 5
   },
   dateInput: {
     fontSize: hp(2),
     fontWeight: theme.fonts.semibold,
-    color: theme.colors.text,
+    color: '#FFFFFF',
     padding: 24,
     borderWidth: 1,
-    borderColor: theme.colors.gray,
+    borderColor: '#333333',
     borderRadius: theme.radius.md,
     borderCurve: 'continuous',
     marginTop: 10,
@@ -979,12 +1253,12 @@ const styles = StyleSheet.create({
   platformsTitle: {
     fontSize: hp(2),
     fontWeight: theme.fonts.semibold,
-    color: theme.colors.text,
+    color: '#FFFFFF',
     marginBottom: 10
   },
   platformsScrollContainer: {
     borderWidth: 1,
-    borderColor: theme.colors.gray,
+    borderColor: '#333333',
     borderRadius: theme.radius.md,
     padding: 10,
     borderCurve: 'continuous',
@@ -995,7 +1269,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   platformPill: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#262626',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 20,
@@ -1011,7 +1285,7 @@ const styles = StyleSheet.create({
   platformPillText: {
     fontSize: hp(1.8),
     fontWeight: theme.fonts.medium,
-    color: theme.colors.textLight,
+    color: '#E0E0E0',
   },
   platformPillTextSelected: {
     color: '#ffffff',
@@ -1144,5 +1418,121 @@ const styles = StyleSheet.create({
   multilineInput: {
     minHeight: hp(10),
     textAlignVertical: 'top',
+  },
+  seriesTypeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: hp(1),
+    marginVertical: hp(1),
+  },
+  seriesTypeLabel: {
+    fontSize: hp(2),
+    fontWeight: theme.fonts.semibold,
+    color: theme.colors.text,
+  },
+  seriesTypeToggle: {
+    flexDirection: 'row',
+    borderWidth: 1,
+    borderColor: theme.colors.gray,
+    borderRadius: theme.radius.md,
+    overflow: 'hidden',
+  },
+  seriesTypeButton: {
+    paddingHorizontal: wp(6),
+    paddingVertical: hp(1),
+    backgroundColor: '#f0f0f0',
+  },
+  seriesTypeButtonActive: {
+    backgroundColor: theme.colors.primary,
+  },
+  seriesTypeButtonText: {
+    fontSize: hp(1.8),
+    fontWeight: theme.fonts.medium,
+    color: theme.colors.textLight,
+  },
+  seriesTypeButtonTextActive: {
+    color: '#ffffff',
+    fontWeight: theme.fonts.semibold,
+  },
+  episodeContainer: {
+    borderWidth: 1,
+    borderColor: '#333333',
+    borderRadius: theme.radius.lg,
+    padding: wp(4),
+    marginBottom: hp(2),
+    backgroundColor: '#181818',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  episodeHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: hp(1.5),
+  },
+  episodeNumber: {
+    fontSize: hp(2),
+    fontWeight: theme.fonts.bold,
+    color: '#FFFFFF',
+  },
+  deleteEpisodeButton: {
+    padding: wp(2),
+  },
+  addEpisodeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: hp(1.5),
+    paddingHorizontal: wp(4),
+    borderWidth: 2,
+    borderColor: theme.colors.primary,
+    borderStyle: 'dashed',
+    borderRadius: theme.radius.md,
+    marginTop: hp(1),
+    gap: wp(2),
+  },
+  addEpisodeButtonText: {
+    fontSize: hp(2),
+    fontWeight: theme.fonts.semibold,
+    color: theme.colors.primary,
+  },
+  progressContainer: {
+    marginTop: hp(1.5),
+    paddingVertical: hp(1),
+    paddingHorizontal: wp(4),
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: hp(0.8),
+  },
+  progressText: {
+    fontSize: hp(1.6),
+    fontWeight: theme.fonts.medium,
+    color: theme.colors.text,
+    flex: 1,
+  },
+  progressPercentage: {
+    fontSize: hp(1.6),
+    fontWeight: theme.fonts.semibold,
+    color: theme.colors.primary,
+    marginLeft: wp(2),
+  },
+  progressBarBackground: {
+    height: hp(0.6),
+    backgroundColor: '#333333',
+    borderRadius: hp(0.3),
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: theme.colors.primary,
+    borderRadius: hp(0.3),
+    transition: 'width 0.3s ease',
   },
 })

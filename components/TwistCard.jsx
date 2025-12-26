@@ -1,7 +1,7 @@
 import { Text, View, StyleSheet, TouchableOpacity, Image, AppState, Dimensions, Modal, Alert } from 'react-native';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import theme from '../constants/theme';
-import { wp, hp } from '../helpers/common';
+import { wp, hp, truncateUsername } from '../helpers/common';
 import Icon from '../assets/icons';
 import moment from 'moment/moment';
 import { Video } from 'expo-av';
@@ -310,7 +310,7 @@ const TwistCard = ({
           />
           </TouchableOpacity>
           <TouchableOpacity onPress={handleUsernamePress}>
-            <Text style={styles.username}>{item?.user?.name || 'Username'}</Text>
+            <Text style={styles.username}>{truncateUsername(item?.user?.name || 'Username')}</Text>
           </TouchableOpacity>
         </View>
 

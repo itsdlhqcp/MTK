@@ -1,4 +1,4 @@
-import { Image, StyleSheet, Text, TouchableOpacity, View, ScrollView, Alert, Animated, Dimensions } from 'react-native'
+import { Image, StyleSheet, Text, TouchableOpacity, View, ScrollView, Alert, Animated, Dimensions, Linking } from 'react-native'
 import React, { useRef, useState, useEffect } from 'react'
 import { wp, hp } from '@/helpers/common'
 import theme from '../constants/theme'
@@ -87,6 +87,7 @@ const ReleaseCardInfo = ({
     const ratingBarAnim = useRef(new Animated.Value(0)).current;
     const [avgRating, setAvgRating] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
+    const imdbShimmerAnim = useRef(new Animated.Value(0)).current;
     
     const shadowStyle = {
         shadowOffset: {
@@ -118,6 +119,17 @@ const ReleaseCardInfo = ({
 
         getAverageRating();
     }, [item?.id, item?.sconnectedId]);
+
+    // Looping shimmer animation for IMDb bar
+    useEffect(() => {
+        Animated.loop(
+            Animated.timing(imdbShimmerAnim, {
+                toValue: 1,
+                duration: 2200,
+                useNativeDriver: true,
+            })
+        ).start();
+    }, [imdbShimmerAnim]);
 
     // Animate the rating bar when average rating changes
     useEffect(() => {
@@ -389,6 +401,49 @@ const ReleaseCardInfo = ({
                 </View>
             </View>
 
+            {/* Full-width IMDb bar above Film Details */}
+            {item?.imdb && (
+              <TouchableOpacity
+                onPress={() => {
+                  const url = item.imdb.startsWith('http')
+                    ? item.imdb
+                    : `https://${item.imdb}`;
+                  Linking.openURL(url).catch(() => {
+                    Alert.alert('Error', 'Could not open IMDB link');
+                  });
+                }}
+                activeOpacity={0.85}
+              >
+                <View style={styles.imdbFullWidth}>
+                  {/* Shimmer overlay */}
+                  <Animated.View
+                    pointerEvents="none"
+                    style={[
+                      styles.imdbShimmerOverlay,
+                      {
+                        transform: [
+                          {
+                            translateX: imdbShimmerAnim.interpolate({
+                              inputRange: [0, 1],
+                              outputRange: [-50, 250], // sweep across
+                            }),
+                          },
+                        ],
+                      },
+                    ]}
+                  >
+                    <LinearGradient
+                      colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.55)', 'rgba(255,255,255,0)']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.imdbShimmerGradient}
+                    />
+                  </Animated.View>
+                  <Text style={styles.imdbFullWidthText}>View Details</Text>
+                </View>
+              </TouchableOpacity>
+            )}
+
             {/* Film Details Section - Only show if there are valid details */}
             {hasValidFilmDetails && (
                 <View style={styles.detailsContainerOuter}>
@@ -504,6 +559,35 @@ const styles = StyleSheet.create({
         marginBottom: getSpacing(6),
         fontWeight: '400',
         textAlign: 'center',
+    },
+    imdbFullWidth: {
+        width: '75%',
+        backgroundColor: '#F5C518', // IMDb yellow
+        paddingVertical: getSpacing(10),
+        paddingHorizontal: getSpacing(16),
+        marginBottom: getSpacing(10),
+        borderRadius: getSpacing(8),
+        alignItems: 'center',
+        justifyContent: 'center',
+        alignSelf: 'center',
+        overflow: 'hidden',
+    },
+    imdbFullWidthText: {
+        color: '#000',
+        fontSize: getResponsiveScale(hp(2)),
+        fontWeight: '800',
+        textAlign: 'center',
+        zIndex: 1,
+    },
+    imdbShimmerOverlay: {
+        position: 'absolute',
+        top: 0,
+        bottom: 0,
+        width: 80,
+        zIndex: 0,
+    },
+    imdbShimmerGradient: {
+        flex: 1,
     },
     statusText: {
         color: 'white',

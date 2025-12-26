@@ -5,6 +5,7 @@ import Input from '../components/Input';
 import { fetchReleaseDetails, createReleaseReview, removeReview, createReviewReply, fetchReviewReplies  } from '../services/ottService'
 import { View,  Text } from "react-native";
 import { createNotifications } from '../services/notificationService'
+import { playReviewSound } from '../services/bellSoundService.js';
 import ReviewItem from "../components/ReviewItem";
 import Icon from '../assets/icons';
 import { hp, wp } from '../helpers/common';
@@ -201,44 +202,47 @@ const StreamDetails = () => {
                 text: reviewRef.current
             }
             
-            setLoading(true);
-            try {
-                let res = await createReleaseReview(data);
-                if(res.success){
-                    // Create the new review object with user data
-                    const newReview = {
-                        ...res.data,
-                        user: {
-                            id: user.id,
-                            // Add any other user fields that are displayed in ReviewItem
-                            ...user
-                        }
-                    };
-    
-                    // Update the state directly as OBJECT on user data
-                    setRelease(prevRelease => ({
-                        ...prevRelease,
-                        preview: [newReview, ...prevRelease.preview]
-                    }));
-    
-                    if(user.id !== release.userId){
-                        let notify = {
-                            senderId: user.id,
-                            receiverId: release.userId,
-                            title: 'reviewed on your release',
-                            data: JSON.stringify({releaseId: release.id, streamId: res?.data?.id})
-                        }
-                        createNotifications(notify);
+        setLoading(true);
+        try {
+            let res = await createReleaseReview(data);
+            if(res.success){
+                // Play review sound on successful submission
+                playReviewSound();
+                
+                // Create the new review object with user data
+                const newReview = {
+                    ...res.data,
+                    user: {
+                        id: user.id,
+                        // Add any other user fields that are displayed in ReviewItem
+                        ...user
                     }
+                };
     
-                    // Reset the input
-                    inputRef?.current?.clear();
-                    reviewRef.current = "";
-                    setReviewText('');
-                    setCharCount(0);
-                } else {
-                    Alert.alert('Review', res.msg || 'Something went wrong');
+                // Update the state directly as OBJECT on user data
+                setRelease(prevRelease => ({
+                    ...prevRelease,
+                    preview: [newReview, ...prevRelease.preview]
+                }));
+    
+                if(user.id !== release.userId){
+                    let notify = {
+                        senderId: user.id,
+                        receiverId: release.userId,
+                        title: 'reviewed on your release',
+                        data: JSON.stringify({releaseId: release.id, streamId: res?.data?.id})
+                    }
+                    createNotifications(notify);
                 }
+    
+                // Reset the input
+                inputRef?.current?.clear();
+                reviewRef.current = "";
+                setReviewText('');
+                setCharCount(0);
+            } else {
+                Alert.alert('Review', res.msg || 'Something went wrong');
+            }
             } catch (err) {
                 Alert.alert('Review', 'Something went wrong');
             } finally {

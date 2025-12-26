@@ -1,4 +1,4 @@
-import { Image, StyleSheet, Text, TouchableOpacity, View, ScrollView, Alert, Animated, Dimensions } from 'react-native'
+import { Image, StyleSheet, Text, TouchableOpacity, View, ScrollView, Alert, Animated, Dimensions, Linking } from 'react-native'
 import React, { useRef, useState, useEffect } from 'react'
 import { wp, hp } from '@/helpers/common'
 import theme from '../constants/theme'
@@ -88,6 +88,7 @@ const StreamCardInfo = ({
     const ratingBarAnim = useRef(new Animated.Value(0)).current;
     const [avgRating, setAvgRating] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
+    const imdbShimmerAnim = useRef(new Animated.Value(0)).current;
     
     const shadowStyle = {
         shadowOffset: {
@@ -110,6 +111,17 @@ const StreamCardInfo = ({
         }
 
     }, [item?.connectedId, item?.id]);
+
+    // Looping shimmer animation for IMDb bar
+    useEffect(() => {
+        Animated.loop(
+            Animated.timing(imdbShimmerAnim, {
+                toValue: 1,
+                duration: 2200,
+                useNativeDriver: true,
+            })
+        ).start();
+    }, [imdbShimmerAnim]);
 
            // Fetch the average rating when component mounts
            const getAverageRating = async () => {
@@ -290,7 +302,10 @@ const StreamCardInfo = ({
         }
     }
 
-    // Film details to display
+    // Check if this is a series
+    const isSeries = item?.seriesType === 'series' || (item?.episodes && Array.isArray(item.episodes) && item.episodes.length > 0);
+    
+    // Film details to display (only for non-series)
     const filmDetails = [
         { label: 'Language', value: item?.lang || 'N/A' },
         { label: 'Genre', value: item?.genre || 'N/A' },
@@ -306,8 +321,14 @@ const StreamCardInfo = ({
     // Filter out film details with 'N/A' values
     const validFilmDetails = filmDetails.filter(detail => detail.value !== 'N/A');
     
-    // Check if there are any valid film details to show
-    const hasValidFilmDetails = validFilmDetails.length > 0;
+    // Check if there are any valid film details to show (only for non-series)
+    const hasValidFilmDetails = !isSeries && validFilmDetails.length > 0;
+    
+    // Get sorted episodes for series
+    const sortedEpisodes = isSeries && item?.episodes 
+        ? [...item.episodes].sort((a, b) => a.episode_number - b.episode_number)
+        : [];
+    const seasonNumber = isSeries ? item?.seasonNumber : null;
 
     const parsedTags = item.tags ? JSON.parse(item.tags) : [];
 
@@ -315,9 +336,43 @@ const StreamCardInfo = ({
 
    const releaseAt = item?.rDate ? moment(item.rDate).format('MMM D') : '';
    const show = releaseAt && moment(item.rDate).isSameOrBefore(moment(), 'day');
+   
+   // Helper function to determine status for series
+   const getSeriesStatus = () => {
+       if (!isSeries) return null; // Not a series, use regular status
+       
+       const today = moment().startOf('day');
+       const releaseDate = item?.rDate ? moment(item.rDate).startOf('day') : null;
+       const endDate = item?.endDate ? moment(item.endDate).startOf('day') : null;
+       
+       // If endDate has passed, hide status
+       if (endDate && today.isAfter(endDate)) {
+           return null; // Hide status
+       }
+       
+       // If release date hasn't passed yet
+       if (!releaseDate || today.isBefore(releaseDate)) {
+           return 'Status: Coming Soon - Digital';
+       }
+       
+       // Release date has passed
+       // If endDate exists and hasn't passed, or no endDate (streaming indefinitely)
+       if (!endDate || today.isSameOrBefore(endDate)) {
+           return 'Status: Now Streaming';
+       }
+       
+       return null;
+   };
+   
+   // Get status text - for series use special logic, for films use regular logic
+   const statusText = isSeries ? getSeriesStatus() : (show ? 'Status: Now Streaming' : 'Status: Coming Soon - Digital');
 
     return (
         <ScreenWrapper bg="#121212">
+        <ScrollView 
+          contentContainerStyle={styles.mainScrollContent}
+          showsVerticalScrollIndicator={false}
+        >
         <View style={styles.mainContainer}>
             {/* Hidden poster view for sharing */}
             {showPosterView && (
@@ -373,25 +428,30 @@ const StreamCardInfo = ({
                             Release: {createdAt || 'N/A'}
                         </Text>
                         
-                        {/* Status */}
-                        <Text style={styles.statusText}>
-                {show
-                    ? 'Status: Now Streaming'
-                    : 'Status: Coming Soon - Digital'}
-                </Text>
+                        {/* Status - Hidden for series if endDate has finished */}
+                        {statusText && (
+                            <Text style={styles.statusText}>
+                                {statusText}
+                            </Text>
+                        )}
 
                     {/* platformstatus */}
-                    {parsedTags.length > 0 && (
-                          <Text style={styles.statusText}>
-                          {parsedTags.length > 0
-                              ? `Streaming Platform - ${
-                                  parsedTags.length === 1
-                                  ? capitalize(parsedTags[0])
-                                  : parsedTags.map(capitalize).join(' and ')
-                              }`
-                              : ''}
-                          </Text>
-                    )}
+                    {(() => {
+                        // Filter out "series" tag from streaming platforms
+                        const platformTags = parsedTags.filter(tag => 
+                            tag && typeof tag === 'string' && tag.toLowerCase() !== 'series'
+                        );
+                        
+                        return platformTags.length > 0 && (
+                            <Text style={styles.statusText}>
+                                {`Streaming Platform - ${
+                                    platformTags.length === 1
+                                    ? capitalize(platformTags[0])
+                                    : platformTags.map(capitalize).join(' and ')
+                                }`}
+                            </Text>
+                        );
+                    })()}
                    
                         {/* Action Buttons */}
                         {showReviewButton && (
@@ -431,7 +491,144 @@ const StreamCardInfo = ({
                 </View>
             </View>
 
-            {/* Film Details Section - Only show if there are valid details */}
+            {/* Series Details Section - Show episodes for series */}
+            {isSeries && sortedEpisodes.length > 0 && (
+                <View style={styles.detailsContainerOuter}>
+                    <View style={[styles.detailsContainer, hasShadow && shadowStyle]}>
+                        {/* Prominent season label above header */}
+                        {seasonNumber != null && (
+                          <View style={styles.seasonBadgeWrapper}>
+                            <View style={styles.seasonBadge}>
+                              <Text style={styles.seasonBadgeText}>Season {seasonNumber}</Text>
+                            </View>
+                          </View>
+                        )}
+                        <View style={styles.seriesHeaderRow}>
+                          <Text style={styles.detailsTitle}>Episode List</Text>
+                        </View>
+                        <ScrollView 
+                            showsVerticalScrollIndicator={false} 
+                            style={styles.episodesScrollView}
+                            contentContainerStyle={styles.episodesScrollContent}
+                        >
+                            {sortedEpisodes.map((episode) => {
+                                const hasReleaseDate = !!episode.release_date;
+                                const hasDuration = !!episode.duration;
+                                const showRightMeta = hasReleaseDate || hasDuration;
+                                const releaseDate = hasReleaseDate
+                                    ? moment(episode.release_date).format('MMM D, YYYY')
+                                    : '';
+                                const isAired = hasReleaseDate
+                                    ? moment(episode.release_date).isSameOrBefore(moment(), 'day')
+                                    : false;
+
+                                return (
+                                    <View key={episode.id || episode.episode_number} style={styles.episodeCard}>
+                                        <View style={styles.episodeCardLeft}>
+                                            <View style={styles.episodeNumberBadge}>
+                                                <Text style={styles.episodeNumberText}>{episode.episode_number}</Text>
+                                            </View>
+                                            <View style={styles.episodeCardText}>
+                                                <Text style={styles.episodeTitle} numberOfLines={1}>
+                                                    {episode.episode_title || `Episode ${episode.episode_number}`}
+                                                </Text>
+                                                <View style={styles.episodeMetaRow}>
+                                                  <View style={styles.episodeStatusPill}>
+                                                    <Text
+                                                      style={[
+                                                        styles.episodeStatusText,
+                                                        isAired
+                                                          ? styles.episodeStatusTextAired
+                                                          : styles.episodeStatusTextUpcoming,
+                                                      ]}
+                                                    >
+                                                      {isAired ? 'Released' : 'Upcoming'}
+                                                    </Text>
+                                                  </View>
+                                                  {hasDuration && (
+                                                    <Text style={styles.episodeDurationInline}>
+                                                      {episode.duration}
+                                                    </Text>
+                                                  )}
+                                                </View>
+                                                {episode.description && (
+                                                    <Text style={styles.episodeDescription} numberOfLines={2}>
+                                                        {episode.description}
+                                                    </Text>
+                                                )}
+                                            </View>
+                                        </View>
+                                        {showRightMeta && (
+                                          <View style={styles.episodeCardRight}>
+                                              {hasReleaseDate && (
+                                                <Text
+                                                  style={[
+                                                    styles.episodeDate,
+                                                    isAired
+                                                      ? styles.episodeDateAired
+                                                      : styles.episodeDateUpcoming,
+                                                  ]}
+                                                >
+                                                  {releaseDate}
+                                                </Text>
+                                              )}
+                                              {hasDuration && (
+                                                  <Text style={styles.episodeDuration}>{episode.duration}</Text>
+                                              )}
+                                          </View>
+                                        )}
+                                    </View>
+                                );
+                            })}
+                        </ScrollView>
+                    </View>
+                </View>
+            )}
+
+            {/* Full-width IMDb bar above Film Details */}
+            {item?.imdb && (
+              <TouchableOpacity
+                onPress={() => {
+                  const url = item.imdb.startsWith('http')
+                    ? item.imdb
+                    : `https://${item.imdb}`;
+                  Linking.openURL(url).catch(() => {
+                    Alert.alert('Error', 'Could not open IMDB link');
+                  });
+                }}
+                activeOpacity={0.85}
+              >
+                <View style={styles.imdbFullWidth}>
+                  {/* Shimmer overlay */}
+                  <Animated.View
+                    pointerEvents="none"
+                    style={[
+                      styles.imdbShimmerOverlay,
+                      {
+                        transform: [
+                          {
+                            translateX: imdbShimmerAnim.interpolate({
+                              inputRange: [0, 1],
+                              outputRange: [-50, 250],
+                            }),
+                          },
+                        ],
+                      },
+                    ]}
+                  >
+                    <LinearGradient
+                      colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.55)', 'rgba(255,255,255,0)']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.imdbShimmerGradient}
+                    />
+                  </Animated.View>
+                  <Text style={styles.imdbFullWidthText}>View Details</Text>
+                </View>
+              </TouchableOpacity>
+            )}
+
+            {/* Film Details Section - Only show if there are valid details and it's not a series */}
             {hasValidFilmDetails && (
                 <View style={styles.detailsContainerOuter}>
                     <View style={[styles.detailsContainer, hasShadow && shadowStyle]}>
@@ -453,6 +650,7 @@ const StreamCardInfo = ({
                 </View>
             )}
         </View>
+        </ScrollView>
         </ScreenWrapper>
     )
 }
@@ -466,6 +664,10 @@ const styles = StyleSheet.create({
         maxWidth: deviceType === 'desktop' ? wp(85) : deviceType === 'tablet' ? wp(95) : wp(100),
         alignSelf: 'center',
         paddingHorizontal: getSpacing(1),
+    },
+    mainScrollContent: {
+        alignItems: 'center',
+        paddingBottom: getSpacing(24),
     },
     container: {
         marginBottom: getSpacing(hp(1)),
@@ -546,6 +748,35 @@ const styles = StyleSheet.create({
         marginBottom: getSpacing(6),
         fontWeight: '400',
         textAlign: 'center',
+    },
+    imdbFullWidth: {
+        width: '75%',
+        backgroundColor: '#F5C518', // IMDb yellow
+        paddingVertical: getSpacing(10),
+        paddingHorizontal: getSpacing(16),
+        marginBottom: getSpacing(10),
+        borderRadius: getSpacing(8),
+        alignItems: 'center',
+        justifyContent: 'center',
+        alignSelf: 'center',
+        overflow: 'hidden',
+    },
+    imdbFullWidthText: {
+        color: '#000',
+        fontSize: getResponsiveScale(hp(2)),
+        fontWeight: '800',
+        textAlign: 'center',
+        zIndex: 1,
+    },
+    imdbShimmerOverlay: {
+        position: 'absolute',
+        top: 0,
+        bottom: 0,
+        width: 80,
+        zIndex: 0,
+    },
+    imdbShimmerGradient: {
+        flex: 1,
     },
     statusText: {
         color: 'white',
@@ -680,11 +911,17 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#262626',
     },
+    seriesHeaderRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        marginBottom: getSpacing(6),
+    },
     detailsTitle: {
         fontSize: getResponsiveScale(hp(2.2)),
         fontWeight: 'bold',
         color: theme.colors.blue || '#0095F6',
-        marginBottom: getSpacing(12),
+        marginBottom: getSpacing(4),
         marginLeft: getSpacing(4),
     },
     detailsScrollView: {
@@ -731,6 +968,133 @@ const styles = StyleSheet.create({
         fontSize: getResponsiveScale(hp(1.5)),
         textAlign: 'center',
         lineHeight: getResponsiveScale(hp(1.8)),
+    },
+    episodesScrollView: {
+        maxHeight: hp(40),
+    },
+    episodesScrollContent: {
+        paddingRight: getSpacing(4),
+        paddingBottom: getSpacing(4),
+    },
+    episodeCard: {
+        backgroundColor: '#181818',
+        borderRadius: getSpacing(14),
+        paddingVertical: getSpacing(10),
+        paddingHorizontal: getSpacing(12),
+        marginBottom: getSpacing(8),
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#2E2E2E',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    episodeCardLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+        marginRight: getSpacing(8),
+    },
+    episodeNumberBadge: {
+        width: getSpacing(hp(4)),
+        height: getSpacing(hp(4)),
+        borderRadius: getSpacing(hp(1.8)),
+        backgroundColor: theme.colors.primary || theme.colors.blue || '#0095F6',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: getSpacing(8),
+    },
+    episodeNumberText: {
+        color: '#FFFFFF',
+        fontSize: getResponsiveScale(hp(1.8)),
+        fontWeight: 'bold',
+    },
+    episodeCardText: {
+        flex: 1,
+        justifyContent: 'center',
+    },
+    episodeTitle: {
+        color: '#FFFFFF',
+        fontSize: getResponsiveScale(hp(2.1)),
+        fontWeight: '600',
+        marginBottom: getSpacing(2),
+    },
+    episodeDescription: {
+        color: '#888888',
+        fontSize: getResponsiveScale(hp(1.5)),
+    },
+    episodeCardRight: {
+        alignItems: 'flex-end',
+        justifyContent: 'center',
+    },
+    episodeDate: {
+        color: '#FFFFFF',
+        fontSize: getResponsiveScale(hp(1.6)),
+        fontWeight: '500',
+        marginBottom: getSpacing(2),
+    },
+    episodeDuration: {
+        color: '#888888',
+        fontSize: getResponsiveScale(hp(1.4)),
+    },
+    episodeMetaRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: getSpacing(2),
+        gap: getSpacing(6),
+    },
+    episodeStatusPill: {
+        paddingHorizontal: getSpacing(8),
+        paddingVertical: getSpacing(3),
+        borderRadius: getSpacing(10),
+        backgroundColor: '#222222',
+    },
+    episodeStatusText: {
+        fontSize: getResponsiveScale(hp(1.4)),
+        fontWeight: '600',
+    },
+    episodeStatusTextAired: {
+        color: '#4CAF50',
+    },
+    episodeStatusTextUpcoming: {
+        color: '#F44336',
+    },
+    episodeDurationInline: {
+        fontSize: getResponsiveScale(hp(1.4)),
+        color: '#BBBBBB',
+        fontWeight: '500',
+    },
+    episodeDateAired: {
+        color: '#4CAF50', // green
+    },
+    episodeDateUpcoming: {
+        color: '#F44336', // red
+    },
+    seasonBadgeWrapper: {
+        alignItems: 'flex-start',
+        marginBottom: getSpacing(8),
+    },
+    seasonBadge: {
+        paddingHorizontal: getSpacing(12),
+        paddingVertical: getSpacing(5),
+        borderRadius: getSpacing(8),
+        backgroundColor: 'rgba(0,0,0,0.8)',
+        borderWidth: 2,
+        borderColor: theme.colors.blue || '#0095F6',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    seasonBadgeText: {
+        color: theme.colors.blue || '#0095F6',
+        fontSize: getResponsiveScale(hp(2.1)),
+        fontWeight: '800',
+        letterSpacing: 0.4,
+        textTransform: 'uppercase',
     },
     ratingoutxpanel: {
         paddingHorizontal: getSpacing(4),

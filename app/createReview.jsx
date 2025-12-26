@@ -12,6 +12,7 @@ import BreathingHeartButton from '../components/BreathingHeartButton'
 import { updatePeopleReview as updateReleasePeopleReview } from '../services/releaseService';
 import { updatePeopleReview as updateOttPeopleReview } from '../services/ottService';
 import { useToast } from '../contexts/ToastContext';
+import { playReviewSound } from '../services/bellSoundService.js';
 
 // Custom toast configuration for centered black toast with white text
 const toastConfig = {
@@ -316,6 +317,10 @@ function CreateReviewFunctional() {
           updatedReview =  await updateReleasePeopleReview(reviewId, reviewData);
         }
         
+        // Play review sound on successful update
+        if (updatedReview) {
+          playReviewSound();
+        }
         
         // Add a small delay to allow the toast to be visible before navigating away
         await new Promise(resolve => setTimeout(resolve, 1000));

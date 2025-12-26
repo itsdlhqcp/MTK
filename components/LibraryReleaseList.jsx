@@ -15,6 +15,7 @@ import theme from '../constants/theme';
 import PratingStars from './pRatingStars';
 import { useToast } from '../contexts/ToastContext';
 import CustomDotIndicator from './CutomDotIndicator';
+import { fetchOtt } from '../services/ottService';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -53,6 +54,7 @@ const AllReleasesList = ({ searchQuery = '' }) => {
   const [loadingRatings, setLoadingRatings] = useState({}); // Track loading state for each rating
   const [searchResults, setSearchResults] = useState([]); // Store search results separately
   const [isSearching, setIsSearching] = useState(false); // Track if we're in search mode
+  const [finishedDigitalSeries, setFinishedDigitalSeries] = useState([]); // Store finished digital series
   
   // Check network status on mount
   useEffect(() => {
@@ -73,11 +75,73 @@ const AllReleasesList = ({ searchQuery = '' }) => {
     return () => unsubscribe();
   }, []);
   
+  // Helper function to check if an item is a series
+  const isItemSeries = (item) => {
+    // Check if it has seriesType
+    if (item?.seriesType === 'series') {
+      return true;
+    }
+    // Check if it has episodes (from streams table)
+    if (item?.episodes && Array.isArray(item.episodes) && item.episodes.length > 0) {
+      return true;
+    }
+    // Check tags for series indicator
+    let tags = [];
+    try {
+      tags = item.tags ? (Array.isArray(item.tags) ? item.tags : JSON.parse(item.tags)) : [];
+    } catch (e) {
+      tags = [];
+    }
+    const tagsString = Array.isArray(tags) ? tags.join(',').toLowerCase() : String(tags).toLowerCase();
+    const bodyText = (item.body || '').toLowerCase();
+    return tagsString.includes('series') || 
+           tagsString.includes('show') ||
+           bodyText.includes('series') ||
+           bodyText.includes('season') ||
+           bodyText.includes('episode');
+  };
+
+  // Fetch finished digital series (series where endDate has passed)
+  const getFinishedDigitalSeries = async () => {
+    if (!isConnected) return;
+    
+    try {
+      // Fetch all streams
+      const res = await fetchOtt(1000, 0); // Fetch a large number to get all
+      
+      if (res.success && res.data) {
+        const today = moment().startOf('day');
+        
+        // Filter for series where endDate exists and has passed
+        const finished = res.data.filter(stream => {
+          // Must be a series
+          if (!isItemSeries(stream)) {
+            return false;
+          }
+          
+          // Must have an endDate
+          if (!stream.endDate) {
+            return false;
+          }
+          
+          // endDate must have passed
+          const endDate = moment(stream.endDate).startOf('day');
+          return today.isAfter(endDate);
+        });
+        
+        setFinishedDigitalSeries(finished);
+      }
+    } catch (error) {
+      console.error('Error fetching finished digital series:', error);
+    }
+  };
+
   // Handle initial data fetch - only when we know we're online
   useEffect(() => {
     if (initialCheckDone && isConnected) {
       // Initial data fetch - only when online
       getAllReleases();
+      getFinishedDigitalSeries();
       
       // Set up Supabase real-time subscription - only when online
       const releaseChannel = supabase
@@ -88,8 +152,20 @@ const AllReleasesList = ({ searchQuery = '' }) => {
         )
         .subscribe();
         
+      const streamsChannel = supabase
+        .channel('all-streams')
+        .on('postgres_changes',
+          { event: '*', schema: 'public', table: 'streams' },
+          () => {
+            // Refetch finished digital series when streams change
+            getFinishedDigitalSeries();
+          }
+        )
+        .subscribe();
+        
       return () => {
         supabase.removeChannel(releaseChannel);
+        supabase.removeChannel(streamsChannel);
       };
     }
   }, [initialCheckDone, isConnected]); 
@@ -240,9 +316,30 @@ const AllReleasesList = ({ searchQuery = '' }) => {
   };
 
   // Use the appropriate data source based on whether we're searching or not
+  // Merge releases with finished digital series
   const displayData = useMemo(() => {
-    return isSearching ? searchResults : releases;
-  }, [isSearching, searchResults, releases]);
+    const baseData = isSearching ? searchResults : releases;
+    
+    // If not searching, merge with finished digital series
+    if (!isSearching) {
+      // Transform finished digital series to match release format
+      const transformedSeries = finishedDigitalSeries.map(series => ({
+        ...series,
+        // Ensure it has the fields needed for display
+        id: `digital_${series.id}`, // Prefix to distinguish from releases
+        isDigitalSeries: true, // Flag to identify as digital series
+      }));
+      
+      // Merge and deduplicate by id
+      const merged = [...baseData, ...transformedSeries];
+      const unique = merged.filter((item, index, self) => 
+        index === self.findIndex(t => t.id === item.id)
+      );
+      return unique;
+    }
+    
+    return baseData;
+  }, [isSearching, searchResults, releases, finishedDigitalSeries]);
 
   // Group releases by month-year - useMemo for performance
   const groupedReleases = useMemo(() => {
@@ -284,13 +381,28 @@ const AllReleasesList = ({ searchQuery = '' }) => {
   // Handle card press
   const handleCardPress = (item) => {
     if (!item?.id) return null;
-    router.push({ 
-      pathname: 'releaseInfo', 
-      params: { 
-        releaseId: item.id,
-        lib: true  // Always set to true when coming from AllReleasesList
-      } 
-    });
+    
+    // If it's a digital series, navigate to stream info
+    if (item.isDigitalSeries) {
+      // Remove the 'digital_' prefix if present
+      const streamId = item.id.toString().replace('digital_', '');
+      router.push({ 
+        pathname: 'streamInfo', 
+        params: { 
+          streamId: streamId,
+          lib: true
+        } 
+      });
+    } else {
+      // Regular release
+      router.push({ 
+        pathname: 'releaseInfo', 
+        params: { 
+          releaseId: item.id,
+          lib: true  // Always set to true when coming from AllReleasesList
+        } 
+      });
+    }
   };
 
   // Render rating stars
@@ -299,24 +411,41 @@ const AllReleasesList = ({ searchQuery = '' }) => {
     const avgRating = releaseRatings[item?.id] !== undefined ? releaseRatings[item.id] : (item?.defRating || 0);
     const releaseAt = item?.rDate ? moment(item.rDate).format('MMM D') : '';
     const show = releaseAt && moment(item.rDate).isSameOrBefore(moment(), 'day');
+    const isLoadingRating = loadingRatings[item?.id] === true;
+    const hasRating = avgRating?.average !== undefined && avgRating?.average !== null && avgRating?.average > 0;
     
-    if (avgRating <= 0) return null;
+    // Show skeleton if loading or if rating is not yet available
+    if (!show) {
+      return (
+        <View style={styles.gridRatingContainer}>
+          <Text style={styles.gridRatingText}></Text>
+        </View>
+      );
+    }
     
     return (
       <View style={styles.gridRatingContainer}>
-        
-
-         {show ? ( 
-                    <> <PratingStars 
-                    rating={avgRating?.average} 
-                    showRatingText={false} 
-                    starSize={hp(1.6)}
-                  />
-                  <Text style={styles.gridRatingText}>{avgRating?.average}/5</Text></>
-                           
-                        ) : (
-                          <Text style={styles.gridRatingText}></Text>
-                )}
+        {isLoadingRating || !hasRating ? (
+          <>
+            <PratingStars 
+              rating={0} 
+              showRatingText={false} 
+              starSize={hp(1.6)}
+              isLoading={true}
+            />
+            <View style={styles.skeletonRatingText} />
+          </>
+        ) : (
+          <>
+            <PratingStars 
+              rating={avgRating?.average} 
+              showRatingText={false} 
+              starSize={hp(1.6)}
+              isLoading={false}
+            />
+            <Text style={styles.gridRatingText}>{avgRating?.average}/5</Text>
+          </>
+        )}
       </View>
     );
   };
@@ -747,6 +876,13 @@ const styles = StyleSheet.create({
     fontSize: hp(1.4),
     fontWeight: '500',
     color: '#00ac62',
+    marginLeft: wp(1),
+  },
+  skeletonRatingText: {
+    width: wp(8),
+    height: hp(1.4),
+    backgroundColor: 'rgba(0, 172, 98, 0.2)',
+    borderRadius: 4,
     marginLeft: wp(1),
   },
   loadingContainer: {
